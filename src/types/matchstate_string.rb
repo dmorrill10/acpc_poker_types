@@ -8,7 +8,7 @@ require File.expand_path('../rank', __FILE__)
 require File.expand_path('../suit', __FILE__)
 
 # Local mixins
-require File.expand_path('../../../mixins/easy_exceptions', __FILE__)
+require File.expand_path('../../mixins/easy_exceptions', __FILE__)
 
 # Model to parse and manage information from a given match state string.
 class MatchstateString

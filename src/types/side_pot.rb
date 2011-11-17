@@ -1,6 +1,6 @@
 
 # Local mixins
-require File.expand_path('../../../mixins/easy_exceptions', __FILE__)
+require File.expand_path('../../mixins/easy_exceptions', __FILE__)
 
 # Local classes
 require File.expand_path('../board_cards', __FILE__)
