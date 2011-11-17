@@ -1,6 +1,6 @@
 
 # Local modules
-require File.expand_path('../../application_defs', __FILE__)
+require File.expand_path('../../acpc_poker_types_defs', __FILE__)
 
 # Local classes
 require File.expand_path('../card', __FILE__)
@@ -8,7 +8,7 @@ require File.expand_path('../pile_of_cards', __FILE__)
 
 # A hand of cards.
 class Hand < PileOfCards
-   include ApplicationDefs
+   include AcpcPokerTypesDefs
       
    # @param [String] hand_in_alternate_form An alternate representation of this hand.
    def self.draw_cards(hand_in_alternate_form)

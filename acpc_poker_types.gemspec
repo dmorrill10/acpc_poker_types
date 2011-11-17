@@ -8,13 +8,14 @@ Gem::Specification.new do |s|
   s.authors     = ["Dustin Morrill"]
   s.email       = ["morrill@ualberta.ca"]
   s.homepage    = ""
-  s.summary     = %q{TODO: Write a gem summary}
-  s.description = %q{TODO: Write a gem description}
+  s.summary     = %q{ACPC Poker Types }
+  s.description = %q{Poker types that conform to the standards of the Annual Computer Poker Competition.}
 
   s.rubyforge_project = "acpc_poker_types"
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
+  s.extensions    = ['src/ext/extconf.rb']
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
 end

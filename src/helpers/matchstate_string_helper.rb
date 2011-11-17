@@ -1,10 +1,9 @@
 # Local modules
-require File.expand_path('../../../application_defs', __FILE__)
-require File.expand_path('../application_helpers', __FILE__)
+require File.expand_path('../../acpc_poker_types_defs', __FILE__)
 
-# Assortment of static helper methods for the MatchstateString model.
+# Assortment of helper methods for the MatchstateString model.
 module MatchstateStringHelper
-   include ApplicationDefs
+   include AcpcPokerTypesDefs
    
    # Builds a match state string from its given component parts.
    #
@@ -17,6 +16,5 @@ module MatchstateStringHelper
    def build_match_state_string(position_relative_to_dealer, hand_number, betting_sequence, all_hole_cards, board_cards)
       string = MATCH_STATE_LABEL + ":#{position_relative_to_dealer}:#{hand_number}:#{betting_sequence}:#{all_hole_cards}"
       string += "#{board_cards}" if board_cards and !board_cards.empty?
-      string
    end
 end

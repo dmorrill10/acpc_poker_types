@@ -1,6 +1,9 @@
 
 # Assortment of definitions for poker types.
-module AcpcPokerTypeDefs
+module AcpcPokerTypesDefs
+   # @return [String] Label for match state strings.
+   MATCH_STATE_LABEL = 'MATCHSTATE'
+   
    # @return [Hash] Maximum game parameter values.
    MAX_VALUES = {:rounds => 4, :players => 10, :board_cards => 7, :hole_cards => 3, :number_of_actions => 64,
                  :line_length => 1024}

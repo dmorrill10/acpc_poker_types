@@ -1,6 +1,6 @@
 
 # Local modules
-require File.expand_path('../../application_defs', __FILE__)
+require File.expand_path('../../acpc_poker_types_defs', __FILE__)
 
 # Local mixins
 require File.expand_path('../../mixins/easy_exceptions', __FILE__)
@@ -10,7 +10,7 @@ require File.expand_path('../rank', __FILE__)
 require File.expand_path('../suit', __FILE__)
 
 class Card
-   include ApplicationDefs
+   include AcpcPokerTypesDefs
    
    exceptions :unable_to_parse_string_of_cards
    

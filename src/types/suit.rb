@@ -1,12 +1,12 @@
 
 # Local modules
-require File.expand_path('../../application_defs', __FILE__)
+require File.expand_path('../../acpc_poker_types_defs', __FILE__)
 
 # Local mixins
 require File.expand_path('../../mixins/easy_exceptions', __FILE__)
 
 class Suit
-   include ApplicationDefs
+   include AcpcPokerTypesDefs
    
    exceptions :not_a_recognized_suit
    

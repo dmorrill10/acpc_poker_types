@@ -2,7 +2,7 @@
 # Local modules
 require File.expand_path('../board_cards', __FILE__)
 require File.expand_path('../hand', __FILE__)
-require File.expand_path('../../helpers/models_helper', __FILE__)
+require File.expand_path('../../helpers/acpc_poker_types_helper', __FILE__)
 require File.expand_path('../../helpers/matchstate_string_helper', __FILE__)
 require File.expand_path('../rank', __FILE__)
 require File.expand_path('../suit', __FILE__)
@@ -12,7 +12,7 @@ require File.expand_path('../../mixins/easy_exceptions', __FILE__)
 
 # Model to parse and manage information from a given match state string.
 class MatchstateString
-   include ModelsHelper
+   include AcpcPokerTypesHelper
    include MatchstateStringHelper
    
    exceptions :incomplete_matchstate_string, :unable_to_parse_string_of_cards
@@ -116,36 +116,23 @@ class MatchstateString
    def list_of_opponents_hole_cards
       local_list_of_hole_card_hands = list_of_hole_card_hands.dup
       local_list_of_hole_card_hands.delete_at @position_relative_to_dealer
-      
-      log "list_of_opponents_hole_cards: list_of_hole_card_hands: #{list_of_hole_card_hands}, @position_relative_to_dealer: #{@position_relative_to_dealer}, local_list_of_hole_card_hands: #{local_list_of_hole_card_hands}"
-      
       local_list_of_hole_card_hands
    end
    
    # @return [Integer] The zero indexed current round number.
    def round
-      log "round: @betting_sequence: #{@betting_sequence}"
-      
       @betting_sequence.scan(/\//).length
    end
    
    # @return [Integer] The number of actions in the current round.
    def number_of_actions_in_current_round
-      log "number_of_actions_in_current_round: @betting_sequence: #{@betting_sequence}"
-      
       betting_sequence_in_each_round = if (split_result = @betting_sequence.split(/\//)).empty?
          then [@betting_sequence,] else split_result end
-      
-      log "number_of_actions_in_current_round: betting_sequence_in_each_round: #{betting_sequence_in_each_round}"
-      
       if @betting_sequence.match(/\/$/)
          number_of_actions = 0
       else
          number_of_actions = list_of_actions(betting_sequence_in_each_round[round]).length
       end
-      
-      log "number_of_actions_in_current_round: number_of_actions #{number_of_actions}"
-      
       number_of_actions
    end
    

@@ -1,19 +1,17 @@
 
 # Local modules
 require File.expand_path('../../helpers/game_definition_helper', __FILE__)
-require File.expand_path('../../helpers/models_helper', __FILE__)
-require File.expand_path('../../application_defs', __FILE__)
-require File.expand_path('../../helpers/application_helpers', __FILE__)
+require File.expand_path('../../acpc_poker_types_defs', __FILE__)
+require File.expand_path('../../helpers/acpc_poker_types_helper', __FILE__)
 
 # Local mixins
 require File.expand_path('../../mixins/easy_exceptions', __FILE__)
 
 # Class that parses and manages game definition information from a game definition file.
 class GameDefinition
-   include ApplicationDefs
-   include ApplicationHelpers
+   include AcpcPokerTypesDefs
+   include AcpcPokerTypesHelper
    include GameDefinitionHelper
-   include ModelsHelper
    
    exceptions :game_definition_parse_error
       
@@ -61,8 +59,6 @@ class GameDefinition
    # @param [String] game_definition_file_name The name of the game definition file that this instance should parse.
    # @raise GameDefinitionParseError
    def initialize(game_definition_file_name)
-      log "initialize"
-
       initialize_members!
       begin
          parse_game_definition! game_definition_file_name
@@ -77,8 +73,6 @@ class GameDefinition
    
    # @return [String] The game definition in text format.
    def to_s
-      log "to_s"
-      
       list_of_lines = []
       list_of_lines << @betting_type if @betting_type
       list_of_lines << "stack = #{@list_of_player_stacks.join(' ')}" unless @list_of_player_stacks.empty?
@@ -96,46 +90,31 @@ class GameDefinition
    end
    
    # @return [Integer] The big blind.
-   def big_blind
-      log "big_blind"
-      
+   def big_blind      
       @list_of_blinds.max
    end
    
    # @return [Integer] The small blind.
    def small_blind
-      log "small_blind"
-      
       @list_of_blinds.min
    end
 
-
-   # All the following methods are private ####################################
    private
    
-   def initialize_members!
-      log "initialize_members!"
-      
+   def initialize_members!      
       @betting_type = BETTING_TYPES[:limit]
       @list_of_blinds = []
       @number_of_board_cards_in_each_round = []
       @raise_size_in_each_round = []
-      @first_player_position_in_each_round = default_first_player_position_in_each_round
-      @max_raise_in_each_round = default_max_raise_in_each_round
+      @first_player_position_in_each_round = DEFAULT_FIRST_PLAYER_POSITION_IN_EVERY_ROUND
+      @max_raise_in_each_round = DEFAULT_MAX_RAISE_IN_EACH_ROUND
       @list_of_player_stacks = []
    end
 
-   def parse_game_definition!(game_definition_file_name)
-      log "parse_game_definition!"
-      
+   def parse_game_definition!(game_definition_file_name)      
       for_every_line_in_file game_definition_file_name do |line|
-         
-         log "line: #{line}"
-         
          break if line.match(/\bend\s*gamedef\b/i)
-         next if game_def_line_not_informative line
-         
-         log "Line is informative"
+         next if game_def_line_not_informative? line
          
          @betting_type = BETTING_TYPES[:limit] if line.match(/\b#{BETTING_TYPES[:limit]}\b/i)
          @betting_type = BETTING_TYPES[:nolimit] if line.match(/\b#{BETTING_TYPES[:nolimit]}\b/i)
@@ -151,19 +130,13 @@ class GameDefinition
          @number_of_ranks = check_game_def_line_for_definition line, 'numranks', @number_of_ranks
          @number_of_hole_cards = check_game_def_line_for_definition line, 'numholecards', @number_of_hole_cards
          @number_of_board_cards_in_each_round = check_game_def_line_for_definition line, 'numboardcards', @number_of_board_cards_in_each_round
-         
-         log "Getting new line from game definition file"
       end      
    end
    
    # @raise GameDefinitionParseError
-   def sanity_check_game_definitions
-      log "sanity_check_game_definitions"
-      
+   def sanity_check_game_definitions     
       error_message = ""
-      
       begin
-         
          # Make sure that everything is defined that needs to be defined
          error_message = "list of player stacks not specified" unless @list_of_player_stacks
          error_message = "list of blinds not specified" unless @list_of_blinds
@@ -216,57 +189,39 @@ class GameDefinition
       end
    end
 
-   def invalid_number_of_rounds?
-      log "invalid_number_of_rounds?: #{@number_of_rounds}"
-      
+   def invalid_number_of_rounds?      
       @number_of_rounds.nil? || 0 == @number_of_rounds || @number_of_rounds > MAX_VALUES[:rounds]
    end
 
-   def invalid_number_of_players?
-      log "invalid_number_of_players?: #{@number_of_players}"
-      
+   def invalid_number_of_players?      
       @number_of_players < 2 || @number_of_players > MAX_VALUES[:players]
    end
 
-   def invalid_number_of_hole_cards?
-      log "invalid_number_of_hole_cards?: #{@number_of_hole_cards}"
-      
+   def invalid_number_of_hole_cards?      
       0 == @number_of_hole_cards || @number_of_hole_cards > MAX_VALUES[:hole_cards]
    end
 
-   def invalid_number_of_ranks?
-      log "invalid_number_of_ranks?: #{@number_of_ranks}"
-      
+   def invalid_number_of_ranks?      
       0 == @number_of_ranks || @number_of_ranks > CARD_RANKS.length
    end
 
-   def invalid_number_of_suits?
-      log "invalid_number_of_suits?: #{@number_of_suits}"
-      
+   def invalid_number_of_suits?      
       0 == @number_of_suits || @number_of_suits > CARD_SUITS.length
    end
 
-   def invalid_first_player_position?(i)
-      log "invalid_first_player_position?: #{@first_player_position_in_each_round}"
-      
+   def invalid_first_player_position?(i)      
       @first_player_position_in_each_round[i] == 0 || @first_player_position_in_each_round[i] > @number_of_players
    end
 
    def not_enough_raise_sizes?
-      log "not_enough_raise_sizes?: #{@raise_size_in_each_round}"
-      
       @betting_type == 'limit' && @raise_size_in_each_round.length < @number_of_rounds
    end
    
    def not_enough_player_stacks?
-      log "not_enough_player_stacks?: #{@list_of_player_stacks}"
-      
       @list_of_player_stacks.length < @number_of_players
    end
    
    def not_enough_blinds?
-      log "not_enough_blinds?: #{@list_of_blinds}"
-      
       @list_of_blinds.length < @number_of_players
    end
 end
