@@ -16,5 +16,6 @@ module MatchstateStringHelper
    def build_match_state_string(position_relative_to_dealer, hand_number, betting_sequence, all_hole_cards, board_cards)
       string = MATCH_STATE_LABEL + ":#{position_relative_to_dealer}:#{hand_number}:#{betting_sequence}:#{all_hole_cards}"
       string += "#{board_cards}" if board_cards and !board_cards.empty?
+      string
    end
 end

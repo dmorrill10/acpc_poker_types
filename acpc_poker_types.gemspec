@@ -11,6 +11,9 @@ Gem::Specification.new do |s|
   s.summary     = %q{ACPC Poker Types }
   s.description = %q{Poker types that conform to the standards of the Annual Computer Poker Competition.}
 
+  s.add_development_dependency 'rspec'
+  s.add_development_dependency 'mocha'
+  
   s.rubyforge_project = "acpc_poker_types"
 
   s.files         = `git ls-files`.split("\n")
