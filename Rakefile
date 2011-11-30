@@ -1,12 +1,15 @@
 require 'bundler/gem_tasks'
 require 'rake'
+require 'rake/extensiontask'
 
 require File.expand_path('../lib/acpc_poker_types/version', __FILE__)
 require File.expand_path('../tasks', __FILE__)
 
 include Tasks
 
-task :build do
+Rake::ExtensionTask.new('hand_evaluator')
+
+task :build => :compile do
    system "gem build acpc_poker_types.gemspec"
 end
 
