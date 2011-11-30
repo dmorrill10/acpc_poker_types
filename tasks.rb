@@ -14,13 +14,10 @@ module Tasks
       end
       
       app_root_path = File.expand_path "../#{rel_app_root_path}", __FILE__
-      new_gem_path = "#{app_root_path}/vendor/gems/#{gem_name}"
+      new_gem_path = "#{app_root_path}/vendor/gems/"
       
-      puts "Copying \"#{gem_name}\" to \"#{new_gem_path}\"..."
-      FileUtils.cp gem_name, new_gem_path
-      
-      puts "Installing #{new_gem_path}..."
-      system "gem install #{new_gem_path}"
+      puts "Unpacking \"#{gem_name}\" to \"#{new_gem_path}\"..."
+      system "gem unpack #{gem_name} --target #{new_gem_path}"
    end
    
    def integrate_into_app(rel_app_root_path, gem_name)
