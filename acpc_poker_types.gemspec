@@ -14,12 +14,11 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency 'rspec'
   s.add_development_dependency 'mocha'
-  s.add_development_dependency 'rake'
   
   s.rubyforge_project = "acpc_poker_types"
 
   s.files         = Dir.glob("lib/**/*") + Dir.glob("src/**/*") + %w(Rakefile acpc_poker_types.gemspec tasks.rb)
   s.test_files    = Dir.glob "spec/**/*"
-  s.extensions    = FileList["ext/**/extconf.rb"] + %w(Rakefile)
+  s.extensions    = FileList["ext/**/extconf.rb"]
   s.require_paths = ["lib"]
 end
