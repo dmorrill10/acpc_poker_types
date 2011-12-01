@@ -18,6 +18,7 @@ module Tasks
       
       puts "Unpacking \"#{gem_name}\" to \"#{new_gem_path}\"..."
       system "gem unpack #{gem_name} --target #{new_gem_path}"
+      system "gem install #{gem_name}"
    end
    
    def integrate_into_app(rel_app_root_path, gem_name)
