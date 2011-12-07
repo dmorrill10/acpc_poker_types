@@ -1,5 +1,8 @@
-# Local modules
+
+# Spec helper (must include first to track code coverage with SimpleCov)
 require File.expand_path('../../support/spec_helper', __FILE__)
+
+# Local modules
 require File.expand_path('../../../src/acpc_poker_types_defs', __FILE__)
 require File.expand_path('../../support/model_test_helper', __FILE__)
 

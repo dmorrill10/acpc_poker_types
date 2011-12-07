@@ -1,4 +1,9 @@
-require 'spec_helper'
+
+# Spec helper (must include first to track code coverage with SimpleCov)
+require File.expand_path('../../support/spec_helper', __FILE__)
+
+# Local classes
+require File.expand_path('../../../src/types/side_pot', __FILE__)
 
 describe SidePot do
    before do
@@ -87,8 +92,9 @@ describe SidePot do
          
          @player1.stubs(:has_folded).returns(false)
          @player2.stubs(:has_folded).returns(false)
-         @player1.stubs(:hand).returns(mock 'Hand')
-         @player2.stubs(:hand).returns(mock 'Hand')
+         hand = mock 'Hand'
+         @player1.stubs(:hole_cards).returns(hand)
+         @player2.stubs(:hole_cards).returns(hand)
          
          pile_of_cards = mock 'PileOfCards'
          pile_of_cards.stubs(:to_poker_hand_strength).returns(5)
@@ -115,8 +121,8 @@ describe SidePot do
          @player2.stubs(:has_folded).returns(false)
          hand1 = mock 'Hand'
          hand2 = mock 'Hand'
-         @player1.stubs(:hand).returns(hand1)
-         @player2.stubs(:hand).returns(hand2)
+         @player1.stubs(:hole_cards).returns(hand1)
+         @player2.stubs(:hole_cards).returns(hand2)
          
          pile_of_cards1 = mock 'PileOfCards'
          pile_of_cards1.stubs(:to_poker_hand_strength).returns(9)

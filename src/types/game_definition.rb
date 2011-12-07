@@ -71,8 +71,13 @@ class GameDefinition
       sanity_check_game_definitions
    end
    
-   # @return [String] The game definition in text format.
+   # @see #to_str
    def to_s
+      to_str
+   end
+   
+   # @return [String] The game definition in text format.
+   def to_str
       list_of_lines = []
       list_of_lines << @betting_type if @betting_type
       list_of_lines << "stack = #{@list_of_player_stacks.join(' ')}" unless @list_of_player_stacks.empty?
@@ -87,6 +92,10 @@ class GameDefinition
       list_of_lines << "numHoleCards = #{@number_of_hole_cards}" if @number_of_hole_cards
       list_of_lines << "numBoardCards = #{@number_of_board_cards_in_each_round.join(' ')}" unless @number_of_board_cards_in_each_round.empty?
       list_of_lines.join(NEWLINE)
+   end
+   
+   def ==(other_game_definition)
+      to_s == other_game_definition.to_s
    end
    
    # @return [Integer] The big blind.

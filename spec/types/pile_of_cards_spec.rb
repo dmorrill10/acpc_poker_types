@@ -1,11 +1,16 @@
-require 'spec_helper'
+
+# Spec helper (must include first to track code coverage with SimpleCov)
+require File.expand_path('../../support/spec_helper', __FILE__)
 
 # Local modules
-require File.expand_path('../../../../../../lib/helpers/application_helpers', __FILE__)
-require File.expand_path('../../../../../../lib/ext/hand_evaluator', __FILE__)
+require File.expand_path('../../../src/helpers/acpc_poker_types_helper', __FILE__)
+require File.expand_path('../../../lib/hand_evaluator', __FILE__)
+
+# Local classes
+require File.expand_path('../../../src/types/pile_of_cards', __FILE__)
 
 describe PileOfCards do
-   include ApplicationHelpers
+   include AcpcPokerTypesHelper
 
    describe '#to_texas_holdem_strength' do
       it 'attributes zero hand strength to an empty hand' do

@@ -1,11 +1,17 @@
-require 'spec_helper'
 
-require File.expand_path('../../../../../../lib/application_defs', __FILE__)
-require File.expand_path('../../../../../../lib/helpers/application_helpers', __FILE__)
+# Spec helper (must include first to track code coverage with SimpleCov)
+require File.expand_path('../../support/spec_helper', __FILE__)
+
+# Local modules
+require File.expand_path('../../../src/acpc_poker_types_defs', __FILE__)
+require File.expand_path('../../../src/helpers/acpc_poker_types_helper', __FILE__)
+
+# Local classes
+require File.expand_path('../../../src/types/card', __FILE__)
 
 describe Card do
-   include ApplicationDefs
-   include ApplicationHelpers
+   include AcpcPokerTypesDefs
+   include AcpcPokerTypesHelper
    
    describe '#new' do
       describe 'raises an exception if' do

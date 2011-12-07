@@ -1,7 +1,10 @@
-require 'spec_helper'
 
-# Local modules
-require File.expand_path('../../../../../../lib/bots/proxy_bot/domain_types/card', __FILE__)
+# Spec helper (must include first to track code coverage with SimpleCov)
+require File.expand_path('../../support/spec_helper', __FILE__)
+
+# Local classes
+require File.expand_path('../../../src/types/card', __FILE__)
+require File.expand_path('../../../src/types/board_cards', __FILE__)
 
 describe BoardCards do
    describe '#to_s' do

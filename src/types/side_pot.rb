@@ -55,7 +55,9 @@ class SidePot < ChipStack
    end
    
    def amount_to_call(player)
-      amount_contributed = @players_involved_and_their_amounts_contributed[player] || 0
+      @players_involved_and_their_amounts_contributed[player] = 0 unless @players_involved_and_their_amounts_contributed[player]
+      
+      amount_contributed =  @players_involved_and_their_amounts_contributed[player]
       largest_amount_contributed = @players_involved_and_their_amounts_contributed.values.max
       largest_amount_contributed - amount_contributed
    end

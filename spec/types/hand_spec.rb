@@ -1,12 +1,18 @@
-require 'spec_helper'
+
+# Spec helper (must include first to track code coverage with SimpleCov)
+require File.expand_path('../../support/spec_helper', __FILE__)
 
 # Local modules
-require File.expand_path('../../../../../../lib/application_defs', __FILE__)
-require File.expand_path('../../../../../../lib/helpers/application_helpers', __FILE__)
+require File.expand_path('../../../src/acpc_poker_types_defs', __FILE__)
+require File.expand_path('../../../src/helpers/acpc_poker_types_helper', __FILE__)
+
+# Local classes
+require File.expand_path('../../../src/types/hand', __FILE__)
 
 describe Hand do
-   include ApplicationHelpers
-   include ApplicationDefs
+   include AcpcPokerTypesDefs
+   include AcpcPokerTypesHelper
+   
 
    describe '#initialize' do
       it 'understands every posspaible card combination' do

@@ -1,6 +1,7 @@
 require 'bundler/gem_tasks'
 require 'rake'
 require 'rake/extensiontask'
+require 'rspec/core/rake_task'
 
 require File.expand_path('../lib/acpc_poker_types/version', __FILE__)
 require File.expand_path('../tasks', __FILE__)
@@ -8,6 +9,16 @@ require File.expand_path('../tasks', __FILE__)
 include Tasks
 
 Rake::ExtensionTask.new('hand_evaluator')
+
+RSpec::Core::RakeTask.new(:spec) do |t|
+   ruby_opts = "-w"
+end
+
+desc 'Compile, build, tag, and run specs'
+task :default => :compile do
+   Rake::Task[:spec].invoke
+   Rake::Task[:tag].invoke
+end
 
 task :build => :compile do
    system "gem build acpc_poker_types.gemspec"
