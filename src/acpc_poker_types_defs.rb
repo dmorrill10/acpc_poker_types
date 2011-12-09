@@ -11,9 +11,6 @@ module AcpcPokerTypesDefs
    # @return [Hash] Betting types understood by this application.
    BETTING_TYPES = {:limit => 'limit', :nolimit => 'nolimit'}
    
-   # @return [Hash] Action types understood by this application.
-   ACTION_TYPES = {:fold => 'f', :call => 'c', :raise => 'r'}
-   
    # @return [Hash] Numeric representation of each action type.
    ACTION_TYPE_NUMBERS = {'f' => 0, 'c' => 1, 'r' => 2}
    

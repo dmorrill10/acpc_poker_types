@@ -9,6 +9,7 @@ require File.expand_path('../../support/model_test_helper', __FILE__)
 # Local classes
 require File.expand_path('../../../src/types/board_cards', __FILE__)
 require File.expand_path('../../../src/types/matchstate_string', __FILE__)
+require File.expand_path('../../../src/types/poker_action', __FILE__)
 
 describe MatchstateString do
    include AcpcPokerTypesDefs
@@ -39,7 +40,7 @@ describe MatchstateString do
       it "parses every possible limit action" do
          partial_match_state = MATCH_STATE_LABEL + ":1:1:"
          hole_cards = arbitrary_hole_card_hand
-         ACTION_TYPES.values.each do |action|
+         PokerAction::LEGAL_ACPC_CHARACTERS.each do |action|
             match_state = partial_match_state + action + ":#{hole_cards}|"
             
             patient = test_match_state_success match_state
@@ -104,7 +105,7 @@ describe MatchstateString do
       it "parses valid limit match states in all rounds" do
          pending 'need to look at this test'
          
-         test_all_rounds_with_given_action_string ACTION_TYPES.values.join ''
+         test_all_rounds_with_given_action_string PokerAction::LEGAL_ACPC_CHARACTERS.to_a.join ''
       end
       it "parses valid no-limit match states in all rounds" do
          pending 'no-limit support'
@@ -115,7 +116,7 @@ describe MatchstateString do
          pending 'need to look at this test'
          
          partial_match_state = MATCH_STATE_LABEL + ":20:22:"
-         all_actions = ACTION_TYPES.values.join ''
+         all_actions = PokerAction::LEGAL_ACPC_CHARACTERS.to_a.join ''
          betting = all_actions
          (MAX_VALUES[:rounds]-1).times do
             betting += "/#{all_actions}"
@@ -130,7 +131,7 @@ describe MatchstateString do
          pending 'move game definition params into match state string'
          
          partial_match_state = MATCH_STATE_LABEL + ":20:22:"
-         all_actions = ACTION_TYPES.values.join ''
+         all_actions = PokerAction::LEGAL_ACPC_CHARACTERS.to_a.join ''
          betting = all_actions
          (MAX_VALUES[:rounds]-1).times do
             betting += "/#{all_actions}"

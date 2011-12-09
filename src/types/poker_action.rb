@@ -1,40 +1,51 @@
 
-# Local modules
-require File.expand_path('../../acpc_poker_types_defs', __FILE__)
+# System
+require 'set'
 
 # Local mixins
 require File.expand_path('../../mixins/easy_exceptions', __FILE__)
 
-class Suit
-   include AcpcPokerTypesDefs
+class PokerAction
    
-   exceptions :not_a_recognized_suit
+   exceptions :illegal_poker_action
    
-   # @return [Symbol] This suit's symbol.
-   attr_reader :symbol
+   # @return [Hash<Symbol, String>] Representations of legal actions.
+   LEGAL_ACTIONS = {bet: 'r', call: 'c', check: 'c', fold: 'f', raise: 'r'}
    
-   # @param [Symbol] suit This suit's symbol.
-   # @raise (see #sanity_check_suit)
-   def initialize(symbol)
-      sanity_check_suit symbol
-      
-      @symbol = symbol
+   # @return [Set<Symbol>] The set of legal action symbols.
+   LEGAL_SYMBOLS = Set.new LEGAL_ACTIONS.keys
+   
+   # @return [Set<String>] The set of legal action strings.
+   LEGAL_STRINGS = Set.new LEGAL_ACTIONS.keys.map { |action| action.to_s }
+   
+   # @return [Set<String>] The set of legal ACPC action characters.
+   LEGAL_ACPC_CHARACTERS = Set.new LEGAL_ACTIONS.values
+   
+   # @param [Symbol, String] action A representation of this action.
+   # @raise IllegalPokerAction
+   def initialize(action)
+      if LEGAL_SYMBOLS.include? action
+         @symbol = action
+      elsif LEGAL_STRINGS.include? action
+         @symbol = action.to_sym
+      elsif LEGAL_ACPC_CHARACTERS.include? action
+         @symbol = LEGAL_ACTIONS.key action
+      end
+      raise(IllegalPokerAction, action.to_s) unless @symbol
    end
    
-   # @return [Integer] Integer ACPC representation of this rank.
-   def to_i
-      CARD_SUIT_NUMBERS[to_s]
+   # @return [Symbol]
+   def to_sym
+      @symbol
    end
    
    # @return [String] String representation of this rank.
    def to_s
-      CARD_SUITS[@symbol]
+      @symbol.to_s
    end
    
-   private
-   
-   # @raise NotARecognizedSuit
-   def sanity_check_suit(suit)
-      raise NotARecognizedSuit, suit.to_s unless CARD_SUITS[suit]
+   # @return [String] ACPC character representation of this rank.
+   def to_acpc
+      LEGAL_ACTIONS[@symbol]
    end
 end

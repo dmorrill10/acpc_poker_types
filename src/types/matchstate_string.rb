@@ -6,6 +6,7 @@ require File.expand_path('../../helpers/acpc_poker_types_helper', __FILE__)
 require File.expand_path('../../helpers/matchstate_string_helper', __FILE__)
 require File.expand_path('../rank', __FILE__)
 require File.expand_path('../suit', __FILE__)
+require File.expand_path('../poker_action', __FILE__)
 
 # Local mixins
 require File.expand_path('../../mixins/easy_exceptions', __FILE__)
@@ -45,7 +46,7 @@ class MatchstateString
    def initialize(raw_match_state)
       raise IncompleteMatchstateString, raw_match_state if line_is_comment_or_empty? raw_match_state
    
-      all_actions = ACTION_TYPES.values.join
+      all_actions = PokerAction::LEGAL_ACPC_CHARACTERS.to_a.join
       all_ranks = CARD_RANKS.values.join
       all_suits = CARD_SUITS.values.join
       all_card_tokens = all_ranks + all_suits
@@ -89,7 +90,7 @@ class MatchstateString
    
    # @return [String] The type of the last action taken.
    def last_action_type
-      all_actions = ACTION_TYPES.values.join ''
+      all_actions = PokerAction::LEGAL_ACPC_CHARACTERS.join ''
       last_action[/[#{all_actions}]/]
    end
    
@@ -139,7 +140,7 @@ class MatchstateString
    private
    
    def list_of_actions(betting_sequence)
-      all_actions = ACTION_TYPES.values.join ''
+      all_actions = PokerAction::LEGAL_ACPC_CHARACTERS.to_a.join ''
       betting_sequence.scan(/[#{all_actions}]\d*/)
    end
    
