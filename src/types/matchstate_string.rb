@@ -110,7 +110,7 @@ class MatchstateString
    
    # @return [Integer] The number of actions in the current round.
    def number_of_actions_in_current_round
-      @betting_sequence[@round]
+      @betting_sequence[round].length
    end
    
    private
