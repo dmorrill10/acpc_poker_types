@@ -30,10 +30,10 @@ class MatchstateString
    # @return [Integer] The hand number.
    attr_reader :hand_number
    
-   # @return [String] The sequence of betting actions.
+   # @return [Array<Array<PokerAction>>] The sequence of betting actions.
    attr_reader :betting_sequence
    
-   # @return [Array] The list of visible hole card sets for each player.
+   # @return [Array<Hand>] The list of visible hole card sets for each player.
    attr_reader :list_of_hole_card_hands
    
    # @return [BoardCards] All visible community cards on the board.
@@ -56,7 +56,7 @@ class MatchstateString
               )
          @position_relative_to_dealer = $1.to_i
          @hand_number = $2.to_i
-         @betting_sequence = $3
+         @betting_sequence = parse_betting_sequence $3
          @list_of_hole_card_hands = parse_list_of_hole_card_hands $4
          @board_cards = parse_board_cards $5
       end
@@ -70,38 +70,21 @@ class MatchstateString
    end
 
    # @return [String] The MatchstateString in raw text form.
-   def to_str
-      string_of_hole_cards = hole_card_strings @list_of_hole_card_hands
-      
+   def to_str      
       build_match_state_string @position_relative_to_dealer, @hand_number,
-         @betting_sequence, string_of_hole_cards, @board_cards
+         betting_sequence_string(@betting_sequence),
+         hole_card_strings(@list_of_hole_card_hands), @board_cards
    end
    
    # @param [MatchstateString] another_matchstate_string A matchstate string to compare against this one.
-   # @return [Boolean] True if this matchstate string is equivalent to +another_matchstate_string+.
+   # @return [Boolean] +true+ if this matchstate string is equivalent to +another_matchstate_string+, +false+ otherwise.
    def ==(another_matchstate_string)
       another_matchstate_string.to_s == to_s
    end
    
-   # @return [String] The last action taken.
+   # @return [PokerAction, NilClass] The last action taken or +nil+ if no action was previously taken.
    def last_action
-      list_of_betting_actions[-1]
-   end
-   
-   # @return [String] The type of the last action taken.
-   def last_action_type
-      all_actions = PokerAction::LEGAL_ACPC_CHARACTERS.join ''
-      last_action[/[#{all_actions}]/]
-   end
-   
-   # @return [String] The raise amount of the last action taken or nil if none was provided.
-   def raise_amount
-      last_action[/\d+/]
-   end
-
-   # @return [Array] The list of betting actions.
-   def list_of_betting_actions
-      list_of_actions @betting_sequence
+      @betting_sequence.last.last
    end
 
    # @return [Hand] The user's hole cards.
@@ -122,24 +105,17 @@ class MatchstateString
    
    # @return [Integer] The zero indexed current round number.
    def round
-      @betting_sequence.scan(/\//).length
+      @betting_sequence.length - 1
    end
    
    # @return [Integer] The number of actions in the current round.
    def number_of_actions_in_current_round
-      betting_sequence_in_each_round = if (split_result = @betting_sequence.split(/\//)).empty?
-         then [@betting_sequence,] else split_result end
-      if @betting_sequence.match(/\/$/)
-         number_of_actions = 0
-      else
-         number_of_actions = list_of_actions(betting_sequence_in_each_round[round]).length
-      end
-      number_of_actions
+      @betting_sequence[@round]
    end
    
    private
    
-   def list_of_actions(betting_sequence)
+   def list_of_actions_from_acpc_characters(betting_sequence)
       all_actions = PokerAction::LEGAL_ACPC_CHARACTERS.to_a.join ''
       betting_sequence.scan(/[#{all_actions}]\d*/)
    end
@@ -154,8 +130,25 @@ class MatchstateString
          hand = Hand.draw_cards string_hand
          list_of_hole_card_hands << hand
       end
-      
       list_of_hole_card_hands
+   end
+   
+   def parse_betting_sequence(string_betting_sequence)
+      return [[]] if string_betting_sequence.empty?
+      
+      betting_sequence = []
+      list_of_actions_by_round = string_betting_sequence.split(/\//)
+      list_of_actions_by_round.each do |betting_sequence_in_a_particular_round|
+         betting_sequence_in_a_particular_round = list_of_actions_from_acpc_characters(betting_sequence_in_a_particular_round).inject([]) do
+            |list, action| list << PokerAction.new(action)
+         end
+         betting_sequence << betting_sequence_in_a_particular_round
+      end
+      # Adjust the number of rounds if the last action was the last action in the round
+      if string_betting_sequence.match(/\//)
+         betting_sequence << [] if string_betting_sequence.count('/') > (betting_sequence.length - 1)
+      end
+      betting_sequence
    end
    
    def parse_board_cards(string_board_cards)
@@ -195,5 +188,14 @@ class MatchstateString
       end
       
       (list_of_hands.inject('') { |string, hand|  string += hand.to_s + '|' }).chop
+   end
+   
+   def betting_sequence_string(betting_sequence)
+      string = ''
+      (round + 1).times do |i|
+         string += (betting_sequence[i].map { |action| action.to_acpc }).join('')
+         string += '/' unless i == round
+      end
+      string
    end
 end

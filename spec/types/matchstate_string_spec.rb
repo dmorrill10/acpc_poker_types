@@ -44,7 +44,7 @@ describe MatchstateString do
             match_state = partial_match_state + action + ":#{hole_cards}|"
             
             patient = test_match_state_success match_state
-            patient.last_action.should be == action
+            patient.last_action.to_acpc.should be == action
          end
       end
       it "parses every possible hole card hand" do
@@ -154,7 +154,7 @@ describe MatchstateString do
             patient = test_match_state_success match_state
             patient.round.should be == i
                
-            betting += "/"
+            betting += "c/"
          end
       end
    end
