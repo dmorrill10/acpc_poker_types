@@ -44,6 +44,9 @@ class Player
    # @example (see MatchstateString#users_hole_cards)
    attr_accessor :hole_cards
    
+   # @return [Array<PokerAction>] The list of actions this player has taken in the current round.
+   attr_accessor :actions_taken_in_current_round
+   
    # @param [String] name The name of this player.
    # @param [Integer] seat This player's seat.  This is a 1 indexed
    #     number that represents the order that the player joined the dealer.
@@ -62,6 +65,7 @@ class Player
        @chip_stack, @chip_balance, @hole_cards, @has_folded, @is_all_in) =
          [name, seat, position_relative_to_dealer, position_relative_to_user,
           chip_stack, chip_balance, hole_cards, has_folded, is_all_in]
+      @actions_taken_in_current_round = []
    end
    
    # @return [String] String representation of this player.
@@ -75,6 +79,7 @@ class Player
 		self.instance_variables.each { |var| hash_rep.store(var.to_s.delete("@"), self.instance_variable_get(var)) }
 		hash_rep["chip_stack"] = @chip_stack.value
 		hash_rep["hole_cards"] = @hole_cards.to_s
+		hash_rep['actions_taken_in_current_round'] = (@actions_taken_in_current_round.map { |action| action.to_acpc }).join('')
 		hash_rep
 	end
 	

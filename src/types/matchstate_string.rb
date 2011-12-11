@@ -84,7 +84,11 @@ class MatchstateString
    
    # @return [PokerAction, NilClass] The last action taken or +nil+ if no action was previously taken.
    def last_action
-      @betting_sequence.last.last
+      last_action_in_the_current_round = @betting_sequence.last.last
+      if !last_action_in_the_current_round && round > 0
+         return @betting_sequence[-2].last
+      end
+      last_action_in_the_current_round
    end
 
    # @return [Hand] The user's hole cards.
