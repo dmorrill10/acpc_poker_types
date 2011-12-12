@@ -12,7 +12,8 @@ module AcpcPokerTypesHelper
    def default_list_of_player_stacks(number_of_players)
       list_of_player_stacks = []
       number_of_players.times do
-         list_of_player_stacks << AcpcPokerTypesDefs::INT32_MAX
+         # @todo The dealer uses AcpcPokerTypesDefs::INT32_MAX but it would look nicer for no limit to use 500. Not sure exactly what should be done here.
+         list_of_player_stacks << 500
       end
       list_of_player_stacks
    end
