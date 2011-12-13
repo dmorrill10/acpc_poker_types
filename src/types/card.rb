@@ -23,7 +23,7 @@ class Card
    # @return [String] The path to this card's image.
    attr_reader :image_path
    
-   IMAGE_DIRECTORY_BASE = File.expand_path('../../../external/SVG_and_EPS_Vector_Playing_Cards_Version_1.3/SVG_Vector_Playing_Cards_Version_1.3/', __FILE__)
+   IMAGE_DIRECTORY_BASE = 'SVG_and_EPS_Vector_Playing_Cards_Version_1.3/SVG_Vector_Playing_Cards_Version_1.3/'
       
    def initialize(card_string_or_rank=nil, suit=nil)
       # This is a facedown card if no arguments were given
