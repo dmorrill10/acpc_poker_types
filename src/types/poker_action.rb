@@ -31,12 +31,16 @@ class PokerAction
    # @return [Set<String>] The set of legal ACPC action characters that may be accompanied by a modifier.
    MODIFIABLE_ACTIONS = LEGAL_ACTIONS.select { |sym, char| 'r' == char || 'b' == char }
    
+   HIGH_RESOLUTION_ACTION_CONVERSION = { 'c' => 'c', 'r' => 'b' }
+   
    # @param [Symbol, String] action A representation of this action.
    # @param [ChipStack, NilClass] modifier A modifier for the action (i.e. a bet or raise size).
    # @raise IllegalPokerAction
-   def initialize(action, modifier=nil)
-      validate_action action
+   def initialize(action, modifier=nil, acting_player_sees_wager=true)
+      validate_action action, acting_player_sees_wager
       validate_modifier modifier
+      
+      
    end
    
    def ==(other_action)
@@ -65,13 +69,18 @@ class PokerAction
    
    private
    
-   def validate_action(action)
+   def validate_action(action, acting_player_sees_wager=true)
       if LEGAL_SYMBOLS.include? action
          @symbol = action
       elsif LEGAL_STRINGS.include? action
          @symbol = action.to_sym
       elsif LEGAL_ACPC_CHARACTERS.include? action
-         @symbol = LEGAL_ACTIONS.key action
+         hi_resolution_action = if acting_player_sees_wager
+            action
+         else
+            HIGH_RESOLUTION_ACTION_CONVERSION[action]
+         end
+         @symbol = LEGAL_ACTIONS.key hi_resolution_action
       end
       raise(IllegalPokerAction, action.to_s) unless @symbol
    end
