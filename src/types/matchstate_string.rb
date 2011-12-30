@@ -43,7 +43,7 @@ class MatchstateString
    # @param [String] raw_match_state A raw match state string to be parsed.
    # @raise IncompleteMatchstateString.
    # @todo Use values from gamedef to structure objects like +number_of_board_cards_in_every_round+
-   def initialize(raw_match_state)
+   def initialize(raw_match_state, acting_player_sees_wager=true)
       raise IncompleteMatchstateString, raw_match_state if line_is_comment_or_empty? raw_match_state
    
       all_actions = PokerAction::LEGAL_ACPC_CHARACTERS.to_a.join
@@ -56,7 +56,7 @@ class MatchstateString
               )
          @position_relative_to_dealer = $1.to_i
          @hand_number = $2.to_i
-         @betting_sequence = parse_betting_sequence $3
+         @betting_sequence = parse_betting_sequence $3, acting_player_sees_wager
          @list_of_hole_card_hands = parse_list_of_hole_card_hands $4
          @board_cards = parse_board_cards $5
       end
@@ -146,14 +146,14 @@ class MatchstateString
       list_of_hole_card_hands
    end
    
-   def parse_betting_sequence(string_betting_sequence)
+   def parse_betting_sequence(string_betting_sequence, acting_player_sees_wager=true)
       return [[]] if string_betting_sequence.empty?
       
       betting_sequence = []
       list_of_actions_by_round = string_betting_sequence.split(/\//)
       list_of_actions_by_round.each do |betting_sequence_in_a_particular_round|
          betting_sequence_in_a_particular_round = list_of_actions_from_acpc_characters(betting_sequence_in_a_particular_round).inject([]) do
-            |list, action| list << PokerAction.new(action)
+            |list, action| list << PokerAction.new(action, acting_player_sees_wager)
          end
          betting_sequence << betting_sequence_in_a_particular_round
       end
