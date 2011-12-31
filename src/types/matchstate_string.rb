@@ -117,10 +117,10 @@ class MatchstateString
       @betting_sequence[round].length
    end
    
-   def betting_sequence_string
+   def betting_sequence_string(betting_sequence=@betting_sequence)
       string = ''
       (round + 1).times do |i|
-         string += (@betting_sequence[i].map { |action| action.to_acpc }).join('')
+         string += (betting_sequence[i].map { |action| action.to_acpc }).join('')
          string += '/' unless i == round
       end
       string
