@@ -153,7 +153,7 @@ class MatchstateString
       list_of_actions_by_round = string_betting_sequence.split(/\//)
       list_of_actions_by_round.each do |betting_sequence_in_a_particular_round|
          betting_sequence_in_a_particular_round = list_of_actions_from_acpc_characters(betting_sequence_in_a_particular_round).inject([]) do
-            |list, action| list << PokerAction.new(action, acting_player_sees_wager)
+            |list, action| list << PokerAction.new(action, nil, acting_player_sees_wager)
          end
          betting_sequence << betting_sequence_in_a_particular_round
       end
