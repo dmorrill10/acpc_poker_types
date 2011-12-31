@@ -80,6 +80,14 @@ describe PokerAction do
       end
    end
    
+   describe 'given knowledge that the actitng player sees a wager' do
+      it 'properly changes the given action to its more precise form' do
+         PokerAction::HIGH_RESOLUTION_ACTION_CONVERSION.each do |imprecise_action, precise_action|
+            PokerAction.new(imprecise_action, nil, false).to_acpc.should ==(precise_action)
+         end
+      end
+   end
+   
    def instantiate_each_action_from_symbols
       PokerAction::LEGAL_SYMBOLS.each do |sym|
          yield sym, PokerAction.new(sym)

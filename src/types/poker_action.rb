@@ -31,7 +31,7 @@ class PokerAction
    # @return [Set<String>] The set of legal ACPC action characters that may be accompanied by a modifier.
    MODIFIABLE_ACTIONS = LEGAL_ACTIONS.select { |sym, char| 'r' == char || 'b' == char }
    
-   HIGH_RESOLUTION_ACTION_CONVERSION = { 'c' => 'c', 'r' => 'b' }
+   HIGH_RESOLUTION_ACTION_CONVERSION = { 'c' => 'k', 'r' => 'b' }
    
    # @param [Symbol, String] action A representation of this action.
    # @param [ChipStack, NilClass] modifier A modifier for the action (i.e. a bet or raise size).
