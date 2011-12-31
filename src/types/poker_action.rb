@@ -39,8 +39,6 @@ class PokerAction
    def initialize(action, modifier=nil, acting_player_sees_wager=true)
       validate_action action, acting_player_sees_wager
       validate_modifier modifier
-      
-      
    end
    
    def ==(other_action)

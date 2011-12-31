@@ -153,10 +153,14 @@ class MatchstateString
       list_of_actions_by_round = string_betting_sequence.split(/\//)
       list_of_actions_by_round.each do |betting_sequence_in_a_particular_round|
          betting_sequence_in_a_particular_round = list_of_actions_from_acpc_characters(betting_sequence_in_a_particular_round).inject([]) do
-            |list, action| list << PokerAction.new(action, nil, acting_player_sees_wager)
+            |list, action| list << PokerAction.new(action)
          end
          betting_sequence << betting_sequence_in_a_particular_round
       end
+      # Increase the resolution of the last action
+      # @todo I'm creating one too many PokerActions, but I'm not going to worry about it for now.
+      betting_sequence[-1] = PokerAction.new(betting_sequence.last.to_acpc, nil, acting_player_sees_wager)
+      
       # Adjust the number of rounds if the last action was the last action in the round
       if string_betting_sequence.match(/\//)
          betting_sequence << [] if string_betting_sequence.count('/') > (betting_sequence.length - 1)
