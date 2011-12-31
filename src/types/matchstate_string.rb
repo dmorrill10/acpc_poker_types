@@ -159,7 +159,7 @@ class MatchstateString
       end
       # Increase the resolution of the last action
       # @todo I'm creating one too many PokerActions, but I'm not going to worry about it for now.
-      betting_sequence[-1] = PokerAction.new(betting_sequence.last.to_acpc, nil, acting_player_sees_wager)
+      betting_sequence[-1][-1] = PokerAction.new(betting_sequence.last.last.to_acpc, nil, acting_player_sees_wager)
       
       # Adjust the number of rounds if the last action was the last action in the round
       if string_betting_sequence.match(/\//)

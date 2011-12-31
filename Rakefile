@@ -32,7 +32,7 @@ end
 
 desc 'Integrate this gem into a given app'
 task :integrate, :rel_app_path do |t, args|
-   Rake::Task[:tag].invoke
+   #Rake::Task[:tag].invoke
    gem_name = "acpc_poker_types-#{AcpcPokerTypes::VERSION}.gem"
    integrate_into_app args[:rel_app_path], gem_name
 end
