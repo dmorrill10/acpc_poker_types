@@ -27,7 +27,12 @@ class ChipStack
       chip_stack.value
    end
    
-   # (see #add_to)
+   # @see Integer#to_s
+   def to_s(base=10)
+      @value.to_s base
+   end
+   
+   # @see #add_to
    def +(number_of_chips)
       add_to number_of_chips
    end

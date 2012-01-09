@@ -53,7 +53,7 @@ class GameDefinition
    # @return [Integer] The number of hole cards that each player is dealt.
    attr_reader :number_of_hole_cards
    
-   # @return [Array] The array containing the blind sizes.
+   # @return [Array] The list of blind sizes.
    attr_reader :list_of_blinds
 
    # @param [String] game_definition_file_name The name of the game definition file that this instance should parse.
