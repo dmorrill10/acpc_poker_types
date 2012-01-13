@@ -3,18 +3,16 @@
 require File.expand_path('../../mixins/easy_exceptions', __FILE__)
 
 # Programmatic representation of a stack of chips.
-class ChipStack   
-   exceptions :illegal_number_of_chips, :not_enough_chips_in_the_stack
+class ChipStack
+   include Comparable
    
-   # @return [Integer] The number of chips to be made into a stack (must be a whole number).
-   attr_reader :value
-   
-   # @param [Integer] number_of_chips The number of chips to be made into a stack.
-   # @raise (see #sanity_check_number_of_chips)
-   def initialize(number_of_chips)
-      sanity_check_number_of_chips number_of_chips
+   exceptions :illegal_number_of_chips
       
-      @value = number_of_chips
+   # @param [#to_i] number_of_chips The number of chips to be made into a stack.
+   # @raise (see #assert_valid_number_of_chips)
+   def initialize(number_of_chips=0)
+      assert_valid_number_of_chips number_of_chips.to_i
+      @value = number_of_chips.to_i
    end
    
    # @todo Mongoid method
@@ -24,7 +22,7 @@ class ChipStack
 
    # @todo Mongoid method
    def serialize(chip_stack)
-      chip_stack.value
+      chip_stack.to_i
    end
    
    # @see Integer#to_s
@@ -32,60 +30,52 @@ class ChipStack
       @value.to_s base
    end
    
-   # @see #add_to
+   # @return [Integer] The number of chips to be made into a stack (must be a whole number).
+   def to_i
+      @value
+   end
+   
+   # Combines this stack with a number of chips, +number_of_chips+.
+   # @param [#to_i] number_of_chips The number of chips to with which this stack will be combined.
+   # @return [ChipStack] The chip stack that results from adding +number_of_chips+ chips to this stack.
+   # @raise (ChipStack#initialize)
    def +(number_of_chips)
-      add_to number_of_chips
+      ChipStack.new @value + number_of_chips.to_i
    end
    
-   # Adds a +number_of_chips+ to the stack and returns the sum.
-   # @param [Integer] number_of_chips The number of chips to add (must be a whole number).
-   # @return [Integer] The sum of the number of chips in this stack and the +number_of_chips+ that were added.
-   # @raise (see #sanity_check_number_of_chips)
-   def add_to(number_of_chips)
-      sanity_check_number_of_chips number_of_chips
-      
-      @value + number_of_chips
-   end
-   
-   # Adds a +number_of_chips+ to the stack.
-   # @param (see #add_to).
-   # @raise (see #add_to)
-   def add_to!(number_of_chips)
-      @value = add_to number_of_chips
-   end
-   
+   # Takes a +number_of_chips+ from this stack.
+   # @param [#to_i] number_of_chips The number of chips to be taken.
+   # @return [ChipStack] The chip stack that results from removing +number_of_chips+ chips from this stack.
+   # @raise (ChipStack#initialize)
    def -(number_of_chips)
-      take_from number_of_chips
+      ChipStack.new @value - number_of_chips.to_i
    end
    
-   # Takes a +number_of_chips+ from the stack and returns the difference.
-   # @param [Integer] number_of_chips The number of chips to be taken
-   #  (must be a whole number and must be less than or equal to the number of chips currently in the stack).
-   # @raise (see #sanity_check_removal_of_a_number_of_chips)
-   def take_from(number_of_chips)
-      sanity_check_removal_of_a_number_of_chips number_of_chips
-      
-      @value - number_of_chips
+   # @param [#to_i] other The other operand.
+   # @return [Array<ChipStack>] List where the first element is a +ChipStack+ version of the +other+ operand and the second element is this instance.
+   # @raise (ChipStack#initialize)
+   def coerce(other)
+      [ChipStack.new(other.to_i), self]
    end
    
-   # Takes a +number_of_chips+ from the stack.
-   # @param (see #take_from)
-   # @raise (see #take_from)
-   def take_from!(number_of_chips)
-      @value = take_from number_of_chips
+   # Tests whether or not this stack is larger than another stack or a number.
+   # @param [#to_i] other The other operand.
+   # @return [Boolean] +true+ 
+   def <=>(other)
+      if @value < other.to_i
+         -1
+      elsif @value > other.to_i
+         1
+      else
+         0
+      end
    end
    
    private
    
-   # raise IllegalNumberOfChips
-   def sanity_check_number_of_chips(number_of_chips)
+   # @param [Integer] number_of_chips A number of chips.
+   # @raise IllegalNumberOfChips
+   def assert_valid_number_of_chips(number_of_chips)
       raise IllegalNumberOfChips if number_of_chips < 0 or number_of_chips.round != number_of_chips
-   end
-   
-   # raise (see #sanity_check_number_of_chips), NotEnoughChipsInTheStack
-   def sanity_check_removal_of_a_number_of_chips(number_of_chips)
-      sanity_check_number_of_chips number_of_chips
-      
-      raise NotEnoughChipsInTheStack if number_of_chips > @value
    end
 end

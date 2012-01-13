@@ -39,7 +39,7 @@ describe SidePot do
       it 'when it is first created' do
          (patient,) = setup_succeeding_test
          
-         patient.value.should be == @initial_amount_in_side_pot
+         patient.should be == @initial_amount_in_side_pot
       end
       it 'when a player makes a bet' do
          (patient, players_and_their_contributions) = setup_succeeding_test
@@ -47,14 +47,14 @@ describe SidePot do
          
          (patient,) = betting_test patient, players_and_their_contributions
          
-         patient.value.should be == 2 * @initial_amount_in_side_pot + @amount_to_bet
+         patient.should be == 2 * @initial_amount_in_side_pot + @amount_to_bet
       end
       it 'when a player calls the current bet' do
          (patient, players_and_their_contributions) = setup_succeeding_test
          
          (patient,) = calling_test patient, players_and_their_contributions
          
-         patient.value.should be == 2 * @initial_amount_in_side_pot
+         patient.should be == 2 * @initial_amount_in_side_pot
       end
       it 'when a player raises the current bet' do
          (patient, players_and_their_contributions) = setup_succeeding_test
@@ -63,7 +63,7 @@ describe SidePot do
          
          (patient,) = raising_test patient, players_and_their_contributions
          
-         patient.value.should be == @initial_amount_in_side_pot + @amount_to_bet + @amount_to_raise_to
+         patient.should be == @initial_amount_in_side_pot + @amount_to_bet + @amount_to_raise_to
       end
    end
    
@@ -74,7 +74,7 @@ describe SidePot do
          (patient,) = betting_test patient, players_and_their_contributions
          
          chips_to_distribute = 2 * @initial_amount_in_side_pot + @amount_to_bet
-         patient.value.should be == chips_to_distribute
+         patient.should be == chips_to_distribute
          
          @player1.stubs(:has_folded).returns(false)
          @player2.stubs(:has_folded).returns(true)
@@ -88,7 +88,7 @@ describe SidePot do
          (patient,) = betting_test patient, players_and_their_contributions
          
          chips_to_distribute = 2 * @initial_amount_in_side_pot + @amount_to_bet
-         patient.value.should be == chips_to_distribute
+         patient.should be == chips_to_distribute
          
          @player1.stubs(:has_folded).returns(false)
          @player2.stubs(:has_folded).returns(false)
@@ -106,7 +106,6 @@ describe SidePot do
          @player1.expects(:take_winnings!).once.with(chips_to_distribute/2)
          @player2.expects(:take_winnings!).once.with(chips_to_distribute/2)
          
-         
          test_chip_distribution patient, players_and_their_contributions, board_cards
       end
       it 'distributes the chips it contains properly to two players that have not folded and have unequal hand strength' do
@@ -115,7 +114,7 @@ describe SidePot do
          (patient,) = betting_test patient, players_and_their_contributions
          
          chips_to_distribute = 2 * @initial_amount_in_side_pot + @amount_to_bet
-         patient.value.should be == chips_to_distribute
+         patient.should be == chips_to_distribute
          
          @player1.stubs(:has_folded).returns(false)
          @player2.stubs(:has_folded).returns(false)
@@ -214,7 +213,7 @@ describe SidePot do
          
       patient.distribute_chips! board_cards
          
-      patient.value.should be == 0
+      patient.should be == 0
       patient.players_involved_and_their_amounts_contributed.should be == players_and_their_contributions
       
       [patient, players_and_their_contributions]

@@ -7,27 +7,31 @@ require File.expand_path('../../../src/types/player', __FILE__)
 
 describe Player do
    class FakeChipStack
-      attr_reader :value
+      include Comparable
+      
       def initialize(number)
-         @value = number
+         @value = number.to_i
+      end
+      def <=>(other)
+         if @value < other.to_i
+            -1
+         elsif @value > other.to_i
+            1
+         else
+            0
+         end
+      end
+      def coerce(other)
+         [FakeChipStack.new(other.to_i), self]
+      end
+      def to_i
+         @value
       end
       def +(number)
-         add_to number
+         @value + number.to_i
       end
       def -(number)
-         take_from number
-      end
-      def add_to(number)
-         @value + number
-      end
-      def add_to!(number)
-         @value = add_to number
-      end
-      def take_from(number)
-         @value - number
-      end
-      def take_from!(number)
-         @value = take_from number
+         @value - number.to_i
       end
    end
    
@@ -46,7 +50,7 @@ describe Player do
       @patient.seat.should be == @seat
       @patient.position_relative_to_dealer.should be == @position_relative_to_dealer
       @patient.position_relative_to_user.should be == @position_relative_to_user
-      @patient.chip_stack.value.should be == @chip_stack.value
+      @patient.chip_stack.should be == @chip_stack
    end
    it 'reports it is not active if it is all-in' do
       @patient.is_active?.should be == true
@@ -60,12 +64,12 @@ describe Player do
    end
    it 'properly changes its state when it contributes chips to a side-pot' do
       @patient.chip_balance.should be == 0
-      @patient.chip_stack.value.should be == @chip_stack.value
+      @patient.chip_stack.should be == @chip_stack
       
-      @patient.take_from_chip_stack! @chip_stack.value
+      @patient.take_from_chip_stack! @chip_stack
       
-      @patient.chip_stack.value.should be == 0
-      @patient.chip_balance.should be == -@chip_stack.value
+      @patient.chip_stack.should be == 0
+      @patient.chip_balance.should be == -@chip_stack.to_i
    end
    it 'properly changes its state when it wins chips' do
       @patient.chip_balance.should be == 0
@@ -73,7 +77,7 @@ describe Player do
       pot_size = 22
       @patient.take_winnings! pot_size
       
-      @patient.chip_stack.value.should be == @chip_stack + pot_size
+      @patient.chip_stack.should be == @chip_stack + pot_size
       @patient.chip_balance.should be == pot_size
    end
 end

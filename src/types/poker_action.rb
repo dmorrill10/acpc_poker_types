@@ -73,7 +73,6 @@ class PokerAction
    
    private
    
-   # @todo LOOKFIRST FIX THIS
    def validate_action(action, modifier, acting_player_sees_wager)
       action_type = nil
       in_place_modifier = nil
@@ -85,7 +84,6 @@ class PokerAction
       end
       action_type, in_place_modifier = $1, $2
       
-      # @todo add a test to ensure this
       raise(IllegalPokerActionModification, "in-place modifier: #{in_place_modifier}, explicit modifier: #{modifier}") if modifier && !in_place_modifier.empty?
       
       modifier_to_use = if modifier

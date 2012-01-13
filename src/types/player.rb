@@ -77,7 +77,7 @@ class Player
 	def to_hash
       hash_rep = {}
 		self.instance_variables.each { |var| hash_rep.store(var.to_s.delete("@"), self.instance_variable_get(var)) }
-		hash_rep["chip_stack"] = @chip_stack.value
+		hash_rep["chip_stack"] = @chip_stack.to_i
 		hash_rep["hole_cards"] = @hole_cards.to_s
 		hash_rep['actions_taken_in_current_round'] = (@actions_taken_in_current_round.map { |action| action.to_acpc }).join('')
 		hash_rep
@@ -101,15 +101,15 @@ class Player
    # @param [Integer] number_of_chips_from_the_pot The number of chips
    #  this player has won from the pot.
    def take_winnings!(number_of_chips_from_the_pot)
-      @chip_stack.add_to! number_of_chips_from_the_pot
+      @chip_stack += number_of_chips_from_the_pot
       @chip_balance += number_of_chips_from_the_pot
    end
    
    # Take chips away from this player's chip stack.
-   # @param (see ChipStack#take_from!)
-   # @raise (see ChipStack#take_from!)
+   # @param (see ChipStack#-)
+   # @raise (see ChipStack#-)
    def take_from_chip_stack!(number_of_chips)
-      @chip_stack.take_from! number_of_chips
+      @chip_stack -= number_of_chips
       @chip_balance -= number_of_chips
    end
 end
