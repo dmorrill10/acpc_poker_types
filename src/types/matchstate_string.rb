@@ -82,11 +82,12 @@ class MatchstateString
       another_matchstate_string.to_s == to_s
    end
    
+   # @param [Array<Array<PokerAction>>] betting_sequence The betting sequence from which the last action should be retrieved.
    # @return [PokerAction, NilClass] The last action taken or +nil+ if no action was previously taken.
-   def last_action
-      last_action_in_the_current_round = @betting_sequence.last.last
+   def last_action(betting_sequence=@betting_sequence)
+      last_action_in_the_current_round = betting_sequence.last.last
       if !last_action_in_the_current_round && round > 0
-         return @betting_sequence[-2].last
+         return betting_sequence[-2].last
       end
       last_action_in_the_current_round
    end
@@ -159,7 +160,7 @@ class MatchstateString
       end
       # Increase the resolution of the last action
       # @todo I'm creating one too many PokerActions, but I'm not going to worry about it for now.
-      betting_sequence[-1][-1] = PokerAction.new(last_action.to_acpc_character, last_action.modifier, acting_player_sees_wager)
+      betting_sequence[-1][-1] = PokerAction.new(last_action(betting_sequence).to_acpc_character, last_action(betting_sequence).modifier, acting_player_sees_wager)
       
       # Adjust the number of rounds if the last action was the last action in the round
       if string_betting_sequence.match(/\//)

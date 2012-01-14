@@ -42,7 +42,6 @@ describe MatchstateString do
          hole_cards = arbitrary_hole_card_hand
          PokerAction::LEGAL_ACPC_CHARACTERS.each do |action|
             match_state = partial_match_state + action + ":#{hole_cards}|"
-            
             patient = test_match_state_success match_state
             patient.last_action.to_acpc.should be == action
          end
