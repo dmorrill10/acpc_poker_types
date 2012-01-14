@@ -92,7 +92,7 @@ class Player
 	end
    
    # @return [Boolean] Whether or not this player is active (has not folded
-   #     or gone all-in).  +true+ if this player is active, +false+ otherwise.
+   #     or gone all-in). +true+ if this player is active, +false+ otherwise.
    def is_active?
       !(folded? || all_in?)
    end
