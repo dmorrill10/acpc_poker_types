@@ -56,7 +56,7 @@ class Player
    # @param [Integer] position_relative_to_user This player's position
    #     relative to the user, 0 indexed, modulo the number of players in
    #     the game.
-   # @param [ChipStack] chip_stack This player's chip stack.
+   # @param [#to_i] chip_stack This player's chip stack.
    # @param [Integer] chip_balance This player's chip balance.
    def initialize(name, seat, position_relative_to_dealer, position_relative_to_user,
                   chip_stack, chip_balance=0, hole_cards=nil, has_folded=false,
@@ -102,7 +102,7 @@ class Player
    #  this player has won from the pot.
    def take_winnings!(number_of_chips_from_the_pot)
       @chip_stack += number_of_chips_from_the_pot
-      @chip_balance += number_of_chips_from_the_pot
+      @chip_balance += number_of_chips_from_the_pot.to_i
    end
    
    # Take chips away from this player's chip stack.
@@ -110,6 +110,6 @@ class Player
    # @raise (see ChipStack#-)
    def take_from_chip_stack!(number_of_chips)
       @chip_stack -= number_of_chips
-      @chip_balance -= number_of_chips
+      @chip_balance -= number_of_chips.to_i
    end
 end
