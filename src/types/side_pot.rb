@@ -18,7 +18,7 @@ class SidePot < ChipStack
    attr_reader :players_involved_and_their_amounts_received
    
    # @param [Player] initiating_player The player that initiated this side-pot.
-   # @param [ChipStack] initial_amount The initial value of this side-pot.
+   # @param [#to_i] initial_amount The initial value of this side-pot.
    # @raise (see ChipStack#initialize)
    def initialize(initiating_player, initial_amount)
       initiating_player.take_from_chip_stack! initial_amount
@@ -33,7 +33,7 @@ class SidePot < ChipStack
       player.take_from_chip_stack! amount
       @players_involved_and_their_amounts_contributed[player] = amount
       
-      @value = @players_involved_and_their_amounts_contributed.values.inject(0){ |sum, current_amount| sum += current_amount }
+      @value = (@players_involved_and_their_amounts_contributed.values.inject(0){ |sum, current_amount| sum += current_amount }).to_i
    end
    
    # Have the +calling_player+ call the bet in this side-pot.
@@ -47,9 +47,8 @@ class SidePot < ChipStack
       amount_for_this_player_to_call = amount_to_call calling_player
       calling_player.take_from_chip_stack! amount_for_this_player_to_call
       @players_involved_and_their_amounts_contributed[calling_player] += amount_for_this_player_to_call
-      @value += amount_for_this_player_to_call
+      @value += amount_for_this_player_to_call.to_i
    end
-   
    
    def amount_to_call(player)
       @players_involved_and_their_amounts_contributed[player] = 0 unless @players_involved_and_their_amounts_contributed[player]
@@ -61,7 +60,7 @@ class SidePot < ChipStack
    
    # Have the +betting_player+ make a bet in this side-pot.
    # @param [Player] betting_player The player making a bet in this side-pot.
-   # @param [ChipStack] number_of_chips The number of chips to bet in this side-pot.
+   # @param [#to_i] number_of_chips The number of chips to bet in this side-pot.
    # @raise (see Player#take_from_chip_stack!)
    def take_bet!(betting_player, number_of_chips)
       raise IllegalOperationOnSidePot unless @players_involved_and_their_amounts_contributed[betting_player]
@@ -70,7 +69,7 @@ class SidePot < ChipStack
       
       @players_involved_and_their_amounts_contributed[betting_player] += number_of_chips
       
-      @value += number_of_chips
+      @value += number_of_chips.to_i
    end
    
    # Have the +raising_player+ make a bet in this side-pot.

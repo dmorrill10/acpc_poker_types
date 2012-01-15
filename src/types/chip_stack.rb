@@ -15,16 +15,6 @@ class ChipStack
       @value = number_of_chips.to_i
    end
    
-   # @todo Mongoid method
-   def deserialize(value)
-      ChipStack.new value
-   end
-
-   # @todo Mongoid method
-   def serialize(chip_stack)
-      chip_stack.to_i
-   end
-   
    # @see Integer#to_s
    def to_s(base=10)
       @value.to_s base
@@ -52,10 +42,14 @@ class ChipStack
    end
    
    # @param [#to_i] other The other operand.
-   # @return [Array<ChipStack>] List where the first element is a +ChipStack+ version of the +other+ operand and the second element is this instance.
-   # @raise (see ChipStack#initialize)
+   # @return [Array<ChipStack>, Array<Integer>] List where the first element is a +ChipStack+ version of the +other+ operand and the second element is this instance.
+   #  If there was a problem converting the +other+ operand to a +ChipStack+, the returned array will contain the +Integer+ versions of +other+ and +self+.
    def coerce(other)
-      [ChipStack.new(other.to_i), self]
+      begin
+         [ChipStack.new(other.to_i), self]
+      rescue
+         [other.to_i, to_i]
+      end
    end
    
    # Tests whether or not this stack is larger than another stack or a number.
