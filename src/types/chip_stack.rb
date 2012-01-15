@@ -38,7 +38,7 @@ class ChipStack
    # Combines this stack with a number of chips, +number_of_chips+.
    # @param [#to_i] number_of_chips The number of chips to with which this stack will be combined.
    # @return [ChipStack] The chip stack that results from adding +number_of_chips+ chips to this stack.
-   # @raise (ChipStack#initialize)
+   # @raise (see ChipStack#initialize)
    def +(number_of_chips)
       ChipStack.new @value + number_of_chips.to_i
    end
@@ -46,14 +46,14 @@ class ChipStack
    # Takes a +number_of_chips+ from this stack.
    # @param [#to_i] number_of_chips The number of chips to be taken.
    # @return [ChipStack] The chip stack that results from removing +number_of_chips+ chips from this stack.
-   # @raise (ChipStack#initialize)
+   # @raise (see ChipStack#initialize)
    def -(number_of_chips)
       ChipStack.new @value - number_of_chips.to_i
    end
    
    # @param [#to_i] other The other operand.
    # @return [Array<ChipStack>] List where the first element is a +ChipStack+ version of the +other+ operand and the second element is this instance.
-   # @raise (ChipStack#initialize)
+   # @raise (see ChipStack#initialize)
    def coerce(other)
       [ChipStack.new(other.to_i), self]
    end

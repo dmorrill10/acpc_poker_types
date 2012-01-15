@@ -74,8 +74,6 @@ class PokerAction
    private
    
    def validate_action(action, modifier, acting_player_sees_wager)
-      action_type = nil
-      in_place_modifier = nil
       if action.to_s.match(/^(#{(LEGAL_SYMBOLS.to_a.map{ |sym| sym.to_s }).join('|')})\s*(\d*)$/)
       elsif action.to_s.match(/^(#{LEGAL_STRINGS.to_a.join('|')})\s*(\d*)$/)
       elsif action.to_s.match(/^([#{LEGAL_ACPC_CHARACTERS.to_a.join('')}])\s*(\d*)$/)
