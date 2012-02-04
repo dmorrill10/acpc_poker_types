@@ -50,7 +50,7 @@ module ModelTestHelper
    def create_game_definition
       game_definition = mock('GameDefinition')
       game_definition.stubs(:number_of_players).returns(3)
-      game_definition.stubs(:raise_size_in_each_round).returns([10, 10, 20, 20])
+      game_definition.stubs(:minimum_wager_in_each_round).returns([10, 10, 20, 20])
       game_definition.stubs(:first_player_position_in_each_round).returns([2, 1, 1, 1])
       game_definition.stubs(:max_raise_in_each_round).returns([3, 4, 4, 4])
       game_definition.stubs(:list_of_player_stacks).returns([20000, 20000, 20000])

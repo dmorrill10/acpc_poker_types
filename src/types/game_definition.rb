@@ -29,8 +29,8 @@ class GameDefinition
    #     number_of_board_cards_in_each_round == [0, 3, 1, 1]
    attr_reader :number_of_board_cards_in_each_round
       
-   # @return [Array] The minimum raise size in each round.
-   attr_reader :raise_size_in_each_round
+   # @return [Array] The minimum wager in each round.
+   attr_reader :minimum_wager_in_each_round
       
    # @return [Array] The position relative to the dealer that is first to act
    #     in each round, indexed from 1.
@@ -67,6 +67,7 @@ class GameDefinition
       end
       
       @list_of_player_stacks = default_list_of_player_stacks(@number_of_players) if @list_of_player_stacks.empty?
+      @minimum_wager_in_each_round = default_minimum_wager_in_each_round(@number_of_rounds) if @minimum_wager_in_each_round.empty?
 
       sanity_check_game_definitions
    end
@@ -83,7 +84,7 @@ class GameDefinition
       list_of_lines << "stack = #{@list_of_player_stacks.join(' ')}" unless @list_of_player_stacks.empty?
       list_of_lines << "numPlayers = #{@number_of_players}" if @number_of_players
       list_of_lines << "blind = #{@list_of_blinds.join(' ')}" unless @list_of_blinds.empty?
-      list_of_lines << "raiseSize = #{@raise_size_in_each_round.join(' ')}" unless @raise_size_in_each_round.empty?
+      list_of_lines << "raiseSize = #{@minimum_wager_in_each_round.join(' ')}" unless @minimum_wager_in_each_round.empty?
       list_of_lines << "numRounds = #{@number_of_rounds}" if @number_of_rounds
       list_of_lines << "firstPlayer = #{@first_player_position_in_each_round.join(' ')}" unless @first_player_position_in_each_round.empty?
       list_of_lines << "maxRaises = #{@max_raise_in_each_round.join(' ')}" unless @max_raise_in_each_round.empty?
@@ -114,7 +115,7 @@ class GameDefinition
       @betting_type = BETTING_TYPES[:limit]
       @list_of_blinds = []
       @number_of_board_cards_in_each_round = []
-      @raise_size_in_each_round = []
+      @minimum_wager_in_each_round = []
       @first_player_position_in_each_round = DEFAULT_FIRST_PLAYER_POSITION_IN_EVERY_ROUND
       @max_raise_in_each_round = DEFAULT_MAX_RAISE_IN_EACH_ROUND
       @list_of_player_stacks = []
@@ -131,7 +132,7 @@ class GameDefinition
          @list_of_player_stacks = check_game_def_line_for_definition line, 'stack', @list_of_player_stacks
          @number_of_players = check_game_def_line_for_definition line, 'numplayers', @number_of_players         
          @list_of_blinds = check_game_def_line_for_definition line, 'blind', @list_of_blinds
-         @raise_size_in_each_round = check_game_def_line_for_definition line, 'raisesize', @raise_size_in_each_round
+         @minimum_wager_in_each_round = check_game_def_line_for_definition line, 'raisesize', @minimum_wager_in_each_round
          @number_of_rounds = check_game_def_line_for_definition line, 'numrounds', @number_of_rounds
          @first_player_position_in_each_round = check_game_def_line_for_definition line, 'firstplayer', @first_player_position_in_each_round
          @max_raise_in_each_round = check_game_def_line_for_definition line, 'maxraises', @max_raise_in_each_round
@@ -149,7 +150,7 @@ class GameDefinition
          # Make sure that everything is defined that needs to be defined
          error_message = "list of player stacks not specified" unless @list_of_player_stacks
          error_message = "list of blinds not specified" unless @list_of_blinds
-         error_message = "raise size in each round not specified" unless @raise_size_in_each_round
+         error_message = "raise size in each round not specified" unless @minimum_wager_in_each_round
          error_message = "first player position in each round not specified" unless @first_player_position_in_each_round
          error_message = "maximum raise in each round not specified" unless @max_raise_in_each_round
          error_message = "number of board cards in each round not specified" unless @number_of_board_cards_in_each_round      
@@ -159,7 +160,7 @@ class GameDefinition
          error_message = "Invalid number of players: #{@number_of_players}" if invalid_number_of_players?
          error_message = "Only read #{@list_of_player_stacks.length} stack sizes, need #{@number_of_players}" if not_enough_player_stacks?
          error_message = "only read #{@list_of_blinds.length} blinds, need #{@number_of_players}" if not_enough_blinds?
-         error_message = "Only read #{@raise_size_in_each_round} raise sizes, need #{@number_of_rounds}" if not_enough_raise_sizes?
+         error_message = "Only read #{@minimum_wager_in_each_round} raise sizes, need #{@number_of_rounds}" if not_enough_raise_sizes?
 
          (0..@number_of_players-1).each do |i|
             if @list_of_blinds[i] > @list_of_player_stacks[i]
@@ -223,7 +224,7 @@ class GameDefinition
    end
 
    def not_enough_raise_sizes?
-      @betting_type == 'limit' && @raise_size_in_each_round.length < @number_of_rounds
+      @betting_type == 'limit' && @minimum_wager_in_each_round.length < @number_of_rounds
    end
    
    def not_enough_player_stacks?

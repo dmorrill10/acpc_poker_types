@@ -18,6 +18,10 @@ module AcpcPokerTypesHelper
       list_of_player_stacks
    end
    
+   def default_minimum_wager_in_each_round(number_of_rounds)
+      number_of_rounds.times.inject([]) { |list, i| list << big_blind }
+   end
+   
    # @yield [Card, Card] Iterate through every permutation of cards in the deck.
    # @yieldparam (see #for_every_rank_and_suit_in_the_deck)
    def for_every_list_of_two_cards_in_the_deck
