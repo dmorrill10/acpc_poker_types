@@ -26,7 +26,7 @@ describe Card do
          for_every_rank_and_suit_in_the_deck { |rank, suit| Card.new(rank, suit) }
       end
       it 'correctly understands all suits and ranks currently recognized in string form' do
-         for_every_rank_and_suit_in_the_deck { |rank, suit| Card.new(CARD_RANKS[rank] + CARD_SUITS[suit]) }
+         for_every_rank_and_suit_in_the_deck { |rank, suit| Card.new(CARD_RANKS[rank] + CARD_SUITS[suit][:acpc_character]) }
       end
    end
    describe '#to_i' do
@@ -35,7 +35,7 @@ describe Card do
             patient = Card.new rank, suit
             
             string_rank = CARD_RANKS[rank]
-            string_suit = CARD_SUITS[suit]
+            string_suit = CARD_SUITS[suit][:acpc_character]
                
             integer_rank = CARD_RANK_NUMBERS[string_rank]
             integer_suit = CARD_SUIT_NUMBERS[string_suit]
@@ -51,7 +51,7 @@ describe Card do
             patient = Card.new rank, suit
             
             string_rank = CARD_RANKS[rank]
-            string_suit = CARD_SUITS[suit]
+            string_suit = CARD_SUITS[suit][:acpc_character]
             string_card = string_rank + string_suit
                
             patient.to_s.should eq(string_card)

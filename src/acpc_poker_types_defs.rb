@@ -26,14 +26,24 @@ module AcpcPokerTypesDefs
       '7' => 5, '8' => 6, '9' => 7, 'T' => 8, 'J' => 9, 'Q' => 10, 'K' => 11,
       'A' => 12}
 
-   # @return [Hash] Card suits understood by this application.
-   CARD_SUITS = {:spades => 's', :hearts => 'h', :diamonds => 'd', :clubs => 'c'}
+   # @return [Hash<Symbol, Hash>] Card suits understood by this application.
+   CARD_SUITS = {spades: {acpc_character: 's', html_character: '&spades;'},
+      hearts: {acpc_character: 'h', html_character: '&hearts;'},
+      diamonds: {acpc_character: 'd', html_character: '&diams;'},
+      clubs: {acpc_character: 'c', html_character: '&clubs;'}}
+   
+   ACPC_SUIT_CHARACTERS_TO_CARD_SUIT_SYMBOLS = CARD_SUITS.inject({}) do |new_relation, suit_relation_array|
+      acpc_character = suit_relation_array[1][:acpc_character]
+      symbol = suit_relation_array[0]
+      new_relation[acpc_character] = symbol
+      new_relation
+   end
    
    # @return [Hash] Numeric representation of each card suit.
    CARD_SUIT_NUMBERS = {'c' => 0, 'd' => 1, 'h' => 2, 's' => 3}
    
    # @return [Array] A list of all the cards understood by this application.
-   LIST_OF_CARDS = CARD_RANKS.values.map {|rank| CARD_SUITS.values.map {|suit| rank + suit}}.flatten
+   LIST_OF_CARDS = (CARD_RANKS.values.map {|rank| CARD_SUITS.values.map {|suit| rank + suit[:acpc_character]}}).flatten
 
    # @return [Array] A list of all the hole cards understood by this application.
    LIST_OF_HOLE_CARD_HANDS =

@@ -48,7 +48,7 @@ class MatchstateString
    
       all_actions = PokerAction::LEGAL_ACPC_CHARACTERS.to_a.join
       all_ranks = CARD_RANKS.values.join
-      all_suits = CARD_SUITS.values.join
+      all_suits = (CARD_SUITS.values.map { |suit| suit[:acpc_character] }).join
       all_card_tokens = all_ranks + all_suits
    
       if raw_match_state.match(
@@ -189,7 +189,7 @@ class MatchstateString
    
    def for_every_card(string_of_cards)
       all_ranks = CARD_RANKS.values.join
-      all_suits = CARD_SUITS.values.join
+      all_suits = (CARD_SUITS.values.map { |suit| suit[:acpc_character] }).join
       
       string_of_cards.scan(/[#{all_ranks}][#{all_suits}]/).each do |string_card|        
          card = Card.new string_card

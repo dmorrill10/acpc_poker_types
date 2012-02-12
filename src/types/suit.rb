@@ -21,14 +21,19 @@ class Suit
       @symbol = symbol
    end
    
-   # @return [Integer] Integer ACPC representation of this rank.
+   # @return [Integer] Integer ACPC representation of this suit.
    def to_i
       CARD_SUIT_NUMBERS[to_s]
    end
    
-   # @return [String] String representation of this rank.
+   # @return [String] String representation of this suit.
    def to_s
-      CARD_SUITS[@symbol]
+      CARD_SUITS[@symbol][:acpc_character]
+   end
+   
+   # @return [String] Raw HTML character representation of this suit.
+   def to_html
+      CARD_SUITS[@symbol][:html_character]
    end
    
    private

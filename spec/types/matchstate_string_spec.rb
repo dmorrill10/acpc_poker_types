@@ -189,7 +189,7 @@ describe MatchstateString do
          (betting_string, list_of_betting_actions) =
          generate_betting_sequence betting_string, list_of_betting_actions, action_string + raise_amount.to_s
          
-         list_of_board_cards << if round > 1 then (round+1).to_s + CARD_SUITS[:spades] else arbitrary_flop end
+         list_of_board_cards << if round > 1 then (round+1).to_s + CARD_SUITS[:spades][:acpc_character] else arbitrary_flop end
          board_cards_string += "/" + list_of_board_cards[round]
       end
    end
@@ -234,8 +234,8 @@ describe MatchstateString do
    def arbitrary_flop
       flop = ""
       rank = 2
-      CARD_SUITS.values.each do |suit|
-         flop += rank.to_s + suit unless CARD_SUITS[:clubs] == suit
+      (CARD_SUITS.values.map { |suit| suit[:acpc_character] }).each do |suit|
+         flop += rank.to_s + suit unless CARD_SUITS[:clubs][:acpc_character] == suit
          rank += 3
       end
       flop
@@ -244,7 +244,7 @@ describe MatchstateString do
    def arbitrary_roll_out
       board_cards = ""
       (1..MAX_VALUES[:rounds]-1).each do |round|
-         board_cards += "/" + if round > 1 then (round+1).to_s + CARD_SUITS[:spades] else arbitrary_flop end
+         board_cards += "/" + if round > 1 then (round+1).to_s + CARD_SUITS[:spades][:acpc_character] else arbitrary_flop end
       end
       board_cards
    end

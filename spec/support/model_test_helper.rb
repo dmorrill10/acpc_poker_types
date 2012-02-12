@@ -113,8 +113,12 @@ module ModelTestHelper
    # @return [Mock Hand] An arbitrary hole card hand.
    def arbitrary_hole_card_hand
       hand = mock('Hand')
-      hand.stubs(:to_str).returns(AcpcPokerTypesDefs::CARD_RANKS[:two] + AcpcPokerTypesDefs::CARD_SUITS[:spades] + AcpcPokerTypesDefs::CARD_RANKS[:three] + AcpcPokerTypesDefs::CARD_SUITS[:hearts])
-      hand.stubs(:to_s).returns(AcpcPokerTypesDefs::CARD_RANKS[:two] + AcpcPokerTypesDefs::CARD_SUITS[:spades] + AcpcPokerTypesDefs::CARD_RANKS[:three] + AcpcPokerTypesDefs::CARD_SUITS[:hearts])
+      hand_as_string = AcpcPokerTypesDefs::CARD_RANKS[:two] +
+         AcpcPokerTypesDefs::CARD_SUITS[:spades][:acpc_character] +
+         AcpcPokerTypesDefs::CARD_RANKS[:three] +
+         AcpcPokerTypesDefs::CARD_SUITS[:hearts][:acpc_character]
+      hand.stubs(:to_str).returns(hand_as_string)
+      hand.stubs(:to_s).returns(hand_as_string)
       
       hand
    end
