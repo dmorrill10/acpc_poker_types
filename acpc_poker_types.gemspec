@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.email       = ["morrill@ualberta.ca"]
   s.homepage    = ""
   s.summary     = %q{ACPC Poker Types }
-  s.description = %q{Poker types that conform to the standards of the Annual Computer Poker Competition.}
+  s.description = %q{Poker classes and constants that conform to the standards of the Annual Computer Poker Competition.}
 
   s.add_development_dependency 'rspec'
   s.add_development_dependency 'mocha'
@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   
   s.rubyforge_project = "acpc_poker_types"
 
-  s.files         = Dir.glob("lib/**/*") + Dir.glob("src/**/*") + Dir.glob("ext/**/*") + Dir.glob("external/**/*") + %w(Rakefile acpc_poker_types.gemspec tasks.rb)
+  s.files         = Dir.glob("lib/**/*") + Dir.glob("src/**/*") + Dir.glob("ext/**/*") + Dir.glob("external/**/*") + %w(Rakefile acpc_poker_types.gemspec tasks.rb README.md)
   s.test_files    = Dir.glob "spec/**/*"
   s.extensions    = FileList["ext/**/extconf.rb"]
   s.require_paths = ["lib"]
