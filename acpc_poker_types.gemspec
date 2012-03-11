@@ -12,6 +12,8 @@ Gem::Specification.new do |s|
   s.summary     = %q{ACPC Poker Types }
   s.description = %q{Poker classes and constants that conform to the standards of the Annual Computer Poker Competition.}
 
+  s.add_dependency 'rake-compiler'
+
   s.add_development_dependency 'rspec'
   s.add_development_dependency 'mocha'
   s.add_development_dependency 'simplecov'
