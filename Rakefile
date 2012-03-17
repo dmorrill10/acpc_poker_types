@@ -21,6 +21,7 @@ task :default => :compile do
 end
 
 task :build => :compile do
+   Rake::Task[:spec].invoke
    system "gem build acpc_poker_types.gemspec"
 end
 
