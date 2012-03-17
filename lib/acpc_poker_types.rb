@@ -1,5 +1,6 @@
 require "acpc_poker_types/version"
 
+require File.expand_path("../../src/acpc_poker_types_defs", __FILE__)
 require File.expand_path("../../src/types/board_cards", __FILE__)
 require File.expand_path("../../src/types/card", __FILE__)
 require File.expand_path("../../src/types/chip_stack", __FILE__)
