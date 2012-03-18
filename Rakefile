@@ -29,5 +29,5 @@ task :tag => :build do
    tag_gem_version AcpcPokerTypes::VERSION
 end
 
-task :install => :build do
+task :install => :compile do
 end
