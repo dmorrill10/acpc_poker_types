@@ -71,11 +71,10 @@ class SidePot < ChipStack
    # @param [Player] betting_player The player making a bet in this side-pot.
    # @param [#to_i] number_of_chips The number of chips to bet in this side-pot.
    # @raise (see Player#take_from_chip_stack!)
-   def take_bet!(betting_player, number_of_chips)
-      raise IllegalOperationOnSidePot unless current_amount_contributed(betting_player)
-      
+   def take_bet!(betting_player, number_of_chips)      
       betting_player.take_from_chip_stack! number_of_chips
       
+      set_current_amount_contributed(betting_player, 0) unless current_amount_contributed(betting_player)
       set_current_amount_contributed(betting_player, current_amount_contributed(betting_player) + number_of_chips)
       
       @value += number_of_chips.to_i
