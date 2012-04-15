@@ -145,7 +145,7 @@ describe SidePot do
       
          patient = SidePot.new @player1, initial_amount_in_side_pot
       
-         players_and_their_contributions = {@player1 => initial_amount_in_side_pot}
+         players_and_their_contributions = {@player1 => [initial_amount_in_side_pot]}
       
          patient.players_involved_and_their_amounts_contributed.should eq(players_and_their_contributions)
          
@@ -163,7 +163,7 @@ describe SidePot do
       
       patient = SidePot.new @player1, @initial_amount_in_side_pot
       
-      players_and_their_contributions = {@player1 => @initial_amount_in_side_pot}
+      players_and_their_contributions = {@player1 => [@initial_amount_in_side_pot]}
       
       patient.players_involved_and_their_amounts_contributed.should be == players_and_their_contributions
       
@@ -172,7 +172,7 @@ describe SidePot do
    
    def calling_test(patient, players_and_their_contributions)
       @player2.expects(:take_from_chip_stack!).once.with(@initial_amount_in_side_pot)
-      players_and_their_contributions[@player2] = @initial_amount_in_side_pot
+      players_and_their_contributions[@player2] = [@initial_amount_in_side_pot]
       
       patient.take_call! @player2
          
@@ -184,7 +184,7 @@ describe SidePot do
    def betting_test(patient, players_and_their_contributions)
       @amount_to_bet = 34
       @player1.expects(:take_from_chip_stack!).once.with(@amount_to_bet)
-      players_and_their_contributions[@player1] += @amount_to_bet
+      players_and_their_contributions[@player1][0] += @amount_to_bet
       
       patient.take_bet! @player1, @amount_to_bet
       
@@ -199,7 +199,7 @@ describe SidePot do
       @player2.expects(:take_from_chip_stack!).once.with(@amount_to_bet)
       @player2.expects(:take_from_chip_stack!).once.with(@amount_to_raise_to - (@amount_to_bet + @initial_amount_in_side_pot))
       
-      players_and_their_contributions[@player2] = @total_amount
+      players_and_their_contributions[@player2] = [@total_amount]
       
       patient.take_raise! @player2, @amount_to_raise_to
       
