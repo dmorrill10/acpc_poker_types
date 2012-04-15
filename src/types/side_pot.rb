@@ -36,6 +36,10 @@ class SidePot < ChipStack
    # @todo
    def contribute!(player, amount)
       player.take_from_chip_stack! amount
+      unless @players_involved_and_their_amounts_contributed[player]
+         @players_involved_and_their_amounts_contributed[player] = (1..@round).inject([]) { |array, i| array.push(0) }
+      end
+      
       set_current_amount_contributed player, amount
       
       # The value of the pot is equal to the sum of the amounts contributed by each player over each round
