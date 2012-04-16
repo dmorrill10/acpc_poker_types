@@ -30,7 +30,7 @@ class SidePot < ChipStack
       @players_involved_and_their_amounts_contributed = {initiating_player => [initial_amount]}
       @players_involved_and_their_amounts_received = {}
       
-      super initial_amount
+      super initial_amount.to_i
    end
 
    # @todo
@@ -149,7 +149,7 @@ class SidePot < ChipStack
       end
 
       # Remove chips from this side-pot
-      @value -= amount_each_player_wins * winning_players.length
+      @value -= (amount_each_player_wins * winning_players.length).to_i
    end
    
    def set_current_amount_contributed(player, amount)
