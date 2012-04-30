@@ -3,8 +3,8 @@
 require File.expand_path('../../support/spec_helper', __FILE__)
 
 # Local classes
-require File.expand_path('../../../src/types/card', __FILE__)
-require File.expand_path('../../../src/types/board_cards', __FILE__)
+require "#{LIB_ACPC_POKER_TYPES_PATH}/types/card"
+require "#{LIB_ACPC_POKER_TYPES_PATH}/types/board_cards"
 
 describe BoardCards do
    describe '#to_s' do
@@ -25,8 +25,8 @@ describe BoardCards do
          card5.stubs(:to_s).returns('5d')
          card5.stubs(:to_str).returns('5d')
          
-         patient = BoardCards.new [3, 1, 1]
-         patient << card1 << card2 << card3 << card4 << card5
+         patient = BoardCards.new
+         patient.push(card1).push(card2).push(card3).next_round!.push(card4).next_round!.push(card5)
          
          patient.to_s.should be == "/#{card1}#{card2}#{card3}/#{card4}/#{card5}"
       end

@@ -1,6 +1,6 @@
 
 # Local modules
-require File.expand_path('../../../lib/hand_evaluator', __FILE__)
+require File.expand_path('../../../hand_evaluator', __FILE__)
 
 
 # A set of cards.

@@ -3,7 +3,7 @@ require 'rake'
 require 'rake/extensiontask'
 require 'rspec/core/rake_task'
 
-require File.expand_path('../lib/acpc_poker_types/version', __FILE__)
+require File.expand_path('../lib/version', __FILE__)
 require File.expand_path('../tasks', __FILE__)
 
 include Tasks

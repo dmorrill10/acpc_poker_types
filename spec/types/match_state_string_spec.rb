@@ -3,38 +3,46 @@
 require File.expand_path('../../support/spec_helper', __FILE__)
 
 # Local modules
-require File.expand_path('../../../src/acpc_poker_types_defs', __FILE__)
+require "#{LIB_ACPC_POKER_TYPES_PATH}/acpc_poker_types_defs"
 require File.expand_path('../../support/model_test_helper', __FILE__)
 
 # Local classes
-require File.expand_path('../../../src/types/board_cards', __FILE__)
-require File.expand_path('../../../src/types/matchstate_string', __FILE__)
-require File.expand_path('../../../src/types/poker_action', __FILE__)
+require "#{LIB_ACPC_POKER_TYPES_PATH}/types/board_cards"
+require "#{LIB_ACPC_POKER_TYPES_PATH}/types/match_state_string"
+require "#{LIB_ACPC_POKER_TYPES_PATH}/types/poker_action"
 
-describe MatchstateString do
+describe MatchStateString do
    include AcpcPokerTypesDefs
    include ModelTestHelper
    
-   describe '#initialize' do
-      describe 'raises an exception if the raw matchstate string' do   
-         it 'is empty' do
-            test_match_state_error ""
-         end
+   describe '#parse' do
+      describe 'raises an exception if ' do
+         describe 'the raw matchstate string' do
+            it 'is empty' do
+               test_match_state_error ""
+            end
+         
+            it 'is not in the proper format' do
+               test_match_state_error "hello world"
+            end
+         
+            it 'does not contain a position' do
+               test_match_state_error MATCH_STATE_LABEL + "::0::AhKd"
+            end
+         
+            it 'does not contain a hand number' do
+               test_match_state_error MATCH_STATE_LABEL + ":0:::AsKc"
+            end
       
-         it 'is not in the proper format' do
-            test_match_state_error "hello world"
+            it 'does not contain cards' do
+               test_match_state_error MATCH_STATE_LABEL + ":0:0::"
+            end
          end
-      
-         it 'does not contain a position' do
-            test_match_state_error MATCH_STATE_LABEL + "::0::AhKd"
-         end
-      
-         it 'does not contain a hand number' do
-            test_match_state_error MATCH_STATE_LABEL + ":0:::AsKc"
-         end
-   
-         it 'does not contain cards' do
-            test_match_state_error MATCH_STATE_LABEL + ":0:0::"
+         describe 'the list of first player positions' do
+            it 'is empty' do
+               match_state = MATCH_STATE_LABEL + ":2:2::" + arbitrary_hole_card_hand
+               expect{MatchStateString.parse(match_state, [])}.to raise_exception(MatchStateString::NoFirstPlayerPositionsGiven)
+            end
          end
       end
       it "parses every possible limit action" do
@@ -76,30 +84,30 @@ describe MatchstateString do
       end
       it 'parses board cards properly for the flop' do
          partial_match_state = MATCH_STATE_LABEL + ":2:2::" + arbitrary_hole_card_hand
-         board_cards = BoardCards.new ['Ah', 'Kd', 'Qc']
+         board_cards = '/AhKdQc'
          flop_match_state = partial_match_state + board_cards
          
-         patient = MatchstateString.new flop_match_state
+         patient = MatchStateString.parse flop_match_state, [0, 0]
          
-         patient.board_cards.should be == board_cards
+         patient.board_cards.to_s.should be == board_cards
       end
       it 'parses board cards properly for the turn' do
          partial_match_state = MATCH_STATE_LABEL + ":2:2::" + arbitrary_hole_card_hand
-         board_cards = BoardCards.new ['Ah', 'Kd', 'Qc', 'Jd']
+         board_cards = '/AhKdQc/Jd'
          turn_match_state = partial_match_state + board_cards
          
-         patient = MatchstateString.new turn_match_state
+         patient = MatchStateString.parse turn_match_state, [0, 0, 0]
          
-         patient.board_cards.should be == board_cards
+         patient.board_cards.to_s.should be == board_cards
       end
       it 'parses board cards properly for the river' do
          partial_match_state = MATCH_STATE_LABEL + ":2:2::" + arbitrary_hole_card_hand
-         board_cards = BoardCards.new ['Ah', 'Kd', 'Qc', 'Jd', 'Th']
+         board_cards = '/AhKdQc/Jd/Th'
          river_match_state = partial_match_state + board_cards
          
-         patient = MatchstateString.new river_match_state
+         patient = MatchStateString.parse river_match_state, [0, 0, 0]
          
-         patient.board_cards.should be == board_cards
+         patient.board_cards.to_s.should be == board_cards
       end
       it "parses valid limit match states in all rounds" do
          pending 'need to look at this test'
@@ -107,13 +115,11 @@ describe MatchstateString do
          test_all_rounds_with_given_action_string PokerAction::LEGAL_ACPC_CHARACTERS.to_a.join ''
       end
       it "parses valid no-limit match states in all rounds" do
-         pending 'no-limit support'
-         
-         test_all_rounds_with_given_action_string ACTION_TYPES[:raise], 1
-      end
-      it "parses a valid two player final match state" do
          pending 'need to look at this test'
          
+         test_all_rounds_with_given_action_string PokerAction::LEGAL_ACTIONS[:raise], 1
+      end
+      it "parses a valid two player final match state" do
          partial_match_state = MATCH_STATE_LABEL + ":20:22:"
          all_actions = PokerAction::LEGAL_ACPC_CHARACTERS.to_a.join ''
          betting = all_actions
@@ -121,14 +127,12 @@ describe MatchstateString do
             betting += "/#{all_actions}"
          end
          board_cards = arbitrary_roll_out
-         hands = arbitrary_hole_card_hand + "|" + arbitrary_hole_card_hand
+         hands = arbitrary_hole_card_hand.to_s + "|" + arbitrary_hole_card_hand.to_s
          match_state = partial_match_state + betting + ":" + hands + board_cards
          
          test_match_state_success match_state
       end
       it "parses a valid three player final match state" do
-         pending 'move game definition params into match state string'
-         
          partial_match_state = MATCH_STATE_LABEL + ":20:22:"
          all_actions = PokerAction::LEGAL_ACPC_CHARACTERS.to_a.join ''
          betting = all_actions
@@ -136,13 +140,14 @@ describe MatchstateString do
             betting += "/#{all_actions}"
          end
          board_cards = arbitrary_roll_out
-         hands = arbitrary_hole_card_hand + "|" + arbitrary_hole_card_hand + "|" + arbitrary_hole_card_hand
+         hands = arbitrary_hole_card_hand.to_s + "|" +
+            arbitrary_hole_card_hand.to_s + "|" + arbitrary_hole_card_hand.to_s
          match_state = partial_match_state + betting + ":" + hands + board_cards
          
          test_match_state_success match_state
       end
    end
-   
+
    describe '#round' do
       it "properly reports the current round number" do
          partial_match_state = MATCH_STATE_LABEL + ":0:0:"
@@ -155,6 +160,25 @@ describe MatchstateString do
                
             betting += "c/"
          end
+      end
+   end
+   
+   it 'reports the correct number of players' do
+      expected_number_of_players = 0
+      10.times do |i|
+         expected_number_of_players += 1
+         hands = []
+         expected_number_of_players.times do |j|
+            if i.odd? and j.odd?
+               hands.push ''
+               next
+            end
+            hands.push arbitrary_hole_card_hand
+         end
+         match_state = MATCH_STATE_LABEL + ':1:1::' + hands.join('|')
+         
+         patient = test_match_state_success match_state
+         patient.number_of_players.should be == expected_number_of_players
       end
    end
    
@@ -180,14 +204,15 @@ describe MatchstateString do
          round_index = round - 1
 
          test_full_information(match_state, list_of_betting_actions,
-         last_action(list_of_betting_actions), users_hole_cards, list_of_opponents_hole_cards,
-         list_of_board_cards, round_index, number_of_actions_in_current_round)
+            last_action(list_of_betting_actions), users_hole_cards,
+            list_of_opponents_hole_cards, list_of_board_cards, round_index,
+            number_of_actions_in_current_round)
          
          # Make an interesting raise amount if the caller specified a raise amount in the first place
          raise_amount += 10**round + round*3 unless raise_amount.to_s.empty?
          
-         (betting_string, list_of_betting_actions) =
-         generate_betting_sequence betting_string, list_of_betting_actions, action_string + raise_amount.to_s
+         (betting_string, list_of_betting_actions) = generate_betting_sequence betting_string,
+            list_of_betting_actions, action_string + raise_amount.to_s
          
          list_of_board_cards << if round > 1 then (round+1).to_s + CARD_SUITS[:spades][:acpc_character] else arbitrary_flop end
          board_cards_string += "/" + list_of_board_cards[round]
@@ -211,7 +236,7 @@ describe MatchstateString do
             
       patient = test_match_state_success match_state
       
-      patient.list_of_betting_actions.should be == list_of_betting_actions
+      patient.betting_sequence.should be == list_of_betting_actions
       patient.last_action.should be == last_action
       patient.users_hole_cards.to_s.should be == users_hole_cards.to_s
       patient.list_of_opponents_hole_cards.should be == list_of_opponents_hole_cards
@@ -221,11 +246,11 @@ describe MatchstateString do
    end
    
    def test_match_state_error(incomplete_match_state)
-      expect{MatchstateString.new incomplete_match_state}.to raise_exception(MatchstateString::IncompleteMatchstateString)
+      expect{MatchStateString.parse incomplete_match_state, [0]}.to raise_exception(MatchStateString::IncompleteMatchStateString)
    end
    
    def test_match_state_success(match_state)
-      patient = MatchstateString.new match_state
+      patient = MatchStateString.parse match_state, [0]
       patient.to_s.should be == match_state
       
       patient

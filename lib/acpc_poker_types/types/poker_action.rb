@@ -3,7 +3,7 @@
 require 'set'
 
 # Local mixins
-require File.expand_path('../../mixins/easy_exceptions', __FILE__)
+require File.expand_path('../../mixins/utils', __FILE__)
 
 # Local classes
 require File.expand_path('../chip_stack', __FILE__)

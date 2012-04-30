@@ -3,7 +3,7 @@
 require File.expand_path('../../support/spec_helper', __FILE__)
 
 # Local classes
-require File.expand_path('../../../src/types/poker_action', __FILE__)
+require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/types/poker_action", __FILE__)
 
 describe PokerAction do
    describe 'legal actions can be retrieved' do

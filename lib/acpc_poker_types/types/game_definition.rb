@@ -5,7 +5,7 @@ require File.expand_path('../../acpc_poker_types_defs', __FILE__)
 require File.expand_path('../../helpers/acpc_poker_types_helper', __FILE__)
 
 # Local mixins
-require File.expand_path('../../mixins/easy_exceptions', __FILE__)
+require File.expand_path('../../mixins/utils', __FILE__)
 
 # Class that parses and manages game definition information from a game definition file.
 class GameDefinition

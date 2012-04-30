@@ -2,21 +2,42 @@
 # Local modules
 require File.expand_path('../board_cards', __FILE__)
 require File.expand_path('../hand', __FILE__)
+require File.expand_path('../../acpc_poker_types_defs', __FILE__)
 require File.expand_path('../../helpers/acpc_poker_types_helper', __FILE__)
-require File.expand_path('../../helpers/matchstate_string_helper', __FILE__)
 require File.expand_path('../rank', __FILE__)
 require File.expand_path('../suit', __FILE__)
 require File.expand_path('../poker_action', __FILE__)
 
 # Local mixins
-require File.expand_path('../../mixins/easy_exceptions', __FILE__)
+require File.expand_path('../../mixins/utils', __FILE__)
 
 # Model to parse and manage information from a given match state string.
-class MatchstateString
+class MatchStateString
+   include AcpcPokerTypesDefs
    include AcpcPokerTypesHelper
-   include MatchstateStringHelper
    
-   exceptions :incomplete_matchstate_string, :unable_to_parse_string_of_cards
+   exceptions :incomplete_match_state_string, :unable_to_parse_string_of_cards,
+      :no_first_player_positions_given
+   
+   alias_class_method :parse, :new
+   
+   # Builds a match state string from its given component parts.
+   #
+   # @param [#to_s] position_relative_to_dealer The position relative to the dealer.
+   # @param [#to_s] hand_number The hand number.
+   # @param [#to_s] betting_sequence The betting sequence.
+   # @param [#to_s] all_hole_cards All the hole cards visible.
+   # @param [#to_s, #empty?] board_cards All the community cards on the board.
+   # @return [String] The constructed match state string.
+   def self.build_match_state_string(position_relative_to_dealer,
+                                     hand_number, betting_sequence,
+                                     all_hole_cards, board_cards)
+      string = MATCH_STATE_LABEL +
+      ":#{position_relative_to_dealer}:#{hand_number}:#{betting_sequence}:#{all_hole_cards}"
+      
+      string += "#{board_cards}" if board_cards and !board_cards.empty?
+      string
+   end
    
    # @return [Integer] The position relative to the dealer of the player that
    #     received the match state string, indexed from 0, modulo the
@@ -39,13 +60,14 @@ class MatchstateString
    # @return [BoardCards] All visible community cards on the board.
    attr_reader :board_cards
    
-   
    # @param [String] raw_match_state A raw match state string to be parsed.
-   # @raise IncompleteMatchstateString.
+   # @param [Array<Integer>] first_player_position_in_each_round The seat of the first player in each round.
+   # @raise IncompleteMatchStateString.
    # @todo Use values from gamedef to structure objects like +number_of_board_cards_in_every_round+
-   def initialize(raw_match_state, acting_player_sees_wager=true)
-      raise IncompleteMatchstateString, raw_match_state if line_is_comment_or_empty? raw_match_state
-   
+   def initialize(raw_match_state, first_player_position_in_each_round)
+      raise IncompleteMatchStateString, raw_match_state if line_is_comment_or_empty? raw_match_state
+      raise NoFirstPlayerPositionsGiven unless first_player_position_in_each_round && !first_player_position_in_each_round.empty?
+      
       all_actions = PokerAction::LEGAL_ACPC_CHARACTERS.to_a.join
       all_ranks = CARD_RANKS.values.join
       all_suits = (CARD_SUITS.values.map { |suit| suit[:acpc_character] }).join
@@ -56,31 +78,32 @@ class MatchstateString
               )
          @position_relative_to_dealer = $1.to_i
          @hand_number = $2.to_i
-         @betting_sequence = parse_betting_sequence $3, acting_player_sees_wager
+         @betting_sequence = parse_betting_sequence $3
          @list_of_hole_card_hands = parse_list_of_hole_card_hands $4
          @board_cards = parse_board_cards $5
       end
-   
-      raise IncompleteMatchstateString, raw_match_state if incomplete_match_state?      
+      
+      raise IncompleteMatchStateString, raw_match_state if incomplete_match_state?
    end
 
-   # @see to_str
-   def to_s
-      to_str
-   end
-
-   # @return [String] The MatchstateString in raw text form.
+   # @return [String] The MatchStateString in raw text form.
    def to_str      
-      build_match_state_string @position_relative_to_dealer, @hand_number,
-         betting_sequence_string,
+      MatchStateString.build_match_state_string @position_relative_to_dealer,
+         @hand_number, betting_sequence_string,
          hole_card_strings(@list_of_hole_card_hands), @board_cards
    end
    
-   # @param [MatchstateString] another_matchstate_string A matchstate string to compare against this one.
-   # @return [Boolean] +true+ if this matchstate string is equivalent to +another_matchstate_string+, +false+ otherwise.
-   def ==(another_matchstate_string)
-      another_matchstate_string.to_s == to_s
+   # @see to_str
+   alias_method :to_s, :to_str
+   
+   # @param [MatchStateString] another_match_state_string A matchstate string to compare against this one.
+   # @return [Boolean] +true+ if this matchstate string is equivalent to +another_match_state_string+, +false+ otherwise.
+   def ==(another_match_state_string)
+      another_match_state_string.to_s == to_s
    end
+   
+   # @return [Integer] The number of players in this match.
+   def number_of_players() @list_of_hole_card_hands.length end
    
    # @param [Array<Array<PokerAction>>] betting_sequence The betting sequence from which the last action should be retrieved.
    # @return [PokerAction, NilClass] The last action taken or +nil+ if no action was previously taken.
@@ -135,14 +158,18 @@ class MatchstateString
    end
    
    def incomplete_match_state?
-      !(@position_relative_to_dealer and @hand_number and @list_of_hole_card_hands)
+      !(@position_relative_to_dealer and @hand_number and
+        @list_of_hole_card_hands) || @list_of_hole_card_hands.empty?
    end
    
    def parse_list_of_hole_card_hands(string_of_hole_cards)      
       list_of_hole_card_hands = []
       for_every_set_of_cards(string_of_hole_cards, '\|') do |string_hand|
          hand = Hand.draw_cards string_hand
-         list_of_hole_card_hands << hand
+         list_of_hole_card_hands.push hand
+      end
+      while list_of_hole_card_hands.length < (string_of_hole_cards.count('|') + 1)
+         list_of_hole_card_hands.push ''
       end
       list_of_hole_card_hands
    end
@@ -170,13 +197,13 @@ class MatchstateString
    end
    
    def parse_board_cards(string_board_cards)
-      # @todo Game definition should be used here instead
-      board_cards = BoardCards.new [3, 1, 1]
+      board_cards = BoardCards.new
       for_every_set_of_cards(string_board_cards, '\/') do |string_board_card_set|
          next if string_board_card_set.match(/^\s*$/)
          for_every_card(string_board_card_set) do |card|
             board_cards << card
          end
+         board_cards.next_round! if board_cards.round < string_board_cards.count('/')
       end
       board_cards
    end
@@ -197,14 +224,7 @@ class MatchstateString
       end
    end
    
-   def hole_card_strings(list_of_hole_card_hands)
-      # @todo Game definition should be used here instead
-      number_of_players = 2
-      list_of_hands = list_of_hole_card_hands.dup
-      while list_of_hands.length < number_of_players
-         list_of_hands << ''
-      end
-      
-      (list_of_hands.inject('') { |string, hand|  string += hand.to_s + '|' }).chop
+   def hole_card_strings(list_of_hole_card_hands)      
+      (list_of_hole_card_hands.map { |hand| hand.to_s }).join '|'
    end
 end

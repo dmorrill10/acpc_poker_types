@@ -3,7 +3,7 @@
 require File.expand_path('../../support/spec_helper', __FILE__)
 
 # Local classes
-require File.expand_path('../../../src/types/chip_stack', __FILE__)
+require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/types/chip_stack", __FILE__)
 
 describe ChipStack do
    describe '#initialization' do

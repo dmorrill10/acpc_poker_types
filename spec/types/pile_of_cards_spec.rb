@@ -3,11 +3,11 @@
 require File.expand_path('../../support/spec_helper', __FILE__)
 
 # Local modules
-require File.expand_path('../../../src/helpers/acpc_poker_types_helper', __FILE__)
+require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/helpers/acpc_poker_types_helper", __FILE__)
 require File.expand_path('../../../lib/hand_evaluator', __FILE__)
 
 # Local classes
-require File.expand_path('../../../src/types/pile_of_cards', __FILE__)
+require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/types/pile_of_cards", __FILE__)
 
 describe PileOfCards do
    include AcpcPokerTypesHelper

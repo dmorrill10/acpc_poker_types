@@ -65,10 +65,12 @@ module AcpcPokerTypesDefs
    DEFAULT_MAX_RAISE_IN_EACH_ROUND = MAX_VALUES[:rounds].times.inject([]) { |list, i|  list << UINT8_MAX }
    
    # @return [Hash<Symbol, String>] File names of the game definitions understood by this application.
-   GAME_DEFINITION_FILE_NAMES = {
-           holdem_limit_2p_reverse_blinds_game: File.expand_path('../../ext/project_acpc_server/holdem.limit.2p.reverse_blinds.game', __FILE__),
-           holdem_no_limit_2p_reverse_blinds_game: File.expand_path('../../ext/project_acpc_server/holdem.nolimit.2p.reverse_blinds.game', __FILE__),
-           holdem_limit_3p_reverse_blinds_game: File.expand_path('../../ext/project_acpc_server/holdem.limit.3p.game', __FILE__),
-           holdem_no_limit_3p_reverse_blinds_game: File.expand_path('../../ext/project_acpc_server/holdem.nolimit.3p.game', __FILE__)
-   }
+   GAME_DEFINITION_FILE_NAMES = lambda do
+      path_to_project_acpc_server_directory = File.expand_path('../../../ext/project_acpc_server', __FILE__)
+      
+      {holdem_limit_2p_reverse_blinds_game: "#{path_to_project_acpc_server_directory}/holdem.limit.2p.reverse_blinds.game",
+         holdem_no_limit_2p_reverse_blinds_game: "#{path_to_project_acpc_server_directory}/holdem.nolimit.2p.reverse_blinds.game",
+         holdem_limit_3p_reverse_blinds_game: "#{path_to_project_acpc_server_directory}/holdem.limit.3p.game",
+         holdem_no_limit_3p_reverse_blinds_game: "#{path_to_project_acpc_server_directory}/holdem.nolimit.3p.game"}
+   end.call
 end

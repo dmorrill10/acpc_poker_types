@@ -3,11 +3,11 @@
 require File.expand_path('../../support/spec_helper', __FILE__)
 
 # Local modules
-require File.expand_path('../../../src/acpc_poker_types_defs', __FILE__)
-require File.expand_path('../../../src/helpers/acpc_poker_types_helper', __FILE__)
+require "#{LIB_ACPC_POKER_TYPES_PATH}/acpc_poker_types_defs"
+require "#{LIB_ACPC_POKER_TYPES_PATH}/helpers/acpc_poker_types_helper"
 
 # Local classes
-require File.expand_path('../../../src/types/suit', __FILE__)
+require "#{LIB_ACPC_POKER_TYPES_PATH}/types/suit"
 
 describe Suit do
    include AcpcPokerTypesDefs
