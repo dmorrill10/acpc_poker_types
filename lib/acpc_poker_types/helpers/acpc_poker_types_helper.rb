@@ -7,6 +7,11 @@ require File.expand_path('../../types/card', __FILE__)
 
 # Assortment of constant definitions and methods for generating default values.
 module AcpcPokerTypesHelper
+   
+   def player_position_relative_to_self(number_of_players)
+      number_of_players - 1
+   end
+   
    # @param [Integer] number_of_players The number of players that require stacks.
    # @return [Array] The default list of initial stacks for every player.
    def default_list_of_player_stacks(number_of_players)
