@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "version"
+require 'version'
 require 'rake/extensiontask'
 
 Gem::Specification.new do |s|
