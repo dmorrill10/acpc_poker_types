@@ -18,7 +18,7 @@ class MatchStateString
    
    exceptions :incomplete_match_state_string
    
-   alias_class_method :parse, :new
+   alias_new :parse
    
    # Builds a match state string from its given component parts.
    #

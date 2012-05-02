@@ -29,6 +29,10 @@ class Class
       end
    end
    
+   def alias_new(alias_of_new)
+      alias_class_method alias_of_new, :new
+   end
+   
    # @param [#to_sym] alias_method A class method to alias the class method, +method_to_alias+.
    # @param [#to_sym] method_to_alias A class method to be aliased by +alias_method+.
    def alias_class_method(alias_method, method_to_alias)
