@@ -38,12 +38,6 @@ describe MatchStateString do
                test_match_state_error MATCH_STATE_LABEL + ":0:0::"
             end
          end
-         describe 'the list of first player positions' do
-            it 'is empty' do
-               match_state = MATCH_STATE_LABEL + ":2:2::" + arbitrary_hole_card_hand
-               expect{MatchStateString.parse(match_state, [])}.to raise_exception(MatchStateString::NoFirstPlayerPositionsGiven)
-            end
-         end
       end
       it "parses every possible limit action" do
          partial_match_state = MATCH_STATE_LABEL + ":1:1:"
@@ -87,7 +81,7 @@ describe MatchStateString do
          board_cards = '/AhKdQc'
          flop_match_state = partial_match_state + board_cards
          
-         patient = MatchStateString.parse flop_match_state, [0, 0]
+         patient = MatchStateString.parse flop_match_state
          
          patient.board_cards.to_s.should be == board_cards
       end
@@ -96,7 +90,7 @@ describe MatchStateString do
          board_cards = '/AhKdQc/Jd'
          turn_match_state = partial_match_state + board_cards
          
-         patient = MatchStateString.parse turn_match_state, [0, 0, 0]
+         patient = MatchStateString.parse turn_match_state
          
          patient.board_cards.to_s.should be == board_cards
       end
@@ -105,7 +99,7 @@ describe MatchStateString do
          board_cards = '/AhKdQc/Jd/Th'
          river_match_state = partial_match_state + board_cards
          
-         patient = MatchStateString.parse river_match_state, [0, 0, 0]
+         patient = MatchStateString.parse river_match_state
          
          patient.board_cards.to_s.should be == board_cards
       end
@@ -147,7 +141,7 @@ describe MatchStateString do
          test_match_state_success match_state
       end
    end
-
+   
    describe '#round' do
       it "properly reports the current round number" do
          partial_match_state = MATCH_STATE_LABEL + ":0:0:"
@@ -246,11 +240,11 @@ describe MatchStateString do
    end
    
    def test_match_state_error(incomplete_match_state)
-      expect{MatchStateString.parse incomplete_match_state, [0]}.to raise_exception(MatchStateString::IncompleteMatchStateString)
+      expect{MatchStateString.parse incomplete_match_state}.to raise_exception(MatchStateString::IncompleteMatchStateString)
    end
    
    def test_match_state_success(match_state)
-      patient = MatchStateString.parse match_state, [0]
+      patient = MatchStateString.parse match_state
       patient.to_s.should be == match_state
       
       patient

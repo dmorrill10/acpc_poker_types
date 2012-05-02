@@ -16,8 +16,7 @@ class MatchStateString
    include AcpcPokerTypesDefs
    include AcpcPokerTypesHelper
    
-   exceptions :incomplete_match_state_string, :unable_to_parse_string_of_cards,
-      :no_first_player_positions_given
+   exceptions :incomplete_match_state_string
    
    alias_class_method :parse, :new
    
@@ -60,22 +59,21 @@ class MatchStateString
    # @return [BoardCards] All visible community cards on the board.
    attr_reader :board_cards
    
+   # @return [Array<Integer>] The list of first seats for each round.
+   attr_reader :first_seat_in_each_round
+   
    # @param [String] raw_match_state A raw match state string to be parsed.
-   # @param [Array<Integer>] first_player_position_in_each_round The seat of the first player in each round.
-   # @raise IncompleteMatchStateString.
-   # @todo Use values from gamedef to structure objects like +number_of_board_cards_in_every_round+
-   def initialize(raw_match_state, first_player_position_in_each_round)
+   # @raise IncompleteMatchStateString
+   def initialize(raw_match_state)
       raise IncompleteMatchStateString, raw_match_state if line_is_comment_or_empty? raw_match_state
-      raise NoFirstPlayerPositionsGiven unless first_player_position_in_each_round && !first_player_position_in_each_round.empty?
       
       all_actions = PokerAction::LEGAL_ACPC_CHARACTERS.to_a.join
       all_ranks = CARD_RANKS.values.join
       all_suits = (CARD_SUITS.values.map { |suit| suit[:acpc_character] }).join
       all_card_tokens = all_ranks + all_suits
-   
+      
       if raw_match_state.match(
-              /#{MATCH_STATE_LABEL}:(\d+):(\d+):([\d#{all_actions}\/]*):([|#{all_card_tokens}]+)\/*([\/#{all_card_tokens}]*)/
-              )
+         /#{MATCH_STATE_LABEL}:(\d+):(\d+):([\d#{all_actions}\/]*):([|#{all_card_tokens}]+)\/*([\/#{all_card_tokens}]*)/)
          @position_relative_to_dealer = $1.to_i
          @hand_number = $2.to_i
          @betting_sequence = parse_betting_sequence $3
@@ -137,9 +135,7 @@ class MatchStateString
    end
    
    # @return [Integer] The number of actions in the current round.
-   def number_of_actions_in_current_round
-      @betting_sequence[round].length
-   end
+   def number_of_actions_in_current_round() @betting_sequence[round].length end
    
    def betting_sequence_string(betting_sequence=@betting_sequence)
       string = ''
@@ -151,6 +147,21 @@ class MatchStateString
    end
    
    private
+   
+   def validate_first_seats(list_of_first_seats)
+      begin
+         raise UnknownFirstSeat, round unless round < list_of_first_seats.length
+         all_seats_are_occupied = ((problem_seat = list_of_first_seats.max) < number_of_players) && ((problem_seat = list_of_first_seats.min.abs)-1 < number_of_players)
+         raise FirstSeatIsUnoccupied, problem_seat unless all_seats_are_occupied
+      rescue UnknownFirstSeat => e
+         raise e
+      rescue FirstSeatIsUnoccupied => e
+         raise e
+      rescue => e
+         raise UnknownFirstSeat, e.message
+      end
+      list_of_first_seats
+   end
    
    def list_of_actions_from_acpc_characters(betting_sequence)
       all_actions = PokerAction::LEGAL_ACPC_CHARACTERS.to_a.join ''
@@ -177,13 +188,12 @@ class MatchStateString
    def parse_betting_sequence(string_betting_sequence, acting_player_sees_wager=true)
       return [[]] if string_betting_sequence.empty?
       
-      betting_sequence = []
       list_of_actions_by_round = string_betting_sequence.split(/\//)
-      list_of_actions_by_round.each do |betting_sequence_in_a_particular_round|
-         betting_sequence_in_a_particular_round = list_of_actions_from_acpc_characters(betting_sequence_in_a_particular_round).inject([]) do |list, action|
-            list << PokerAction.new(action)
+      betting_sequence = list_of_actions_by_round.inject([]) do |list_of_actions, betting_string_in_a_particular_round|
+         list_of_actions_in_a_particular_round = list_of_actions_from_acpc_characters(betting_string_in_a_particular_round).inject([]) do |list, action|
+            list.push PokerAction.new(action)
          end
-         betting_sequence << betting_sequence_in_a_particular_round
+         list_of_actions.push list_of_actions_in_a_particular_round
       end
       # Increase the resolution of the last action
       # @todo I'm creating one too many PokerActions, but I'm not going to worry about it for now.

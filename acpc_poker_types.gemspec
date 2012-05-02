@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "acpc_poker_types/version"
+require "version"
 require 'rake/extensiontask'
 
 Gem::Specification.new do |s|
