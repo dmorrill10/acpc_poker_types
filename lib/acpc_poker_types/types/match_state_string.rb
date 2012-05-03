@@ -104,7 +104,8 @@ class MatchStateString
    def number_of_players() @list_of_hole_card_hands.length end
    
    # @param [Array<Array<PokerAction>>] betting_sequence The betting sequence from which the last action should be retrieved.
-   # @return [PokerAction, NilClass] The last action taken or +nil+ if no action was previously taken.
+   # @return [PokerAction] The last action taken.
+   # @raise NoActionsHaveBeenTaken if no actions have been taken.
    def last_action(betting_sequence=@betting_sequence)
       raise NoActionsHaveBeenTaken if betting_sequence.empty?
 

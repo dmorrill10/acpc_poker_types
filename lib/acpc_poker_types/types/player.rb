@@ -2,36 +2,36 @@
 # Local classes
 require File.expand_path('../chip_stack', __FILE__)
 
+# Local mixins
+require File.expand_path('../../mixins/utils', __FILE__)
+
 # Class to model a player.
-class Player   
+class Player
+   
+   alias_new :join_match
+   
    # @return [String] The name of this player.
    attr_reader :name
    
-   # @return [Integer] This player's seat.  This is a 1 indexed
-   #     number that represents the order that the player joined the dealer.
+   # @return [Integer] This player's seat.  This is a 0 indexed
+   #  number that represents the order that this player joined the dealer.
    attr_reader :seat
    
-   # @return [Integer] This player's position relative to the dealer,
-   #     0 indexed, modulo the number of players in the game.
+   # @return [Integer] This player's position relative to the dealer, indexed
+   #  such that the player immediately to to the left of the dealer has a
+   #  +position_relative_to_dealer+ of zero.
    # @example (see MatchStateString#position_relative_to_dealer)
    attr_accessor :position_relative_to_dealer
    
-   # @return [Integer] This player's position relative to the user,
-   #     0 indexed, modulo the number of players in the game.
+   # @return [Integer] This player's position relative to the user, indexed
+   #  such that the player immediately to to the left of the dealer has a
+   #  +position_relative_to_dealer+ of zero.
    # @example The player immediately to the left of the user has
    #     +position_relative_to_user+ == 0
    # @example The user has
    #     +position_relative_to_user+ == <number of players> - 1
    attr_reader :position_relative_to_user
-   
-   # @return [Boolean] Whether or not this player has folded.
-   #     +true+ if this player has folded, +false+ otherwise.
-   attr_accessor :has_folded
-   
-   # @return [Boolean] Whether or not this player is all-in.
-   #     +true+ if this player is all-in, +false+ otherwise.
-   attr_accessor :is_all_in
-   
+      
    # @return [ChipStack] This player's chip stack.
    attr_accessor :chip_stack
    
@@ -40,32 +40,29 @@ class Player
    #  player loses.  Positive amounts are winnings, negative amounts are losses.
    attr_accessor :chip_balance
    
-   # @return [Hand] This player's hole cards or nil if none are known to the user.
+   # @return [Hand] This player's hole cards or nil if this player is not
+   #  holding cards.
    # @example (see MatchStateString#users_hole_cards)
    attr_accessor :hole_cards
    
-   # @return [Array<PokerAction>] The list of actions this player has taken in the current round.
-   attr_accessor :actions_taken_in_current_round
+   # @return [Array<Array<PokerAction>>] The list of actions this player has taken in
+   #  the current hand, separated by round.
+   attr_accessor :actions_taken_in_current_hand
    
-   # @param [String] name The name of this player.
-   # @param [Integer] seat This player's seat.  This is a 1 indexed
-   #     number that represents the order that the player joined the dealer.
-   # @param [Integer] position_relative_to_dealer This player's position
-   #     relative to the dealer, 0 indexed, modulo the number of players in
-   #     the game.
-   # @param [Integer] position_relative_to_user This player's position
-   #     relative to the user, 0 indexed, modulo the number of players in
-   #     the game.
-   # @param [#to_i] chip_stack This player's chip stack.
-   # @param [Integer] chip_balance This player's chip balance.
-   def initialize(name, seat, position_relative_to_dealer, position_relative_to_user,
-                  chip_stack, chip_balance=0, hole_cards=nil, has_folded=false,
-                  is_all_in=false)
-      (@name, @seat, @position_relative_to_dealer, @position_relative_to_user,
-       @chip_stack, @chip_balance, @hole_cards, @has_folded, @is_all_in) =
-         [name, seat, position_relative_to_dealer, position_relative_to_user,
-          chip_stack, chip_balance, hole_cards, has_folded, is_all_in]
-      @actions_taken_in_current_round = []
+   # @todo These comments don't work as expected
+   # @param [String] name (see #name)
+   # @param [Integer] seat (see #seat)
+   # @param [Integer] position_relative_to_user (see #position_relative_to_user)
+   # @param [#to_i] chip_stack (see #chip_stack)
+   # @param [Hand] hole_cards (see #hole_cards)
+   def initialize(name, seat, position_relative_to_user, chip_stack,
+                  hole_cards=Hand.new)
+      @name = name
+      @seat = seat
+      @position_relative_to_user = position_relative_to_user
+      @chip_balance = 0
+      
+      start_new_hand!(position_relative_to_dealer, chip_stack, hole_cards)
    end
    
    # @return [String] String representation of this player.
@@ -83,12 +80,36 @@ class Player
 		hash_rep
 	end
 	
-	def folded?
-      @has_folded
+	# @param [Integer] position_relative_to_dealer (see #position_relative_to_dealer)
+	# @param [#to_i] chip_stack (see #chip_stack)
+	# @param [Hand] hole_cards (see #hole_cards)
+	def start_new_hand!(position_relative_to_dealer, chip_stack=@chip_stack,
+                       hole_cards=Hand.new)
+      @position_relative_to_dealer = position_relative_to_dealer
+      @chip_stack = chip_stack
+      @hole_cards = hole_cards
+      @actions_taken_in_current_hand = []
+      
+      start_new_round!
 	end
 	
+	def start_new_round!
+      @actions_taken_in_current_hand << []
+	end
+	
+	# @param [PokerAction] action The action to take.
+	def take_action!(action)
+      @actions_taken_in_current_hand.last << action
+	end
+	
+	# @return [Boolean] Reports whether or not this player has folded.
+	def folded?
+      @hole_cards.nil?
+	end
+	
+	# @return [Boolean] Reports whether or not this player is all-in.
 	def all_in?
-      @is_all_in
+      0 == chip_stack
 	end
    
    # @return [Boolean] Whether or not this player is active (has not folded
@@ -97,12 +118,16 @@ class Player
       !(folded? || all_in?)
    end
    
+   def add_to_stack(chips)
+      @chip_stack += chips
+      @chip_balance += chips.to_i
+   end
+   
    # Adjusts this player's state when it takes chips from the pot.
    # @param [Integer] number_of_chips_from_the_pot The number of chips
    #  this player has won from the pot.
    def take_winnings!(number_of_chips_from_the_pot)
-      @chip_stack += number_of_chips_from_the_pot
-      @chip_balance += number_of_chips_from_the_pot.to_i
+      add_to_stack number_of_chips_from_the_pot
    end
    
    # Take chips away from this player's chip stack.
