@@ -16,7 +16,6 @@ class PokerAction
    attr_reader :modifier
    
    # @return [Hash<Symbol, String>] Representations of legal actions.
-   # @todo support overloaded actions like bet and check LEGAL_ACTIONS = {bet: 'r', call: 'c', check: 'c', fold: 'f', raise: 'r'}
    LEGAL_ACTIONS = {bet: 'b', call: 'c', check: 'k', fold: 'f', raise: 'r'}
    
    # @return [Set<Symbol>] The set of legal action symbols.

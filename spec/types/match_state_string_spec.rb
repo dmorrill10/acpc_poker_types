@@ -19,23 +19,23 @@ describe MatchStateString do
       describe 'raises an exception if ' do
          describe 'the raw matchstate string' do
             it 'is empty' do
-               test_match_state_error ""
+               test_match_state_initialization_error ""
             end
          
             it 'is not in the proper format' do
-               test_match_state_error "hello world"
+               test_match_state_initialization_error "hello world"
             end
          
             it 'does not contain a position' do
-               test_match_state_error MATCH_STATE_LABEL + "::0::AhKd"
+               test_match_state_initialization_error MATCH_STATE_LABEL + "::0::AhKd"
             end
          
             it 'does not contain a hand number' do
-               test_match_state_error MATCH_STATE_LABEL + ":0:::AsKc"
+               test_match_state_initialization_error MATCH_STATE_LABEL + ":0:::AsKc"
             end
       
             it 'does not contain cards' do
-               test_match_state_error MATCH_STATE_LABEL + ":0:0::"
+               test_match_state_initialization_error MATCH_STATE_LABEL + ":0:0::"
             end
          end
       end
@@ -148,9 +148,10 @@ describe MatchStateString do
          betting = ""
          hand = arbitrary_hole_card_hand
          (MAX_VALUES[:rounds]-1).times do |i|
-            match_state = partial_match_state + betting + ":" + '|' + hand
+            match_state = partial_match_state + betting + ':|' + hand
             patient = test_match_state_success match_state
             patient.round.should be == i
+            patient.in_new_round?(i-1).should be true
                
             betting += "c/"
          end
@@ -173,6 +174,26 @@ describe MatchStateString do
          
          patient = test_match_state_success match_state
          patient.number_of_players.should be == expected_number_of_players
+      end
+   end
+   
+   describe '#last_action' do
+      it 'raises an exception if no previous action exists' do
+         initial_match_state = "#{MATCH_STATE_LABEL}:1:1::#{arbitrary_hole_card_hand}"
+         patient = MatchStateString.parse initial_match_state
+         expect{patient.last_action}.to raise_exception(MatchStateString::NoActionsHaveBeenTaken)
+         patient.first_state_of_first_round?.should == true
+      end
+      it 'works properly if previous actions exist' do
+         partial_match_state = "#{MATCH_STATE_LABEL}:1:1:"
+         PokerAction::LEGAL_ACPC_CHARACTERS.each do |action_character|
+            partial_match_state += action_character
+            match_state = "#{partial_match_state}:#{arbitrary_hole_card_hand}"
+            
+            patient = MatchStateString.parse match_state
+            patient.last_action.should be == PokerAction.new(action_character)
+            patient.first_state_of_first_round?.should == false
+         end
       end
    end
    
@@ -239,17 +260,15 @@ describe MatchStateString do
       patient.number_of_actions_in_current_round.should be == number_of_actions_in_current_round
    end
    
-   def test_match_state_error(incomplete_match_state)
+   def test_match_state_initialization_error(incomplete_match_state)
       expect{MatchStateString.parse incomplete_match_state}.to raise_exception(MatchStateString::IncompleteMatchStateString)
    end
-   
    def test_match_state_success(match_state)
       patient = MatchStateString.parse match_state
       patient.to_s.should be == match_state
       
       patient
    end
-   
    def arbitrary_flop
       flop = ""
       rank = 2

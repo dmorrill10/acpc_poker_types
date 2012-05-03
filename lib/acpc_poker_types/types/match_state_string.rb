@@ -16,7 +16,7 @@ class MatchStateString
    include AcpcPokerTypesDefs
    include AcpcPokerTypesHelper
    
-   exceptions :incomplete_match_state_string
+   exceptions :incomplete_match_state_string, :no_actions_have_been_taken
    
    alias_new :parse
    
@@ -106,11 +106,11 @@ class MatchStateString
    # @param [Array<Array<PokerAction>>] betting_sequence The betting sequence from which the last action should be retrieved.
    # @return [PokerAction, NilClass] The last action taken or +nil+ if no action was previously taken.
    def last_action(betting_sequence=@betting_sequence)
-      last_action_in_the_current_round = betting_sequence.last.last
-      if !last_action_in_the_current_round && round > 0
-         return betting_sequence[-2].last
-      end
-      last_action_in_the_current_round
+      raise NoActionsHaveBeenTaken if betting_sequence.empty?
+
+      return betting_sequence.last.last if betting_sequence.last.last
+      
+      last_action(betting_sequence.reject{ |elem| elem.equal?(betting_sequence.last) })
    end
 
    # @return [Hand] The user's hole cards.
@@ -139,7 +139,8 @@ class MatchStateString
    
    # @param [Array<Action>] betting_sequence=@betting_sequence The sequence of
    #  actions to link into an ACPC string.
-   # @return [String] The ACPC string created by the given betting sequence, +betting_sequence+.
+   # @return [String] The ACPC string created by the given betting sequence,
+   #  +betting_sequence+.
    def betting_sequence_string(betting_sequence=@betting_sequence)
       string = ''
       (round + 1).times do |i|
@@ -150,8 +151,8 @@ class MatchStateString
    end
    
    # @return [Bool] Reports whether or not it is the first state of the first round.
-   def first_state_of_the_first_round?
-      0 == round && 0 == number_of_actions_in_current_round
+   def first_state_of_first_round?
+      (0 == round) && (0 == number_of_actions_in_current_round)
    end
    
    # @param [Integer] last_round The round in which the last action was taken.
