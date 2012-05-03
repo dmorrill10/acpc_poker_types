@@ -137,6 +137,9 @@ class MatchStateString
    # @return [Integer] The number of actions in the current round.
    def number_of_actions_in_current_round() @betting_sequence[round].length end
    
+   # @param [Array<Action>] betting_sequence=@betting_sequence The sequence of
+   #  actions to link into an ACPC string.
+   # @return [String] The ACPC string created by the given betting sequence, +betting_sequence+.
    def betting_sequence_string(betting_sequence=@betting_sequence)
       string = ''
       (round + 1).times do |i|
@@ -144,6 +147,11 @@ class MatchStateString
          string += '/' unless i == round
       end
       string
+   end
+   
+   # @return [Bool] Reports whether or not it is the first state of the first round.
+   def first_state_of_the_first_round?
+      0 == round && 0 == number_of_actions_in_current_round
    end
    
    private
