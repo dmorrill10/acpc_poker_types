@@ -8,8 +8,6 @@ require File.expand_path('../../mixins/utils', __FILE__)
 # Class to model a player.
 class Player
    
-   alias_new :join_match
-   
    # @return [String] The name of this player.
    attr_reader :name
    
@@ -33,30 +31,33 @@ class Player
    attr_reader :position_relative_to_user
       
    # @return [ChipStack] This player's chip stack.
-   attr_accessor :chip_stack
+   attr_reader :chip_stack
    
    # @return [Integer] The amount this player has won or lost in the current
    #  match.  During a hand, this is a projected amount assuming that this
    #  player loses.  Positive amounts are winnings, negative amounts are losses.
-   attr_accessor :chip_balance
+   attr_reader :chip_balance
    
    # @return [Hand] This player's hole cards or nil if this player is not
    #  holding cards.
    # @example (see MatchStateString#users_hole_cards)
-   attr_accessor :hole_cards
+   attr_reader :hole_cards
    
    # @return [Array<Array<PokerAction>>] The list of actions this player has taken in
    #  the current hand, separated by round.
-   attr_accessor :actions_taken_in_current_hand
+   attr_reader :actions_taken_in_current_hand
+   
+   alias_new :join_match
    
    # @todo These comments don't work as expected
    # @param [String] name (see #name)
    # @param [Integer] seat (see #seat)
    # @param [Integer] position_relative_to_user (see #position_relative_to_user)
+   # @param [Integer] position_relative_to_dealer (see #position_relative_to_dealer)
    # @param [#to_i] chip_stack (see #chip_stack)
    # @param [Hand] hole_cards (see #hole_cards)
-   def initialize(name, seat, position_relative_to_user, chip_stack,
-                  hole_cards=Hand.new)
+   def initialize(name, seat, position_relative_to_user,
+                  position_relative_to_dealer, chip_stack, hole_cards=Hand.new)
       @name = name
       @seat = seat
       @position_relative_to_user = position_relative_to_user
@@ -99,6 +100,7 @@ class Player
 	
 	# @param [PokerAction] action The action to take.
 	def take_action!(action)
+      # //////////////////
       @actions_taken_in_current_hand.last << action
 	end
 	
@@ -114,8 +116,13 @@ class Player
    
    # @return [Boolean] Whether or not this player is active (has not folded
    #     or gone all-in). +true+ if this player is active, +false+ otherwise.
-   def is_active?
+   def active?
       !(folded? || all_in?)
+   end
+   
+   # @return [Integer] The current round, zero indexed.
+   def round
+      @actions_taken_in_current_hand.length - 1
    end
    
    def add_to_stack(chips)

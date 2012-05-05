@@ -30,284 +30,181 @@ describe PokerAction do
       end
       it 'raises an exception if a modifier accompanies an unmodifiable action' do
          unmodifiable_actions = PokerAction::LEGAL_SYMBOLS - PokerAction::MODIFIABLE_ACTIONS.keys
-         modifier_amount = 9001
-         modifier = mock 'ChipStack'
-         modifier.stubs(:to_s).returns(modifier_amount.to_s)
          unmodifiable_actions.each do |sym|
-            expect{PokerAction.new(sym, modifier)}.to raise_exception(PokerAction::IllegalPokerActionModification)
+            expect{PokerAction.new(sym, 0, default_modifier)}.to raise_exception(PokerAction::IllegalPokerActionModification)
          end
       end
       it 'raise an exception if a modifier is given both implicitly and explicitly' do
-         modifier_amount = 9001
-         modifier = mock 'ChipStack'
-         modifier.stubs(:to_s).returns(modifier_amount.to_s)
-         expect{PokerAction.new('r9001', modifier)}.to raise_exception(PokerAction::IllegalPokerActionModification)
+         expect{PokerAction.new('r9001', 0, default_modifier)}.to raise_exception(PokerAction::IllegalPokerActionModification)
       end
       it 'raise an exception if a fold action is given when no wager is seen by the acting player' do
-         expect{PokerAction.new('f', nil, false)}.to raise_exception(PokerAction::IllegalPokerAction)
+         expect{PokerAction.new('f', 0, nil, false)}.to raise_exception(PokerAction::IllegalPokerAction)
       end
-      describe 'treats all defined legal actions as such' do
-         it 'when the action is a symbol' do
-            instantiate_each_action_from_symbols do |sym, patient|
-            end
-         end
-         it 'when the action is a string' do
-            instantiate_each_action_from_strings do |string, patient|
-            end
-         end
-         it 'when the action is an ACPC character' do
-            instantiate_each_action_from_acpc_characters do |char, patient|
-            end
-         end
-         it 'when the action is a modified ACPC action' do
-            instantiate_each_action_from_modified_acpc_characters do |action, patient|
-            end
-         end
-      end
-   end
-   
-   describe 'without a modifier' do
-      before(:each) do
-         @modifier = nil
-      end
-      
-      describe 'converts itself into its proper' do
-         describe 'symbol' do
-            it 'from ACPC form' do
-               instantiate_each_action_from_acpc_characters(@modifier) do |char, patient|
-                  patient.to_sym.should be == PokerAction::LEGAL_ACTIONS.key(char)
-               end
-            end
-            it 'from string form' do
-               instantiate_each_action_from_strings(@modifier) do |string, patient|
-                  patient.to_sym.should be == string.to_sym
-               end
-            end
-            it 'from symbol form' do
-               instantiate_each_action_from_symbols(@modifier) do |sym, patient|
-                  patient.to_sym.should be == sym
-               end
-            end
-         end
-         describe 'string' do
-            it 'from ACPC form' do
-               instantiate_each_action_from_acpc_characters(@modifier) do |char, patient|
-                  patient.to_s.should be == PokerAction::LEGAL_ACTIONS.key(char).to_s
-               end
-            end
-            it 'from string form' do
-               instantiate_each_action_from_strings(@modifier) do |string, patient|
-                  patient.to_s.should be == string
-               end
-            end
-            it 'from symbol form' do
-               instantiate_each_action_from_symbols(@modifier) do |sym, patient|
-                  patient.to_s.should be == sym.to_s
-               end
-            end
-         end
-         describe 'ACPC character' do
-            it 'from ACPC form' do
-               instantiate_each_action_from_acpc_characters(@modifier) do |char, patient|
-                  patient.to_acpc_character.should be == char
-               end
-            end
-            it 'from string form' do
-               instantiate_each_action_from_strings(@modifier) do |string, patient|
-                  patient.to_acpc_character.should be == PokerAction::LEGAL_ACTIONS[string.to_sym]
-               end
-            end
-            it 'from symbol form' do
-               instantiate_each_action_from_symbols(@modifier) do |sym, patient|
-                  patient.to_acpc_character.should be == PokerAction::LEGAL_ACTIONS[sym]
-               end
-            end
-         end
-         describe 'full ACPC form' do
-            it 'from ACPC form' do
-               instantiate_each_action_from_acpc_characters(@modifier) do |char, patient|
-                  expected_acpc_form = if PokerAction::MODIFIABLE_ACTIONS.values.include? PokerAction::LEGAL_ACTIONS.key(char)
-                     char + @modifier.to_s
-                  else
-                     char
+      describe 'creates actions properly' do
+         it 'from various forms' do
+            various_amounts_to_put_in_pot do |amount|
+               with_and_without_a_modifier do |modifier|
+                  instantiate_each_action_from_acpc_characters(amount, modifier) do |char, actual_modifier|
+                     check_patient_data PokerAction::LEGAL_ACTIONS.key(char),
+                                        PokerAction::LEGAL_ACTIONS.key(char).to_s + actual_modifier.to_s,
+                                        char + actual_modifier.to_s,
+                                        char,
+                                        amount,
+                                        actual_modifier
                   end
-                  patient.to_acpc.should be == expected_acpc_form
-               end
-            end
-            it 'from string form' do
-               instantiate_each_action_from_strings(@modifier) do |string, patient|
-                  expected_acpc_form = if PokerAction::MODIFIABLE_ACTIONS.keys.include? string.to_sym
-                     PokerAction::LEGAL_ACTIONS[string.to_sym] + @modifier.to_s
-                  else
-                     PokerAction::LEGAL_ACTIONS[string.to_sym]
+                  instantiate_each_action_from_strings(amount, modifier) do |string, actual_modifier|
+                     check_patient_data string.to_sym,
+                                        string + actual_modifier.to_s,
+                                        PokerAction::LEGAL_ACTIONS[string.to_sym] + actual_modifier.to_s,
+                                        PokerAction::LEGAL_ACTIONS[string.to_sym],
+                                        amount,
+                                        actual_modifier
                   end
-                  patient.to_acpc.should be == expected_acpc_form
-               end
-            end
-            it 'from symbol form' do
-               instantiate_each_action_from_symbols(@modifier) do |sym, patient|
-                  expected_acpc_form = if PokerAction::MODIFIABLE_ACTIONS.keys.include? sym
-                     PokerAction::LEGAL_ACTIONS[sym] + @modifier.to_s
-                  else
-                     PokerAction::LEGAL_ACTIONS[sym]
+                  instantiate_each_action_from_symbols(amount, modifier) do |sym, actual_modifier|
+                     check_patient_data sym,
+                                        sym.to_s + actual_modifier.to_s,
+                                        PokerAction::LEGAL_ACTIONS[sym] + actual_modifier.to_s,
+                                        PokerAction::LEGAL_ACTIONS[sym],
+                                        amount,
+                                        actual_modifier
                   end
-                  patient.to_acpc.should be == expected_acpc_form
+                  instantiate_each_action_from_modified_acpc_characters(amount, modifier) do |char, actual_modifier|
+                     check_patient_data PokerAction::LEGAL_ACTIONS.key(char),
+                                        PokerAction::LEGAL_ACTIONS.key(char).to_s + actual_modifier.to_s,
+                                        char + actual_modifier.to_s,
+                                        char,
+                                        amount,
+                                        actual_modifier
+                  end
+                  instantiate_each_action_from_modified_strings(amount, modifier) do |string, actual_modifier|
+                     check_patient_data string.to_sym,
+                                        string + actual_modifier.to_s,
+                                        PokerAction::LEGAL_ACTIONS[string.to_sym] + actual_modifier.to_s,
+                                        PokerAction::LEGAL_ACTIONS[string.to_sym],
+                                        amount,
+                                        actual_modifier
+                  end
                end
             end
          end
       end
    end
    
-   # @todo Would rather not duplicate this code but I can't find a way to instantiate a mock object outside of an 'it' block, and still the variables from a 'before' block outside 'it' blocks.
-   describe 'with a modifier' do
-      before(:each) do
-         modifier_amount = 9001
-         @modifier = mock 'ChipStack'
-         @modifier.stubs(:to_s).returns(modifier_amount.to_s)
+   def default_modifier
+      modifier_amount = 9001
+      modifier = mock 'ChipStack'
+      modifier.stubs(:to_s).returns(modifier_amount.to_s)
+      modifier
+   end
+   def various_amounts_to_put_in_pot
+      [0, 9002, -9002].each do |amount|
+         yield amount
       end
-         
-      describe 'converts itself into its proper' do
-         describe 'symbol' do
-            it 'from ACPC form' do
-               instantiate_each_action_from_acpc_characters(@modifier) do |char, patient|
-                  patient.to_sym.should be == PokerAction::LEGAL_ACTIONS.key(char)
-               end
-            end
-            it 'from string form' do
-               instantiate_each_action_from_strings(@modifier) do |string, patient|
-                  patient.to_sym.should be == string.to_sym
-               end
-            end
-            it 'from symbol form' do
-               instantiate_each_action_from_symbols(@modifier) do |sym, patient|
-                  patient.to_sym.should be == sym
-               end
-            end
-         end
-         describe 'string' do
-            it 'from ACPC form' do
-               instantiate_each_action_from_acpc_characters(@modifier) do |char, patient|
-                  patient.to_s.should be == PokerAction::LEGAL_ACTIONS.key(char).to_s
-               end
-            end
-            it 'from string form' do
-               instantiate_each_action_from_strings(@modifier) do |string, patient|
-                  patient.to_s.should be == string
-               end
-            end
-            it 'from symbol form' do
-               instantiate_each_action_from_symbols(@modifier) do |sym, patient|
-                  patient.to_s.should be == sym.to_s
-               end
-            end
-         end
-         describe 'ACPC character' do
-            it 'from ACPC form' do
-               instantiate_each_action_from_acpc_characters(@modifier) do |char, patient|
-                  patient.to_acpc_character.should be == char
-               end
-            end
-            it 'from string form' do
-               instantiate_each_action_from_strings(@modifier) do |string, patient|
-                  patient.to_acpc_character.should be == PokerAction::LEGAL_ACTIONS[string.to_sym]
-               end
-            end
-            it 'from symbol form' do
-               instantiate_each_action_from_symbols(@modifier) do |sym, patient|
-                  patient.to_acpc_character.should be == PokerAction::LEGAL_ACTIONS[sym]
-               end
-            end
-         end
-         describe 'full ACPC form' do
-            it 'from ACPC form' do
-               instantiate_each_action_from_acpc_characters(@modifier) do |char, patient|
-                  expected_acpc_form = if PokerAction::MODIFIABLE_ACTIONS.values.include? char
-                     char + @modifier.to_s
-                  else
-                     char
-                  end
-                  patient.to_acpc.should be == expected_acpc_form
-               end
-            end
-            it 'from string form' do
-               instantiate_each_action_from_strings(@modifier) do |string, patient|
-                  expected_acpc_form = if PokerAction::MODIFIABLE_ACTIONS.keys.include? string.to_sym
-                     PokerAction::LEGAL_ACTIONS[string.to_sym] + @modifier.to_s
-                  else
-                     PokerAction::LEGAL_ACTIONS[string.to_sym]
-                  end
-                  patient.to_acpc.should be == expected_acpc_form
-               end
-            end
-            it 'from symbol form' do
-               instantiate_each_action_from_symbols(@modifier) do |sym, patient|
-                  expected_acpc_form = if PokerAction::MODIFIABLE_ACTIONS.keys.include? sym
-                     PokerAction::LEGAL_ACTIONS[sym] + @modifier.to_s
-                  else
-                     PokerAction::LEGAL_ACTIONS[sym]
-                  end
-                  patient.to_acpc.should be == expected_acpc_form
-               end
-            end
-         end
+   end
+   def with_and_without_a_modifier
+      [nil, default_modifier].each do |modifier|
+         yield modifier
       end
-      describe 'given knowledge that the acting player does not see a wager' do
-         it 'properly changes the given action to its more precise form' do
-            PokerAction::HIGH_RESOLUTION_ACTION_CONVERSION.each do |imprecise_action, precise_action|
-               next if :fold == imprecise_action
-               imprecise_action_character = PokerAction::LEGAL_ACTIONS[imprecise_action]
-               precise_action_character = PokerAction::LEGAL_ACTIONS[precise_action]
-               if PokerAction::MODIFIABLE_ACTIONS.values.include? imprecise_action_character
-                  modifier = @modifier
-                  expected_acpc_form = precise_action_character + @modifier.to_s
-               else   
-                  modifier = nil
-                  expected_acpc_form = precise_action_character
-               end
-               PokerAction.new(imprecise_action_character, modifier, false).to_acpc.should ==(expected_acpc_form)
+   end
+   def check_patient_data(expected_sym,
+                          expected_string,
+                          expected_acpc,
+                          expected_acpc_character,
+                          amount_to_put_in_pot=0,
+                          modifier=nil)
+      @patient.to_sym.should be == expected_sym
+      @patient.to_s.should be == expected_string
+      @patient.to_acpc.should be == expected_acpc
+      @patient.to_acpc_character.should be == expected_acpc_character
+      @patient.amount_to_put_in_pot.should be == amount_to_put_in_pot
+       
+      has_modifier = !modifier.nil?
+      @patient.has_modifier?.should be == has_modifier
+   end
+   
+   
+   describe 'given knowledge that the acting player does not see a wager' do
+      it 'properly changes the given action to its more precise form' do
+         PokerAction::HIGH_RESOLUTION_ACTION_CONVERSION.each do |imprecise_action, precise_action|
+            next if :fold == imprecise_action
+            imprecise_action_character = PokerAction::LEGAL_ACTIONS[imprecise_action]
+            precise_action_character = PokerAction::LEGAL_ACTIONS[precise_action]
+            if PokerAction::MODIFIABLE_ACTIONS.values.include? imprecise_action_character
+               modifier = default_modifier
+               expected_acpc_form = precise_action_character + modifier.to_s
+            else   
+               modifier = nil
+               expected_acpc_form = precise_action_character
             end
+            PokerAction.new(imprecise_action_character, 0, modifier, false).to_acpc.should ==(expected_acpc_form)
          end
       end
    end
    
-   def instantiate_each_action_from_symbols(given_modifier=nil)
+   def instantiate_each_action_from_symbols(amount_to_put_in_pot=0,
+                                            modifier=nil)
       PokerAction::LEGAL_SYMBOLS.each do |sym|
          modifier = if PokerAction::MODIFIABLE_ACTIONS.keys.include? sym
-            given_modifier
+            modifier
          else
             nil
          end
-         yield sym, PokerAction.new(sym, modifier)
+         
+         @patient = PokerAction.new(sym, amount_to_put_in_pot, modifier)
+         yield sym, modifier
       end
    end
-   def instantiate_each_action_from_strings(given_modifier=nil)
+   def instantiate_each_action_from_strings(amount_to_put_in_pot=0,
+                                            modifier=nil)
       PokerAction::LEGAL_STRINGS.each do |string|
          modifier = if PokerAction::MODIFIABLE_ACTIONS.keys.include? string.to_sym
-            given_modifier
+            modifier
          else
             nil
          end
-         yield string, PokerAction.new(string, modifier)
+         
+         @patient = PokerAction.new(string, amount_to_put_in_pot, modifier)
+         yield string, modifier
       end
    end
-   def instantiate_each_action_from_acpc_characters(given_modifier=nil)
-      PokerAction::LEGAL_ACPC_CHARACTERS.each do |char|
-         modifier = if PokerAction::MODIFIABLE_ACTIONS.values.include? char
-            given_modifier
-         else
-            nil
-         end
-         yield char, PokerAction.new(char, modifier)
-      end
-   end
-   def instantiate_each_action_from_modified_acpc_characters(given_modifier=nil)
-      unless given_modifier
-         given_modifier = mock('ChipStack')
-         given_modifier.stubs(:to_s).returns('9001')
+   def instantiate_each_action_from_modified_strings(amount_to_put_in_pot=0,
+                                                             modifier=nil)
+      unless modifier
+         modifier = mock('ChipStack')
+         modifier.stubs(:to_s).returns('9001')
       end
       PokerAction::MODIFIABLE_ACTIONS.values.each do |char|
-         modified_action = char + given_modifier.to_s
-         yield modified_action, PokerAction.new(modified_action)
+         string = PokerAction::LEGAL_ACTIONS.key(char).to_s
+         modified_action = string + modifier.to_s
+         
+         @patient = PokerAction.new(modified_action, amount_to_put_in_pot)
+         yield string, modifier
+      end
+   end
+   def instantiate_each_action_from_acpc_characters(amount_to_put_in_pot=0,
+                                                    modifier=nil)
+      PokerAction::LEGAL_ACPC_CHARACTERS.each do |char|
+         modifier = if PokerAction::MODIFIABLE_ACTIONS.values.include? char
+            modifier
+         else
+            nil
+         end
+
+         @patient = PokerAction.new(char, amount_to_put_in_pot, modifier)
+         yield char, modifier
+      end
+   end
+   def instantiate_each_action_from_modified_acpc_characters(amount_to_put_in_pot=0,
+                                                             modifier=nil)
+      unless modifier
+         modifier = mock('ChipStack')
+         modifier.stubs(:to_s).returns('9001')
+      end
+      PokerAction::MODIFIABLE_ACTIONS.values.each do |char|
+         modified_action = char + modifier.to_s
+         
+         @patient = PokerAction.new(modified_action, amount_to_put_in_pot)
+         yield char, modifier
       end
    end
 end

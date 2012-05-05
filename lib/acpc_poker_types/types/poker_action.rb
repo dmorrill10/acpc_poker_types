@@ -12,6 +12,10 @@ class PokerAction
    
    exceptions :illegal_poker_action, :illegal_poker_action_modification
    
+   # @return The amount that the player taking this action needs to put in the pot.
+   #  Could be negative to imply the acting player takes chips from the pot.
+   attr_reader :amount_to_put_in_pot
+   
    # @return A modifier for the action (i.e. a bet or raise size).
    attr_reader :modifier
    
@@ -36,8 +40,10 @@ class PokerAction
    # @param [Symbol, String] action A representation of this action.
    # @param [ChipStack, NilClass] modifier A modifier for the action (i.e. a bet or raise size).
    # @raise IllegalPokerAction
-   def initialize(action, modifier=nil, acting_player_sees_wager=true)
+   def initialize(action, amount_to_put_in_pot=0, modifier=nil,
+                  acting_player_sees_wager=true)
       (@symbol, @modifier) = validate_action action, modifier, acting_player_sees_wager
+      @amount_to_put_in_pot = amount_to_put_in_pot
    end
    
    def ==(other_action)
@@ -54,10 +60,9 @@ class PokerAction
       @symbol
    end
    
-   # @todo Should probably display the modifier here as well.
    # @return [String] String representation of this action.
    def to_s
-      @symbol.to_s
+      @symbol.to_s + @modifier.to_s
    end
    
    # @return [String] Full ACPC representation of this action.
@@ -105,9 +110,8 @@ class PokerAction
    
    def increase_resolution_of_action(action, acting_player_sees_wager)
       if acting_player_sees_wager
-         action
-      else
-         HIGH_RESOLUTION_ACTION_CONVERSION[action]
+         return action
       end
+      HIGH_RESOLUTION_ACTION_CONVERSION[action]
    end
 end
