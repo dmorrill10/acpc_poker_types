@@ -197,8 +197,6 @@ describe MatchStateString do
       end
    end
    
-   # Non-test methods #########################################################
-   
    # @param [Integer] An amount to append to actions.  If none is given,
    #  +raise_amount+ defaults to an empty string.
    def test_all_rounds_with_given_action_string(action_string, raise_amount = '')
