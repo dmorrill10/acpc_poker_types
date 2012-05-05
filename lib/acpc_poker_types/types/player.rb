@@ -100,8 +100,11 @@ class Player
 	
 	# @param [PokerAction] action The action to take.
 	def take_action!(action)
-      # //////////////////
       @actions_taken_in_current_hand.last << action
+      
+      return @hole_cards = nil if :fold == action.to_sym
+      
+      take_from_chip_stack! action.amount_to_put_in_pot
 	end
 	
 	# @return [Boolean] Reports whether or not this player has folded.
@@ -111,7 +114,7 @@ class Player
 	
 	# @return [Boolean] Reports whether or not this player is all-in.
 	def all_in?
-      0 == chip_stack
+      0 == @chip_stack
 	end
    
    # @return [Boolean] Whether or not this player is active (has not folded
@@ -124,17 +127,19 @@ class Player
    def round
       @actions_taken_in_current_hand.length - 1
    end
-   
-   def add_to_stack(chips)
-      @chip_stack += chips
-      @chip_balance += chips.to_i
-   end
-   
+      
    # Adjusts this player's state when it takes chips from the pot.
    # @param [Integer] number_of_chips_from_the_pot The number of chips
    #  this player has won from the pot.
    def take_winnings!(number_of_chips_from_the_pot)
       add_to_stack number_of_chips_from_the_pot
+   end
+   
+   private
+   
+   def add_to_stack(chips)
+      @chip_stack += chips
+      @chip_balance += chips.to_i
    end
    
    # Take chips away from this player's chip stack.

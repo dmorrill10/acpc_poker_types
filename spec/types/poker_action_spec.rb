@@ -89,6 +89,23 @@ describe PokerAction do
          end
       end
    end
+   describe 'given knowledge that the acting player does not see a wager' do
+      it 'properly changes the given action to its more precise form' do
+         PokerAction::HIGH_RESOLUTION_ACTION_CONVERSION.each do |imprecise_action, precise_action|
+            next if :fold == imprecise_action
+            imprecise_action_character = PokerAction::LEGAL_ACTIONS[imprecise_action]
+            precise_action_character = PokerAction::LEGAL_ACTIONS[precise_action]
+            if PokerAction::MODIFIABLE_ACTIONS.values.include? imprecise_action_character
+               modifier = default_modifier
+               expected_acpc_form = precise_action_character + modifier.to_s
+            else   
+               modifier = nil
+               expected_acpc_form = precise_action_character
+            end
+            PokerAction.new(imprecise_action_character, 0, modifier, false).to_acpc.should ==(expected_acpc_form)
+         end
+      end
+   end
    
    def default_modifier
       modifier_amount = 9001
@@ -120,27 +137,7 @@ describe PokerAction do
        
       has_modifier = !modifier.nil?
       @patient.has_modifier?.should be == has_modifier
-   end
-   
-   
-   describe 'given knowledge that the acting player does not see a wager' do
-      it 'properly changes the given action to its more precise form' do
-         PokerAction::HIGH_RESOLUTION_ACTION_CONVERSION.each do |imprecise_action, precise_action|
-            next if :fold == imprecise_action
-            imprecise_action_character = PokerAction::LEGAL_ACTIONS[imprecise_action]
-            precise_action_character = PokerAction::LEGAL_ACTIONS[precise_action]
-            if PokerAction::MODIFIABLE_ACTIONS.values.include? imprecise_action_character
-               modifier = default_modifier
-               expected_acpc_form = precise_action_character + modifier.to_s
-            else   
-               modifier = nil
-               expected_acpc_form = precise_action_character
-            end
-            PokerAction.new(imprecise_action_character, 0, modifier, false).to_acpc.should ==(expected_acpc_form)
-         end
-      end
-   end
-   
+   end   
    def instantiate_each_action_from_symbols(amount_to_put_in_pot=0,
                                             modifier=nil)
       PokerAction::LEGAL_SYMBOLS.each do |sym|
