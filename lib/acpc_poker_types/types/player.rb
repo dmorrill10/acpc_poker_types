@@ -14,22 +14,7 @@ class Player
    # @return [Integer] This player's seat.  This is a 0 indexed
    #  number that represents the order that this player joined the dealer.
    attr_reader :seat
-   
-   # @return [Integer] This player's position relative to the dealer, indexed
-   #  such that the player immediately to to the left of the dealer has a
-   #  +position_relative_to_dealer+ of zero.
-   # @example (see MatchStateString#position_relative_to_dealer)
-   attr_accessor :position_relative_to_dealer
-   
-   # @return [Integer] This player's position relative to the user, indexed
-   #  such that the player immediately to to the left of the dealer has a
-   #  +position_relative_to_dealer+ of zero.
-   # @example The player immediately to the left of the user has
-   #     +position_relative_to_user+ == 0
-   # @example The user has
-   #     +position_relative_to_user+ == <number of players> - 1
-   attr_reader :position_relative_to_user
-      
+
    # @return [ChipStack] This player's chip stack.
    attr_reader :chip_stack
    
@@ -56,14 +41,12 @@ class Player
    # @param [Integer] position_relative_to_dealer (see #position_relative_to_dealer)
    # @param [#to_i] chip_stack (see #chip_stack)
    # @param [Hand] hole_cards (see #hole_cards)
-   def initialize(name, seat, position_relative_to_user,
-                  position_relative_to_dealer, chip_stack, hole_cards=Hand.new)
+   def initialize(name, seat, chip_stack, hole_cards=Hand.new)
       @name = name
       @seat = seat
-      @position_relative_to_user = position_relative_to_user
       @chip_balance = 0
       
-      start_new_hand!(position_relative_to_dealer, chip_stack, hole_cards)
+      start_new_hand!(chip_stack, hole_cards)
    end
    
    # @return [String] String representation of this player.
@@ -81,12 +64,9 @@ class Player
 		hash_rep
 	end
 	
-	# @param [Integer] position_relative_to_dealer (see #position_relative_to_dealer)
 	# @param [#to_i] chip_stack (see #chip_stack)
 	# @param [Hand] hole_cards (see #hole_cards)
-	def start_new_hand!(position_relative_to_dealer, chip_stack=@chip_stack,
-                       hole_cards=Hand.new)
-      @position_relative_to_dealer = position_relative_to_dealer
+	def start_new_hand!(chip_stack=@chip_stack, hole_cards=Hand.new)
       @chip_stack = chip_stack
       @hole_cards = hole_cards
       @actions_taken_in_current_hand = []

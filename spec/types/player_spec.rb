@@ -12,21 +12,16 @@ describe Player do
    before(:each) do
       @name = 'p1'
       @seat = '1'
-      @position_relative_to_dealer = '0'
-      @position_relative_to_user = '1'
       @chip_stack = default_chip_stack
       @hole_cards = default_hand
       
-      @patient = Player.join_match @name, @seat, @position_relative_to_user,
-         @position_relative_to_dealer, @chip_stack, @hole_cards
+      @patient = Player.join_match @name, @seat, @chip_stack, @hole_cards
    end
    
    describe '#join_match' do
       it 'initializes properly' do
          check_patient_data @name,
                             @seat,
-                            @position_relative_to_user,
-                            @position_relative_to_dealer,
                             @chip_stack,
                             0,
                             @hole_cards,
@@ -53,7 +48,7 @@ describe Player do
                @position_relative_to_dealer = i
                @chip_stack = default_chip_stack
                
-               @patient.start_new_hand! @position_relative_to_dealer, @chip_stack, @hole_cards
+               @patient.start_new_hand! @chip_stack, @hole_cards
                test_sequence_of_non_fold_actions
                
                i += 1
@@ -65,7 +60,7 @@ describe Player do
                @hole_cards = hand
                @position_relative_to_dealer = i
                
-               @patient.start_new_hand! @position_relative_to_dealer, @chip_stack, @hole_cards
+               @patient.start_new_hand! @chip_stack, @hole_cards
                test_sequence_of_non_fold_actions
                
                i += 1
@@ -81,8 +76,6 @@ describe Player do
          @patient.take_action! action
          check_patient_data @name,
                             @seat,
-                            @position_relative_to_user,
-                            @position_relative_to_dealer,
                             @chip_stack,
                             0,
                             nil,
@@ -100,8 +93,6 @@ describe Player do
          @patient.take_action! action
          check_patient_data @name,
                             @seat,
-                            @position_relative_to_user,
-                            @position_relative_to_dealer,
                             0,
                             -@chip_stack.to_i,
                             @hole_cards,
@@ -124,8 +115,6 @@ describe Player do
    
    def check_patient_data(name,
                           seat,
-                          position_relative_to_user,
-                          position_relative_to_dealer,
                           chip_stack,
                           chip_balance,
                           hole_cards,
@@ -136,8 +125,6 @@ describe Player do
                           round)
       @patient.name.should == name
       @patient.seat.should == seat
-      @patient.position_relative_to_user.should == position_relative_to_user
-      @patient.position_relative_to_dealer.should == position_relative_to_dealer
       @patient.chip_stack.should == chip_stack
       @patient.chip_balance.should == chip_balance
       @patient.hole_cards.should == hole_cards
@@ -221,8 +208,6 @@ describe Player do
             @patient.take_action! action
             check_patient_data @name,
                                @seat,
-                               @position_relative_to_user,
-                               @position_relative_to_dealer,
                                chip_stack,
                                chip_balance,
                                @hole_cards,
