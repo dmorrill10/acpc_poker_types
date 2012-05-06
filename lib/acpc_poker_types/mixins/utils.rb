@@ -78,8 +78,8 @@ class Integer
    # @example <code>1.position_relative_to 0, 3</code> == 0
    # @example <code>1.position_relative_to 1, 3</code> == 2
    def position_relative_to(seat, number_of_players)
-      raise SeatOutOfBounds unless seat_in_bounds?(seat, number_of_players) &&
-         seat_in_bounds?(self, number_of_players)
+      raise SeatOutOfBounds unless seat.seat_in_bounds?(number_of_players) &&
+         seat_in_bounds?(number_of_players)
          
       adjusted_seat = if self > seat
          self
@@ -107,23 +107,26 @@ class Integer
    # @example <code>1.seat_from_relative_position 2, 3</code> == 1
    def seat_from_relative_position(relative_position_of_self_to_result,
                                    number_of_players)
-      raise SeatOutOfBounds unless seat_in_bounds?(self, number_of_players)
-      raise RelativePositionOutOfBounds unless seat_in_bounds?(relative_position_of_self_to_result,
-                                                               number_of_players)
+      raise SeatOutOfBounds unless seat_in_bounds?(number_of_players)
+      
+      unless relative_position_of_self_to_result.seat_in_bounds?(number_of_players)
+         raise RelativePositionOutOfBounds
+      end
          
       position_adjustment = relative_position_of_self_to_result + 1
       
       to_seat = self + number_of_players - position_adjustment
-      if self > to_seat || !seat_in_bounds?(to_seat, number_of_players)
+      if self > to_seat || !to_seat.seat_in_bounds?(number_of_players)
          self - position_adjustment
       else
          to_seat
       end
    end
    
-   private
-   
-   def seat_in_bounds?(seat, number_of_players)
-      seat < number_of_players && seat >= 0
+   # @param [Integer] number_of_players The number of players at the table.
+   # @return [Bool] Reports whether or not +self+ represents an out of bounds
+   #  seat.
+   def seat_in_bounds?(number_of_players)
+      self < number_of_players && self >= 0
    end
 end
