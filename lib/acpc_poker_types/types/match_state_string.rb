@@ -163,10 +163,6 @@ class MatchStateString
       round > last_round
    end
    
-   def position_relative_to_dealer_of(seat)
-      position_difference_between_user_and_seat = @position_relative_to_dealer
-   end
-   
    def player_position_relative_to_self
       number_of_players - 1
    end
