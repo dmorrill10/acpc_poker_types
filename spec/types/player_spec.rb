@@ -14,8 +14,9 @@ describe Player do
       @seat = '1'
       @chip_stack = default_chip_stack
       @hole_cards = default_hand
+      @blind = 10
       
-      @patient = Player.join_match @name, @seat, @chip_stack, @hole_cards
+      @patient = Player.join_match @name, @seat, @chip_stack
    end
    
    describe '#join_match' do
@@ -24,12 +25,12 @@ describe Player do
                             @seat,
                             @chip_stack,
                             0,
-                            @hole_cards,
-                            [[]],
-                            false,
-                            false,
+                            nil,
+                            nil,
                             true,
-                            0
+                            false,
+                            false,
+                            nil
       end
    end
    describe '#take_action!' do
@@ -48,7 +49,7 @@ describe Player do
                @position_relative_to_dealer = i
                @chip_stack = default_chip_stack
                
-               @patient.start_new_hand! @chip_stack, @hole_cards
+               @patient.start_new_hand! @blind, @chip_stack, @hole_cards
                test_sequence_of_non_fold_actions
                
                i += 1
@@ -60,7 +61,7 @@ describe Player do
                @hole_cards = hand
                @position_relative_to_dealer = i
                
-               @patient.start_new_hand! @chip_stack, @hole_cards
+               @patient.start_new_hand! @blind, @chip_stack, @hole_cards
                test_sequence_of_non_fold_actions
                
                i += 1
@@ -186,7 +187,7 @@ describe Player do
       chip_balance = 0
       chip_stack = default_chip_stack
       actions_taken_this_hand = []
-         
+      
       number_of_rounds = 4
       number_of_rounds.times do |round|
          @patient.start_new_round! unless 0 == round
