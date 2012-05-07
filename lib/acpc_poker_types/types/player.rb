@@ -111,8 +111,14 @@ class Player
    # Adjusts this player's state when it takes chips from the pot.
    # @param [Integer] number_of_chips_from_the_pot The number of chips
    #  this player has won from the pot.
+   # @raise (see #take_from_chip_stack!)
    def take_winnings!(number_of_chips_from_the_pot)
       add_to_stack number_of_chips_from_the_pot
+   end
+   
+   # @param [#to_i] blind_amount The blind amount for this player to pay.
+   def pay_blind!(blind_amount)
+      take_from_chip_stack! blind_amount
    end
    
    private
