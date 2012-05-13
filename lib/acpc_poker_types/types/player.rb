@@ -121,6 +121,10 @@ class Player
       add_to_stack number_of_chips_from_the_pot
    end
    
+   def assign_cards!(hole_cards)
+      @hole_cards = hole_cards
+   end
+   
    private
    
    # @param [#to_i] blind_amount The blind amount for this player to pay.
