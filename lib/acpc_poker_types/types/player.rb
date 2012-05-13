@@ -41,12 +41,11 @@ class Player
    # @param [Integer] position_relative_to_dealer (see #position_relative_to_dealer)
    # @param [#to_i] chip_stack (see #chip_stack)
    # @param [Hand] hole_cards (see #hole_cards)
-   def initialize(name, seat, chip_stack, hole_cards=Hand.new)
+   def initialize(name, seat, chip_stack)
       @name = name
       @seat = seat
       @chip_balance = 0
-      
-      start_new_hand!(chip_stack, hole_cards)
+      @chip_stack = chip_stack
    end
    
    # @return [String] String representation of this player.
@@ -64,12 +63,14 @@ class Player
 		hash_rep
 	end
 	
+	# @param [#to_i] blind_amount The blind amount for this player to pay.
 	# @param [#to_i] chip_stack (see #chip_stack)
 	# @param [Hand] hole_cards (see #hole_cards)
-	def start_new_hand!(chip_stack=@chip_stack, hole_cards=Hand.new)
+	def start_new_hand!(blind=ChipStack.new(0), chip_stack=@chip_stack, hole_cards=Hand.new)
       @chip_stack = chip_stack
       @hole_cards = hole_cards
       @actions_taken_in_current_hand = []
+      pay_blind!(blind)
       
       start_new_round!
 	end
@@ -105,7 +106,11 @@ class Player
    
    # @return [Integer] The current round, zero indexed.
    def round
-      @actions_taken_in_current_hand.length - 1
+      begin
+         @actions_taken_in_current_hand.length - 1
+      rescue
+         nil
+      end
    end
       
    # Adjusts this player's state when it takes chips from the pot.
@@ -116,12 +121,12 @@ class Player
       add_to_stack number_of_chips_from_the_pot
    end
    
+   private
+   
    # @param [#to_i] blind_amount The blind amount for this player to pay.
    def pay_blind!(blind_amount)
       take_from_chip_stack! blind_amount
    end
-   
-   private
    
    def add_to_stack(chips)
       @chip_stack += chips

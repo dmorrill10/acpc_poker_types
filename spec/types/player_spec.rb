@@ -9,21 +9,18 @@ require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/types/hand", __FILE__)
 
 describe Player do
    
-   before(:each) do
-      @name = 'p1'
-      @seat = '1'
-      @chip_stack = default_chip_stack
-      @hole_cards = default_hand
-      @blind = 10
-      
-      @patient = Player.join_match @name, @seat, @chip_stack
+   NAME = 'p1'
+   SEAT = '1'
+   INITIAL_CHIP_STACK = 100000
+   BLIND = 100
+   
+   before(:each) do      
+      init_patient
    end
    
    describe '#join_match' do
       it 'initializes properly' do
-         check_patient_data @name,
-                            @seat,
-                            @chip_stack,
+         check_patient_data INITIAL_CHIP_STACK,
                             0,
                             nil,
                             nil,
@@ -45,12 +42,10 @@ describe Player do
          it "in Doyle's game" do
             i = 0
             various_hands do |hand|
-               @hole_cards = hand
+               init_patient
                @position_relative_to_dealer = i
-               @chip_stack = default_chip_stack
                
-               @patient.start_new_hand! @blind, @chip_stack, @hole_cards
-               test_sequence_of_non_fold_actions
+               test_sequence_of_non_fold_actions hand
                
                i += 1
             end
@@ -58,11 +53,10 @@ describe Player do
          it 'in a continuous game' do
             i = 0
             various_hands do |hand|
-               @hole_cards = hand
+               init_patient
                @position_relative_to_dealer = i
                
-               @patient.start_new_hand! @blind, @chip_stack, @hole_cards
-               test_sequence_of_non_fold_actions
+               test_sequence_of_non_fold_actions hand
                
                i += 1
             end
@@ -74,11 +68,11 @@ describe Player do
          action = mock 'PokerAction'
          action.stubs(:to_sym).returns(:fold)
       
+         @patient.start_new_hand! BLIND, INITIAL_CHIP_STACK
          @patient.take_action! action
-         check_patient_data @name,
-                            @seat,
-                            @chip_stack,
-                            0,
+         
+         check_patient_data INITIAL_CHIP_STACK - BLIND,
+                            -BLIND,
                             nil,
                            [[action]],
                            true,
@@ -89,14 +83,15 @@ describe Player do
       it 'it is all-in' do
          action = mock 'PokerAction'
          action.stubs(:to_sym).returns(:raise)
-         action.stubs(:amount_to_put_in_pot).returns(@chip_stack.to_i)
+         action.stubs(:amount_to_put_in_pot).returns(INITIAL_CHIP_STACK - BLIND)
          
+         hand = default_hand
+         @patient.start_new_hand! BLIND, INITIAL_CHIP_STACK, hand
          @patient.take_action! action
-         check_patient_data @name,
-                            @seat,
-                            0,
-                            -@chip_stack.to_i,
-                            @hole_cards,
+         
+         check_patient_data 0,
+                            -INITIAL_CHIP_STACK,
+                            hand,
                             [[action]],
                             false,
                             true,
@@ -114,9 +109,7 @@ describe Player do
       @patient.chip_balance.should be == pot_size
    end
    
-   def check_patient_data(name,
-                          seat,
-                          chip_stack,
+   def check_patient_data(chip_stack,
                           chip_balance,
                           hole_cards,
                           actions_taken_in_current_hand,
@@ -124,8 +117,8 @@ describe Player do
                           is_all_in,
                           is_active,
                           round)
-      @patient.name.should == name
-      @patient.seat.should == seat
+      @patient.name.should == NAME
+      @patient.seat.should == SEAT
       @patient.chip_stack.should == chip_stack
       @patient.chip_balance.should == chip_balance
       @patient.hole_cards.should == hole_cards
@@ -183,9 +176,11 @@ describe Player do
          yield action
       end
    end
-   def test_sequence_of_non_fold_actions
-      chip_balance = 0
-      chip_stack = default_chip_stack
+   def test_sequence_of_non_fold_actions(hole_cards=default_hand)
+      @patient.start_new_hand! BLIND, INITIAL_CHIP_STACK, hole_cards
+      
+      chip_balance = -BLIND
+      chip_stack = INITIAL_CHIP_STACK - BLIND
       actions_taken_this_hand = []
       
       number_of_rounds = 4
@@ -201,17 +196,17 @@ describe Player do
             chip_stack -= if chip_stack - action.amount_to_put_in_pot >= 0
                action.amount_to_put_in_pot
             else chip_stack end
+            
             is_all_in = 0 == chip_stack
             is_active = !is_all_in
             
             actions_taken_this_hand.last << action
             
             @patient.take_action! action
-            check_patient_data @name,
-                               @seat,
-                               chip_stack,
+            
+            check_patient_data chip_stack,
                                chip_balance,
-                               @hole_cards,
+                               hole_cards,
                                actions_taken_this_hand,
                                false,
                                is_all_in,
@@ -227,6 +222,10 @@ describe Player do
    end
    def default_hand
       hidden_cards = mock 'Hand'
+      
       hidden_cards
+   end
+   def init_patient
+      @patient = Player.join_match NAME, SEAT, INITIAL_CHIP_STACK
    end
 end
