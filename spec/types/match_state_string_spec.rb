@@ -151,7 +151,6 @@ describe MatchStateString do
             match_state = partial_match_state + betting + ':|' + hand
             patient = test_match_state_success match_state
             patient.round.should be == i
-            patient.in_new_round?(i-1).should be true
                
             betting += "c/"
          end
