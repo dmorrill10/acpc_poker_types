@@ -155,14 +155,7 @@ class MatchStateString
    def first_state_of_first_round?
       (0 == round) && (0 == number_of_actions_in_current_round)
    end
-   
-   # @param [Integer] last_round The round in which the last action was taken.
-   # @return [Boolean] +true+ if the current round is a later round than the
-   #  round in which the last action was taken, +false+ otherwise.
-   def in_new_round?(last_round)
-      round > last_round
-   end
-   
+
    def player_position_relative_to_self
       number_of_players - 1
    end
