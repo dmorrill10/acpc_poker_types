@@ -205,7 +205,7 @@ describe MatchStateString do
       list_of_opponents_hole_cards = [[]]
       
       (betting_string, list_of_betting_actions) = generate_betting_sequence action_string + raise_amount.to_s
-      number_of_actions_in_current_round = list_of_betting_actions.length
+      number_of_actions_this_round = list_of_betting_actions.length
       
       list_of_board_cards = []
       board_cards_string = ""
@@ -218,7 +218,7 @@ describe MatchStateString do
          test_full_information(match_state, list_of_betting_actions,
             last_action(list_of_betting_actions), users_hole_cards,
             list_of_opponents_hole_cards, list_of_board_cards, round_index,
-            number_of_actions_in_current_round)
+            number_of_actions_this_round)
          
          # Make an interesting raise amount if the caller specified a raise amount in the first place
          raise_amount += 10**round + round*3 unless raise_amount.to_s.empty?
@@ -244,7 +244,7 @@ describe MatchStateString do
    
    def test_full_information(match_state, list_of_betting_actions,
          last_action, users_hole_cards, list_of_opponents_hole_cards,
-         list_of_board_cards, round, number_of_actions_in_current_round)
+         list_of_board_cards, round, number_of_actions_this_round)
             
       patient = test_match_state_success match_state
       
@@ -254,7 +254,7 @@ describe MatchStateString do
       patient.list_of_opponents_hole_cards.should be == list_of_opponents_hole_cards
       (if patient.board_cards.join.empty? then [] else [patient.board_cards.join] end).should be == list_of_board_cards
       patient.round.should be == round
-      patient.number_of_actions_in_current_round.should be == number_of_actions_in_current_round
+      patient.number_of_actions_this_round.should be == number_of_actions_this_round
    end
    
    def test_match_state_initialization_error(incomplete_match_state)

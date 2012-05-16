@@ -136,7 +136,14 @@ class MatchStateString
    end
    
    # @return [Integer] The number of actions in the current round.
-   def number_of_actions_in_current_round() @betting_sequence[round].length end
+   def number_of_actions_this_round() @betting_sequence[round].length end
+   
+   # @return [Integer] The number of actions in the current hand.
+   def number_of_actions_this_hand
+      @betting_sequence.inject(0) do |sum, sequence_per_round|
+         sum += sequence_per_round.length
+      end
+   end
    
    # @param [Array<Action>] betting_sequence=@betting_sequence The sequence of
    #  actions to link into an ACPC string.
@@ -153,7 +160,7 @@ class MatchStateString
    
    # @return [Bool] Reports whether or not it is the first state of the first round.
    def first_state_of_first_round?
-      (0 == round) && (0 == number_of_actions_in_current_round)
+      (0 == number_of_actions_this_hand)
    end
 
    def player_position_relative_to_self
