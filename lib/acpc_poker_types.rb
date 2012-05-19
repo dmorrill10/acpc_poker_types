@@ -1,4 +1,6 @@
-require "version"
+require File.expand_path("../acpc_poker_types/version", __FILE__)
+
+require File.expand_path("../hand_evaluator", __FILE__)
 
 require File.expand_path("../acpc_poker_types/acpc_poker_types_defs", __FILE__)
 require File.expand_path("../acpc_poker_types/types/board_cards", __FILE__)

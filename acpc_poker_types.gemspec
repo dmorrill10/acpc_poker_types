@@ -1,7 +1,5 @@
-# -*- encoding: utf-8 -*-
-$:.push File.expand_path("../lib", __FILE__)
-require 'version'
-require 'rake/extensiontask'
+#$:.push File.expand_path("../lib", __FILE__)
+require File.expand_path('../lib/acpc_poker_types/version', __FILE__)
 
 Gem::Specification.new do |s|
   s.name        = "acpc_poker_types"
@@ -20,11 +18,9 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'guard-rspec'
   s.add_development_dependency 'guard-bundler'
   s.add_development_dependency 'libnotify'
-  
-  s.rubyforge_project = "acpc_poker_types"
 
   s.files         = Dir.glob("lib/**/*") + Dir.glob("ext/**/*") + Dir.glob("external/**/*") + %w(Rakefile acpc_poker_types.gemspec tasks.rb README.md)
   s.test_files    = Dir.glob "spec/**/*"
-  s.extensions    = FileList["ext/**/extconf.rb"]
+  s.extensions    = Dir.glob "ext/**/extconf.rb"
   s.require_paths = ["lib"]
 end
