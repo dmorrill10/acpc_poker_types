@@ -7,6 +7,7 @@ require File.expand_path('../../mixins/utils', __FILE__)
 
 # Class to model a player.
 class Player
+   include Comparable
    
    # @return [String] The name of this player.
    attr_reader :name
@@ -37,10 +38,7 @@ class Player
    # @todo These comments don't work as expected
    # @param [String] name (see #name)
    # @param [Integer] seat (see #seat)
-   # @param [Integer] position_relative_to_user (see #position_relative_to_user)
-   # @param [Integer] position_relative_to_dealer (see #position_relative_to_dealer)
    # @param [#to_i] chip_stack (see #chip_stack)
-   # @param [Hand] hole_cards (see #hole_cards)
    def initialize(name, seat, chip_stack)
       @name = name
       @seat = seat
