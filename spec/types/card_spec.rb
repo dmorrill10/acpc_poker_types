@@ -26,7 +26,7 @@ describe Card do
          for_every_rank_and_suit_in_the_deck { |rank, suit| Card.new(rank, suit) }
       end
       it 'correctly understands all suits and ranks currently recognized in string form' do
-         for_every_rank_and_suit_in_the_deck { |rank, suit| Card.new(CARD_RANKS[rank] + CARD_SUITS[suit][:acpc_character]) }
+         for_every_rank_and_suit_in_the_deck { |rank, suit| Card.new(AcpcPokerTypesDefs::CARD_RANKS[rank] + AcpcPokerTypesDefs::CARD_SUITS[suit][:acpc_character]) }
       end
    end
    describe '#to_i' do
@@ -34,12 +34,12 @@ describe Card do
          for_every_rank_and_suit_in_the_deck do |rank, suit|
             patient = Card.new rank, suit
             
-            string_rank = CARD_RANKS[rank]
-            string_suit = CARD_SUITS[suit][:acpc_character]
+            string_rank = AcpcPokerTypesDefs::CARD_RANKS[rank]
+            string_suit = AcpcPokerTypesDefs::CARD_SUITS[suit][:acpc_character]
                
-            integer_rank = CARD_RANK_NUMBERS[string_rank]
-            integer_suit = CARD_SUIT_NUMBERS[string_suit]
-            integer_card = integer_rank * CARD_SUITS.length + integer_suit
+            integer_rank = AcpcPokerTypesDefs::CARD_RANK_NUMBERS[string_rank]
+            integer_suit = AcpcPokerTypesDefs::CARD_SUIT_NUMBERS[string_suit]
+            integer_card = integer_rank * AcpcPokerTypesDefs::CARD_SUITS.length + integer_suit
             
             patient.to_i.should eq(integer_card)
          end
@@ -50,8 +50,8 @@ describe Card do
          for_every_rank_and_suit_in_the_deck do |rank, suit|
             patient = Card.new rank, suit
             
-            string_rank = CARD_RANKS[rank]
-            string_suit = CARD_SUITS[suit][:acpc_character]
+            string_rank = AcpcPokerTypesDefs::CARD_RANKS[rank]
+            string_suit = AcpcPokerTypesDefs::CARD_SUITS[suit][:acpc_character]
             string_card = string_rank + string_suit
                
             patient.to_s.should eq(string_card)
@@ -63,7 +63,7 @@ describe Card do
    # @param [Integer] integer_suit The integer ACPC representation of the card's suit.
    # @return [Integer] The integer ACPC representation of the card.
    def make_acpc_card(integer_rank, integer_suit)
-      integer_rank * CARD_SUITS.length + integer_suit
+      integer_rank * AcpcPokerTypesDefs::CARD_SUITS.length + integer_suit
    end
    
    # @param [String] string_card A card represented by a string of the form
@@ -73,8 +73,8 @@ describe Card do
       string_rank = string_card[0]
       string_suit = string_card[1]
       
-      integer_rank = CARD_RANK_NUMBERS[string_rank]
-      integer_suit = CARD_SUIT_NUMBERS[string_suit]
+      integer_rank = AcpcPokerTypesDefs::CARD_RANK_NUMBERS[string_rank]
+      integer_suit = AcpcPokerTypesDefs::CARD_SUIT_NUMBERS[string_suit]
             
       make_acpc_card(integer_rank, integer_suit)
    end

@@ -26,8 +26,8 @@ describe Rank do
          for_every_rank_in_the_deck do |rank|
             patient = Rank.new rank
             
-            string_rank = CARD_RANKS[rank]
-            integer_rank = CARD_RANK_NUMBERS[string_rank]
+            string_rank = AcpcPokerTypesDefs::CARD_RANKS[rank]
+            integer_rank = AcpcPokerTypesDefs::CARD_RANK_NUMBERS[string_rank]
             
             patient.to_i.should eq(integer_rank)
          end
@@ -38,7 +38,7 @@ describe Rank do
          for_every_rank_in_the_deck do |rank|
             patient = Rank.new rank
             
-            string_rank = CARD_RANKS[rank]
+            string_rank = AcpcPokerTypesDefs::CARD_RANKS[rank]
             
             patient.to_s.should eq(string_rank)
          end

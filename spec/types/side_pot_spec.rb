@@ -195,7 +195,7 @@ describe SidePot do
       setup_succeeding_test
       
       calling_test
-      MAX_VALUES[:rounds].times do |round|
+      AcpcPokerTypesDefs::MAX_VALUES[:rounds].times do |round|
          @patient.round = round
          betting_test @player1, round
          raising_test @player2, @player1, round

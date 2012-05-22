@@ -19,7 +19,7 @@ describe GameDefinition do
    
    describe '#initialize' do
       it "parses all available game definitions properly" do      
-         GAME_DEFINITION_FILE_NAMES.values.each do |game_definition_file_name|
+         AcpcPokerTypesDefs::GAME_DEFINITION_FILE_NAMES.values.each do |game_definition_file_name|
             patient = GameDefinition.new game_definition_file_name
             
             # I reason that if the GameDefinition produced by the string version of the patient is identical to the patient, then it's likley that everything works

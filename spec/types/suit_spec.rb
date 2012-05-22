@@ -26,8 +26,8 @@ describe Suit do
          for_every_suit_in_the_deck do |suit|
             patient = Suit.new suit
             
-            string_suit = CARD_SUITS[suit][:acpc_character]
-            integer_suit = CARD_SUIT_NUMBERS[string_suit]
+            string_suit = AcpcPokerTypesDefs::CARD_SUITS[suit][:acpc_character]
+            integer_suit = AcpcPokerTypesDefs::CARD_SUIT_NUMBERS[string_suit]
             
             patient.to_i.should eq(integer_suit)
          end
@@ -38,7 +38,7 @@ describe Suit do
          for_every_suit_in_the_deck do |suit|
             patient = Suit.new suit
             
-            string_suit = CARD_SUITS[suit][:acpc_character]
+            string_suit = AcpcPokerTypesDefs::CARD_SUITS[suit][:acpc_character]
             
             patient.to_s.should eq(string_suit)
          end
@@ -49,7 +49,7 @@ describe Suit do
          for_every_suit_in_the_deck do |suit|
             patient = Suit.new suit
             
-            html_suit = CARD_SUITS[suit][:html_character]
+            html_suit = AcpcPokerTypesDefs::CARD_SUITS[suit][:html_character]
             
             patient.to_html.should eq(html_suit)
          end

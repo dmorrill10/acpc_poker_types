@@ -201,7 +201,7 @@ class MatchStateString
          list_of_hole_card_hands.push hand
       end
       while list_of_hole_card_hands.length < (string_of_hole_cards.count('|') + 1)
-         list_of_hole_card_hands.push ''
+         list_of_hole_card_hands.push Hand.new
       end
       list_of_hole_card_hands
    end
