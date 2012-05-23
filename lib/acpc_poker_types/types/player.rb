@@ -44,6 +44,7 @@ class Player
       @seat = seat
       @chip_balance = 0
       @chip_stack = chip_stack
+      @actions_taken_in_current_hand = []
    end
    
    # @return [String] String representation of this player.
