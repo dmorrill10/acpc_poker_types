@@ -44,7 +44,6 @@ class Player
       @seat = seat
       @chip_balance = 0
       @chip_stack = chip_stack
-      @actions_taken_in_current_hand = []
    end
    
    # @return [String] String representation of this player.
@@ -58,9 +57,16 @@ class Player
 		self.instance_variables.each { |var| hash_rep.store(var.to_s.delete("@"), self.instance_variable_get(var)) }
 		hash_rep["chip_stack"] = @chip_stack.to_i
 		hash_rep["hole_cards"] = @hole_cards.to_s
-		hash_rep['actions_taken_in_current_hand'] = (@actions_taken_in_current_hand.map { |action| action.to_acpc }).join('')
+		hash_rep['actions_taken_in_current_hand'] = actions_taken_in_current_hand_to_string
 		
 		hash_rep
+	end
+	
+	def actions_taken_in_current_hand_to_string
+      return '' unless @actions_taken_in_current_hand
+      (@actions_taken_in_current_hand.map do |actions_per_round|
+         (actions_per_round.map { |action| action.to_acpc }).join('')
+      end).join('/')
 	end
 	
 	# @param [#to_i] blind_amount The blind amount for this player to pay.
