@@ -57,7 +57,8 @@ class Player
 		self.instance_variables.each { |var| hash_rep.store(var.to_s.delete("@"), self.instance_variable_get(var)) }
 		hash_rep["chip_stack"] = @chip_stack.to_i
 		hash_rep["hole_cards"] = @hole_cards.to_s
-		hash_rep['actions_taken_in_current_round'] = (@actions_taken_in_current_round.map { |action| action.to_acpc }).join('')
+		hash_rep['actions_taken_in_current_hand'] = (@actions_taken_in_current_hand.map { |action| action.to_acpc }).join('')
+		
 		hash_rep
 	end
 	
