@@ -23,11 +23,11 @@ describe Player do
          check_patient_data INITIAL_CHIP_STACK,
                             0,
                             nil,
-                            nil,
+                            [[]],
+                            false,
+                            false,
                             true,
-                            false,
-                            false,
-                            nil
+                            0
       end
    end
    describe '#take_action!' do
@@ -67,13 +67,14 @@ describe Player do
       it 'it has folded' do   
          action = mock 'PokerAction'
          action.stubs(:to_sym).returns(:fold)
+         action.stubs(:amount_to_put_in_pot).returns(0)
       
          @patient.start_new_hand! BLIND, INITIAL_CHIP_STACK
          @patient.take_action! action
          
          check_patient_data INITIAL_CHIP_STACK - BLIND,
                             -BLIND,
-                            nil,
+                            Hand.new,
                            [[action]],
                            true,
                            false,

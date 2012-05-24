@@ -44,6 +44,8 @@ class Player
       @seat = seat
       @chip_balance = 0
       @chip_stack = chip_stack
+      
+      @actions_taken_in_current_hand = [[]]
    end
    
    # @return [String] String representation of this player.
@@ -89,14 +91,16 @@ class Player
 	def take_action!(action)
       @actions_taken_in_current_hand.last << action
       
-      return @hole_cards = nil if :fold == action.to_sym
-      
       take_from_chip_stack! action.amount_to_put_in_pot
 	end
 	
 	# @return [Boolean] Reports whether or not this player has folded.
 	def folded?
-      @hole_cards.nil?
+      if @actions_taken_in_current_hand.last.empty?
+         false
+      else
+         :fold == @actions_taken_in_current_hand.last.last.to_sym
+      end
 	end
 	
 	# @return [Boolean] Reports whether or not this player is all-in.
