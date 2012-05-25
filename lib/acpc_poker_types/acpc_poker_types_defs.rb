@@ -62,7 +62,7 @@ module AcpcPokerTypesDefs
    DEFAULT_FIRST_PLAYER_POSITION_IN_EVERY_ROUND = MAX_VALUES[:rounds].times.inject([]) { |list, i| list << 1 }
    
    # @return [Array] The default maximum raise in each round.
-   DEFAULT_MAX_RAISE_IN_EACH_ROUND = MAX_VALUES[:rounds].times.inject([]) { |list, i|  list << UINT8_MAX }
+   DEFAULT_MAX_NUMBER_Of_WAGERS = MAX_VALUES[:rounds].times.inject([]) { |list, i|  list << UINT8_MAX }
    
    # @return [Hash<Symbol, String>] File names of the game definitions understood by this application.
    GAME_DEFINITION_FILE_NAMES = lambda do

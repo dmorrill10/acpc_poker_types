@@ -10,16 +10,12 @@ module AcpcPokerTypesHelper
    
    # @param [Integer] number_of_players The number of players that require stacks.
    # @return [Array] The default list of initial stacks for every player.
-   def default_list_of_player_stacks(number_of_players)
+   def default_chip_stacks(number_of_players)
       list_of_player_stacks = []
       number_of_players.times do
          list_of_player_stacks << AcpcPokerTypesDefs::INT32_MAX
       end
       list_of_player_stacks
-   end
-   
-   def default_minimum_wager_in_each_round(number_of_rounds)
-      number_of_rounds.times.inject([]) { |list, i| list << big_blind }
    end
    
    # @yield [Card, Card] Iterate through every permutation of cards in the deck.
