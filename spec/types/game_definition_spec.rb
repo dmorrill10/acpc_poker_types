@@ -15,7 +15,6 @@ require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/types/game_definition", _
 describe GameDefinition do
    include AcpcPokerTypesDefs
    include AcpcPokerTypesHelper
-   include GameDefinitionHelper
    
    describe '#initialize' do
       it "parses all available game definitions properly" do      
@@ -44,7 +43,7 @@ describe GameDefinition do
       remaining_lines = []
       begin
          for_every_line_in_file game_definition_file_name do |definition|
-            next if game_def_line_not_informative definition
+            next if GameDefinition.game_def_line_not_informative? definition
             remaining_lines << definition
             game_definition_array.each do |definition_from_game|               
                remaining_lines.delete definition if definition.match("^\s*#{definition_from_game}")
