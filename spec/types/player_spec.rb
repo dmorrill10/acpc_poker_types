@@ -20,14 +20,18 @@ describe Player do
    
    describe '#join_match' do
       it 'initializes properly' do
-         check_patient_data INITIAL_CHIP_STACK,
-                            0,
-                            nil,
-                            [[]],
-                            false,
-                            false,
-                            true,
-                            0
+         @expected = {
+            chip_stack: INITIAL_CHIP_STACK,
+            chip_balance: 0,
+            chip_contribution: [0],
+            hole_cards: nil,
+            actions_taken_this_hand: [[]],
+            has_folded: false,
+            is_all_in: false,
+            is_active: true,
+            round: 0
+         }
+         check_patient
       end
    end
    describe '#take_action!' do
@@ -72,14 +76,18 @@ describe Player do
          @patient.start_new_hand! BLIND, INITIAL_CHIP_STACK
          @patient.take_action! action
          
-         check_patient_data INITIAL_CHIP_STACK - BLIND,
-                            -BLIND,
-                            Hand.new,
-                           [[action]],
-                           true,
-                           false,
-                           false,
-                           0
+         @expected = {
+            chip_stack: INITIAL_CHIP_STACK - BLIND,
+            chip_balance: -BLIND,
+            chip_contribution: [BLIND],
+            hole_cards: Hand.new,
+            actions_taken_this_hand: [[action]],
+            has_folded: true,
+            is_all_in: false,
+            is_active: false,
+            round: 0
+         }
+         check_patient
       end
       it 'it is all-in' do
          action = mock 'PokerAction'
@@ -90,14 +98,18 @@ describe Player do
          @patient.start_new_hand! BLIND, INITIAL_CHIP_STACK, hand
          @patient.take_action! action
          
-         check_patient_data 0,
-                            -INITIAL_CHIP_STACK,
-                            hand,
-                            [[action]],
-                            false,
-                            true,
-                            false,
-                            0
+         @expected = {
+            chip_stack: 0,
+            chip_balance: -INITIAL_CHIP_STACK,
+            chip_contribution: [INITIAL_CHIP_STACK],
+            hole_cards: hand,
+            actions_taken_this_hand: [[action]],
+            has_folded: false,
+            is_all_in: true,
+            is_active: false,
+            round: 0
+         }
+         check_patient
       end
    end
    it 'properly changes its state when it wins chips' do
@@ -110,24 +122,20 @@ describe Player do
       @patient.chip_balance.should be == pot_size
    end
    
-   def check_patient_data(chip_stack,
-                          chip_balance,
-                          hole_cards,
-                          actions_taken_in_current_hand,
-                          has_folded,
-                          is_all_in,
-                          is_active,
-                          round)
+   def check_patient
       @patient.name.should == NAME
       @patient.seat.should == SEAT
-      @patient.chip_stack.should == chip_stack
-      @patient.chip_balance.should == chip_balance
-      @patient.hole_cards.should == hole_cards
-      @patient.actions_taken_in_current_hand.should == actions_taken_in_current_hand
-      @patient.folded?.should == has_folded
-      @patient.all_in?.should == is_all_in
-      @patient.active?.should == is_active
-      @patient.round.should == round
+      @patient.chip_stack.should == @expected[:chip_stack]
+      @patient.chip_balance.should == @expected[:chip_balance]
+      @patient.hole_cards.should == @expected[:hole_cards]
+      @patient.actions_taken_this_hand.should == @expected[:actions_taken_this_hand]
+      @patient.folded?.should == @expected[:has_folded]
+      @patient.all_in?.should == @expected[:is_all_in]
+      @patient.active?.should == @expected[:is_active]
+      @patient.round.should == @expected[:round]
+      @patient.chip_contribution.should == @expected[:chip_contribution]
+      @patient.chip_contribution_over_hand.should == @expected[:chip_contribution].inject(0) { |sum, per_round| sum += per_round }
+      @patient.chip_balance_over_hand.should == -@expected[:chip_contribution].inject(0) { |sum, per_round| sum += per_round }
    end
    def various_actions
       various_amounts_to_put_in_pot do |amount|
@@ -183,20 +191,26 @@ describe Player do
       chip_balance = -BLIND
       chip_stack = INITIAL_CHIP_STACK - BLIND
       actions_taken_this_hand = []
+      chip_contribution = [BLIND]
       
       number_of_rounds = 4
       number_of_rounds.times do |round|
-         @patient.start_new_round! unless 0 == round
-            
+         unless 0 == round
+            @patient.start_new_round! 
+            chip_contribution << 0
+         end
          actions_taken_this_hand << []
          
          various_actions do |action|
             next if :fold == action.to_sym
             
-            chip_balance -= action.amount_to_put_in_pot
-            chip_stack -= if chip_stack - action.amount_to_put_in_pot >= 0
+            chip_stack_adjustment = if chip_stack - action.amount_to_put_in_pot >= 0
                action.amount_to_put_in_pot
             else chip_stack end
+            
+            chip_balance -= chip_stack_adjustment
+            chip_stack -= chip_stack_adjustment
+            chip_contribution[-1] += chip_stack_adjustment
             
             is_all_in = 0 == chip_stack
             is_active = !is_all_in
@@ -205,14 +219,18 @@ describe Player do
             
             @patient.take_action! action
             
-            check_patient_data chip_stack,
-                               chip_balance,
-                               hole_cards,
-                               actions_taken_this_hand,
-                               false,
-                               is_all_in,
-                               is_active,
-                               round
+            @expected = {
+               chip_stack: chip_stack,
+               chip_balance: chip_balance,
+               chip_contribution: chip_contribution,
+               hole_cards: hole_cards,
+               actions_taken_this_hand: actions_taken_this_hand,
+               has_folded: false,
+               is_all_in: is_all_in,
+               is_active: is_active,
+               round: round
+            }
+            check_patient
          end
       end
    end

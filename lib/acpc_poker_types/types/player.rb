@@ -19,6 +19,10 @@ class Player
    # @return [ChipStack] This player's chip stack.
    attr_reader :chip_stack
    
+   # @return [Array<ChipStack>] This player's contribution to the pot in the
+   #  current hand, organized by round.
+   attr_reader :chip_contribution
+   
    # @return [Integer] The amount this player has won or lost in the current
    #  match.  During a hand, this is a projected amount assuming that this
    #  player loses.  Positive amounts are winnings, negative amounts are losses.
@@ -31,7 +35,7 @@ class Player
    
    # @return [Array<Array<PokerAction>>] The list of actions this player has taken in
    #  the current hand, separated by round.
-   attr_reader :actions_taken_in_current_hand
+   attr_reader :actions_taken_this_hand
    
    alias_new :join_match
    
@@ -44,8 +48,9 @@ class Player
       @seat = seat
       @chip_balance = 0
       @chip_stack = chip_stack
+      @chip_contribution = [0]
       
-      @actions_taken_in_current_hand = [[]]
+      @actions_taken_this_hand = [[]]
    end
    
    # @return [String] String representation of this player.
@@ -59,14 +64,14 @@ class Player
 		self.instance_variables.each { |var| hash_rep.store(var.to_s.delete("@"), self.instance_variable_get(var)) }
 		hash_rep["chip_stack"] = @chip_stack.to_i
 		hash_rep["hole_cards"] = @hole_cards.to_s
-		hash_rep['actions_taken_in_current_hand'] = actions_taken_in_current_hand_to_string
+		hash_rep['actions_taken_this_hand'] = actions_taken_this_hand_to_string
 		
 		hash_rep
 	end
 	
-	def actions_taken_in_current_hand_to_string
-      return '' unless @actions_taken_in_current_hand
-      (@actions_taken_in_current_hand.map do |actions_per_round|
+	def actions_taken_this_hand_to_string
+      return '' unless @actions_taken_this_hand
+      (@actions_taken_this_hand.map do |actions_per_round|
          (actions_per_round.map { |action| action.to_acpc }).join('')
       end).join('/')
 	end
@@ -77,29 +82,32 @@ class Player
 	def start_new_hand!(blind=ChipStack.new(0), chip_stack=@chip_stack, hole_cards=Hand.new)
       @chip_stack = chip_stack
       @hole_cards = hole_cards
-      @actions_taken_in_current_hand = []
-      pay_blind!(blind)
+      @actions_taken_this_hand = []
+      @chip_contribution = []
       
       start_new_round!
+      
+      pay_blind!(blind)
 	end
 	
 	def start_new_round!
-      @actions_taken_in_current_hand << []
+      @actions_taken_this_hand << []
+      @chip_contribution << 0
 	end
 	
 	# @param [PokerAction] action The action to take.
 	def take_action!(action)
-      @actions_taken_in_current_hand.last << action
+      @actions_taken_this_hand.last << action
       
       take_from_chip_stack! action.amount_to_put_in_pot
 	end
 	
 	# @return [Boolean] Reports whether or not this player has folded.
 	def folded?
-      if @actions_taken_in_current_hand.last.empty?
+      if @actions_taken_this_hand.last.empty?
          false
       else
-         :fold == @actions_taken_in_current_hand.last.last.to_sym
+         :fold == @actions_taken_this_hand.last.last.to_sym
       end
 	end
 	
@@ -116,11 +124,7 @@ class Player
    
    # @return [Integer] The current round, zero indexed.
    def round
-      begin
-         @actions_taken_in_current_hand.length - 1
-      rescue
-         nil
-      end
+      @actions_taken_this_hand.length - 1
    end
       
    # Adjusts this player's state when it takes chips from the pot.
@@ -135,6 +139,14 @@ class Player
       @hole_cards = hole_cards
    end
    
+   def chip_contribution_over_hand
+      @chip_contribution.inject(0) { |sum, per_round| sum += per_round }
+   end
+   
+   def chip_balance_over_hand
+      -chip_contribution_over_hand
+   end
+   
    private
    
    # @param [#to_i] blind_amount The blind amount for this player to pay.
@@ -145,6 +157,7 @@ class Player
    def add_to_stack(chips)
       @chip_stack += chips
       @chip_balance += chips.to_i
+      @chip_contribution[-1] -= chips.to_i
    end
    
    # Take chips away from this player's chip stack.
@@ -153,5 +166,6 @@ class Player
    def take_from_chip_stack!(number_of_chips)
       @chip_stack -= number_of_chips
       @chip_balance -= number_of_chips.to_i
+      @chip_contribution[-1] += number_of_chips.to_i
    end
 end
