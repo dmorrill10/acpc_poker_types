@@ -18,6 +18,52 @@ describe Player do
       init_patient
    end
    
+   describe '::create_players' do
+      it "raises an exception if the number of player names doesn't match the number of players from the game definition" do
+         game_def = mock 'GameDefinition'
+         various_numbers_of_players do |number_of_players|
+            game_def.stubs(:number_of_players).returns(number_of_players)
+            
+            expect do
+               Player.create_players(
+                  ((number_of_players-1).times.inject([]) do |names, i|
+                       names << "p#{i}"
+                    end
+                  ),
+                  game_def
+               )
+            end.to raise_exception(Player::IncorrectNumberOfPlayerNames)
+            expect do
+               Player.create_players(
+                  ((number_of_players+1).times.inject([]) do |names, i|
+                       names << "p#{i}"
+                    end
+                  ),
+                  game_def
+               )
+            end.to raise_exception(Player::IncorrectNumberOfPlayerNames)
+         end
+      end
+      it 'works properly' do
+         game_def = mock 'GameDefinition'
+         various_numbers_of_players do |number_of_players|
+            game_def.stubs(:number_of_players).returns(number_of_players)
+            game_def.expects(:chip_stacks).times(number_of_players).returns(INITIAL_CHIP_STACK)
+         
+            patients = Player.create_players(
+               (number_of_players.times.inject([]) do |names, i|
+                  names << "p#{i}"
+               end),
+               game_def
+            )
+            
+            patients.length.should == number_of_players
+            patients.each do |patient|
+               patient.class.should == Player
+            end
+         end
+      end
+   end
    describe '#join_match' do
       it 'initializes properly' do
          @expected = {
@@ -122,6 +168,11 @@ describe Player do
       @patient.chip_balance.should be == pot_size
    end
    
+   def various_numbers_of_players
+      (1..100).each do |number_of_players|
+         yield number_of_players
+      end
+   end
    def check_patient
       @patient.name.should == NAME
       @patient.seat.should == SEAT

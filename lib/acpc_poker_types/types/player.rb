@@ -1,6 +1,7 @@
 
 # Local classes
 require File.expand_path('../chip_stack', __FILE__)
+require File.expand_path('../game_definition', __FILE__)
 
 # Local mixins
 require File.expand_path('../../mixins/utils', __FILE__)
@@ -8,6 +9,20 @@ require File.expand_path('../../mixins/utils', __FILE__)
 # Class to model a player.
 class Player
    include Comparable
+   
+   exceptions :incorrect_number_of_player_names
+   
+   # @todo Check for a discrepency between num of player names and num of players
+   def self.create_players(player_names, game_def)
+      raise IncorrectNumberOfPlayerNames unless game_def.number_of_players == player_names.length
+      
+      game_def.number_of_players.times.inject([]) do |players, seat|
+         players << Player.join_match(player_names[seat],
+                                      seat,
+                                      ChipStack.new(game_def.chip_stacks[seat])
+                                      )
+      end
+   end
    
    # @return [String] The name of this player.
    attr_reader :name

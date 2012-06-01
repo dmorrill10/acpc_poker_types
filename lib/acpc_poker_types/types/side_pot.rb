@@ -146,7 +146,7 @@ class SidePot < ChipStack
          @players_involved_and_their_amounts_received[player] = amount_each_player_wins
          player.take_winnings! amount_each_player_wins
       end
-
+      
       # Remove chips from this side-pot
       @value -= (amount_each_player_wins * winning_players.length).to_i
    end
