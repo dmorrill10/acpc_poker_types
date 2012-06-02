@@ -12,9 +12,13 @@ class Player
    
    exceptions :incorrect_number_of_player_names
    
-   # @todo Check for a discrepency between num of player names and num of players
    def self.create_players(player_names, game_def)
-      raise IncorrectNumberOfPlayerNames unless game_def.number_of_players == player_names.length
+      if game_def.number_of_players != player_names.length
+         raise(
+            IncorrectNumberOfPlayerNames,
+            "#{player_names.length} names for #{game_def.number_of_players} players"
+         )
+      end
       
       game_def.number_of_players.times.inject([]) do |players, seat|
          players << Player.join_match(player_names[seat],
