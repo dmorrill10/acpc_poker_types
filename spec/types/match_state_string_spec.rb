@@ -176,22 +176,45 @@ describe MatchStateString do
       end
    end
    
-   describe '#last_action' do
-      it 'raises an exception if no previous action exists' do
+   describe '#last_action, #round_in_which_last_action_taken, and #first_state_of_first_round' do
+      it 'returns +nil+ if no previous action exists, or true in the case of #first_state_of_first_round' do
          initial_match_state = "#{AcpcPokerTypesDefs::MATCH_STATE_LABEL}:1:1::#{arbitrary_hole_card_hand}"
          patient = MatchStateString.parse initial_match_state
-         expect{patient.last_action}.to raise_exception(MatchStateString::NoActionsHaveBeenTaken)
+         patient.last_action.should == nil
+         patient.round_in_which_last_action_taken.should == nil
          patient.first_state_of_first_round?.should == true
       end
-      it 'works properly if previous actions exist' do
-         partial_match_state = "#{AcpcPokerTypesDefs::MATCH_STATE_LABEL}:1:1:"
-         PokerAction::LEGAL_ACPC_CHARACTERS.each do |action_character|
-            partial_match_state += action_character
-            match_state = "#{partial_match_state}:#{arbitrary_hole_card_hand}"
-            
-            patient = MatchStateString.parse match_state
-            patient.last_action.should be == PokerAction.new(action_character)
-            patient.first_state_of_first_round?.should == false
+      it 'works properly if a previous action exists' do
+         PokerAction::LEGAL_ACPC_CHARACTERS.each do |first_action|
+            PokerAction::LEGAL_ACPC_CHARACTERS.each do |second_action|
+               PokerAction::LEGAL_ACPC_CHARACTERS.each do |third_action|
+                  partial_match_state = "#{AcpcPokerTypesDefs::MATCH_STATE_LABEL}:1:1:"
+                  
+                  partial_match_state += first_action
+                  match_state = "#{partial_match_state}:#{arbitrary_hole_card_hand}"
+                  
+                  patient = MatchStateString.parse match_state
+                  patient.last_action.should be == PokerAction.new(first_action)
+                  patient.round_in_which_last_action_taken.should == 0
+                  patient.first_state_of_first_round?.should == false
+
+                  partial_match_state += "#{second_action}/"
+                  match_state = "#{partial_match_state}:#{arbitrary_hole_card_hand}"
+                  
+                  patient = MatchStateString.parse match_state
+                  patient.last_action.should be == PokerAction.new(second_action)
+                  patient.round_in_which_last_action_taken.should == 0
+                  patient.first_state_of_first_round?.should == false
+
+                  partial_match_state += third_action
+                  match_state = "#{partial_match_state}:#{arbitrary_hole_card_hand}"
+                  
+                  patient = MatchStateString.parse match_state
+                  patient.last_action.should be == PokerAction.new(third_action)
+                  patient.round_in_which_last_action_taken.should == 1
+                  patient.first_state_of_first_round?.should == false
+               end
+            end
          end
       end
    end

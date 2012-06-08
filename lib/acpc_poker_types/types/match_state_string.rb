@@ -16,7 +16,7 @@ class MatchStateString
    include AcpcPokerTypesDefs
    include AcpcPokerTypesHelper
    
-   exceptions :incomplete_match_state_string, :no_actions_have_been_taken
+   exceptions :incomplete_match_state_string
    
    alias_new :parse
    
@@ -107,11 +107,13 @@ class MatchStateString
    # @return [PokerAction] The last action taken.
    # @raise NoActionsHaveBeenTaken if no actions have been taken.
    def last_action(betting_sequence=@betting_sequence)
-      raise NoActionsHaveBeenTaken if betting_sequence.empty?
-
-      return betting_sequence.last.last if betting_sequence.last.last
-      
-      last_action(betting_sequence.reject{ |elem| elem.equal?(betting_sequence.last) })
+      if betting_sequence.nil? || betting_sequence.empty?
+         nil
+      elsif betting_sequence.last.last
+         betting_sequence.last.last
+      else
+         last_action(betting_sequence.reject{ |elem| elem.equal?(betting_sequence.last) })
+      end
    end
 
    # @return [Hand] The user's hole cards.
@@ -150,15 +152,14 @@ class MatchStateString
    # @return [String] The ACPC string created by the given betting sequence,
    #  +betting_sequence+.
    def betting_sequence_string(betting_sequence=@betting_sequence)
-      string = ''
-      (round + 1).times do |i|
+      (round + 1).times.inject('') do |string, i|
          string += (betting_sequence[i].map { |action| action.to_acpc }).join('')
          string += '/' unless i == round
+         string
       end
-      string
    end
    
-   # @return [Bool] Reports whether or not it is the first state of the first round.
+   # @return [Boolean] Reports whether or not it is the first state of the first round.
    def first_state_of_first_round?
       (0 == number_of_actions_this_hand)
    end
@@ -167,6 +168,18 @@ class MatchStateString
       number_of_players - 1
    end
    
+   def round_in_which_last_action_taken
+      unless number_of_actions_this_hand > 0
+         nil
+      else
+         if number_of_actions_this_round < 1
+            round - 1
+         else
+            round
+         end
+      end
+   end
+
    private
    
    def validate_first_seats(list_of_first_seats)
