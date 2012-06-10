@@ -38,12 +38,17 @@ class PokerAction
    HIGH_RESOLUTION_ACTION_CONVERSION = {call: :check, raise: :bet, fold: :fold, check: :check, bet: :bet}
    
    # @param [Symbol, String] action A representation of this action.
-   # @param [ChipStack, NilClass] modifier A modifier for the action (i.e. a bet or raise size).
+   # @param [Hash] context The context in which this action is being made. Recognized keys include +:modifier+, 
+   #  +:acting_player_sees_wager+, and +:amount_to_put_in_pot+.
    # @raise IllegalPokerAction
-   def initialize(action, amount_to_put_in_pot=0, modifier=nil,
-                  acting_player_sees_wager=true)
-      (@symbol, @modifier) = validate_action action, modifier, acting_player_sees_wager
-      @amount_to_put_in_pot = amount_to_put_in_pot
+   def initialize(action, context={})
+      (@symbol, @modifier) = validate_action(action, context[:modifier], (if context[:acting_player_sees_wager].nil?
+            true 
+         else 
+            context[:acting_player_sees_wager]
+         end)
+      )
+      @amount_to_put_in_pot = context[:amount_to_put_in_pot].to_i
    end
    
    def ==(other_action)

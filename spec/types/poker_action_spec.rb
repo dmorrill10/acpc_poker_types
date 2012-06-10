@@ -31,14 +31,14 @@ describe PokerAction do
       it 'raises an exception if a modifier accompanies an unmodifiable action' do
          unmodifiable_actions = PokerAction::LEGAL_SYMBOLS - PokerAction::MODIFIABLE_ACTIONS.keys
          unmodifiable_actions.each do |sym|
-            expect{PokerAction.new(sym, 0, default_modifier)}.to raise_exception(PokerAction::IllegalPokerActionModification)
+            expect{PokerAction.new(sym, {modifier: default_modifier})}.to raise_exception(PokerAction::IllegalPokerActionModification)
          end
       end
       it 'raise an exception if a modifier is given both implicitly and explicitly' do
-         expect{PokerAction.new('r9001', 0, default_modifier)}.to raise_exception(PokerAction::IllegalPokerActionModification)
+         expect{PokerAction.new('r9001', {modifier: default_modifier})}.to raise_exception(PokerAction::IllegalPokerActionModification)
       end
       it 'raise an exception if a fold action is given when no wager is seen by the acting player' do
-         expect{PokerAction.new('f', 0, nil, false)}.to raise_exception(PokerAction::IllegalPokerAction)
+         expect{PokerAction.new('f', {acting_player_sees_wager: false})}.to raise_exception(PokerAction::IllegalPokerAction)
       end
       describe 'creates actions properly' do
          it 'from various forms' do
@@ -102,7 +102,7 @@ describe PokerAction do
                modifier = nil
                expected_acpc_form = precise_action_character
             end
-            PokerAction.new(imprecise_action_character, 0, modifier, false).to_acpc.should ==(expected_acpc_form)
+            PokerAction.new(imprecise_action_character, {modifier: modifier, acting_player_sees_wager: false}).to_acpc.should ==(expected_acpc_form)
          end
       end
    end
@@ -147,7 +147,7 @@ describe PokerAction do
             nil
          end
          
-         @patient = PokerAction.new(sym, amount_to_put_in_pot, modifier)
+         @patient = PokerAction.new(sym, {amount_to_put_in_pot: amount_to_put_in_pot, modifier: modifier})
          yield sym, modifier
       end
    end
@@ -160,7 +160,7 @@ describe PokerAction do
             nil
          end
          
-         @patient = PokerAction.new(string, amount_to_put_in_pot, modifier)
+         @patient = PokerAction.new(string, {amount_to_put_in_pot: amount_to_put_in_pot, modifier: modifier})
          yield string, modifier
       end
    end
@@ -174,7 +174,7 @@ describe PokerAction do
          string = PokerAction::LEGAL_ACTIONS.key(char).to_s
          modified_action = string + modifier.to_s
          
-         @patient = PokerAction.new(modified_action, amount_to_put_in_pot)
+         @patient = PokerAction.new(modified_action, {amount_to_put_in_pot: amount_to_put_in_pot})
          yield string, modifier
       end
    end
@@ -187,7 +187,7 @@ describe PokerAction do
             nil
          end
 
-         @patient = PokerAction.new(char, amount_to_put_in_pot, modifier)
+         @patient = PokerAction.new(char, {amount_to_put_in_pot: amount_to_put_in_pot, modifier: modifier})
          yield char, modifier
       end
    end
@@ -200,7 +200,7 @@ describe PokerAction do
       PokerAction::MODIFIABLE_ACTIONS.values.each do |char|
          modified_action = char + modifier.to_s
          
-         @patient = PokerAction.new(modified_action, amount_to_put_in_pot)
+         @patient = PokerAction.new(modified_action, {amount_to_put_in_pot: amount_to_put_in_pot})
          yield char, modifier
       end
    end

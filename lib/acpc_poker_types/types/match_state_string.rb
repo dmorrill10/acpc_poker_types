@@ -231,10 +231,14 @@ class MatchStateString
       end
       # Increase the resolution of the last action
       # @todo I'm creating one too many PokerActions, but I'm not going to worry about it for now.
-      betting_sequence[-1][-1] = PokerAction.new(last_action(betting_sequence).to_acpc_character,
-                                                 last_action(betting_sequence).amount_to_put_in_pot,
-                                                 last_action(betting_sequence).modifier,
-                                                 acting_player_sees_wager)
+      betting_sequence[-1][-1] = PokerAction.new(
+         last_action(betting_sequence).to_acpc_character,
+         {
+            amount_to_put_in_pot: last_action(betting_sequence).amount_to_put_in_pot,
+            modifier: last_action(betting_sequence).modifier,
+            acting_player_sees_wager: acting_player_sees_wager
+         }
+      )
       
       # Adjust the number of rounds if the last action was the last action in the round
       if string_betting_sequence.match(/\//)
