@@ -33,9 +33,9 @@ class GameDefinition
    attr_reader :min_wagers
       
    # @return [Array] The position relative to the dealer that is first to act
-   #     in each round, indexed from 1.
+   #     in each round, indexed from 0.
    # @example The usual Texas hold'em sequence would look like this:
-   #     first_player_positions == [2, 1, 1, 1]
+   #     first_player_positions == [1, 0, 0, 0]
    attr_reader :first_player_positions
    
    # @return [Array] The maximum number of wagers in each round.
@@ -62,20 +62,18 @@ class GameDefinition
    # @param [String, #match] line A line from a game definition file.
    # @param [String] definition_name The name of the game definition that is
    #     being checked for in +line+.
-   # @param default The default value to return in the case that the game
-   #     definition name doesn't match +line+.
    # @return The game definition value in +line+ if +line+ contains the game definition
-   #     referred to by +definition_name+, +default+ otherwise.
-   def self.check_game_def_line_for_definition(line, definition_name, default)
+   #     referred to by +definition_name+, +nil+ otherwise.
+   def self.check_game_def_line_for_definition(line, definition_name)
       if line.match(/^\s*#{definition_name}\s*=\s*([\d\s]+)/i)
          values = $1.chomp.split(/\s+/)
          (0..values.length-1).each do |i|
             values[i] = values[i].to_i
          end
-         return flatten_if_single_element_array values
+         flatten_if_single_element_array values
+      else
+         nil
       end
-      
-      default
    end
 
    # Checks if the given line from a game definition file is informative or not
@@ -102,6 +100,8 @@ class GameDefinition
       @min_wagers = default_min_wagers(@number_of_rounds) if @min_wagers.empty?
       
       sanity_check_game_definitions
+
+      @first_player_positions.map! { |position| position - 1 }
    end
    
    # @see #to_str
@@ -112,13 +112,13 @@ class GameDefinition
    # @return [String] The game definition in text format.
    def to_str
       list_of_lines = []
-      list_of_lines << @betting_type if @betting_type
+      list_of_lines << BETTING_TYPES[@betting_type] if @betting_type
       list_of_lines << "stack = #{@chip_stacks.join(' ')}" unless @chip_stacks.empty?
       list_of_lines << "numPlayers = #{@number_of_players}" if @number_of_players
       list_of_lines << "blind = #{@blinds.join(' ')}" unless @blinds.empty?
       list_of_lines << "raiseSize = #{@min_wagers.join(' ')}" unless @min_wagers.empty?
       list_of_lines << "numRounds = #{@number_of_rounds}" if @number_of_rounds
-      list_of_lines << "firstPlayer = #{@first_player_positions.join(' ')}" unless @first_player_positions.empty?
+      list_of_lines << "firstPlayer = #{(@first_player_positions.map{|p| p + 1}).join(' ')}" unless @first_player_positions.empty?
       list_of_lines << "maxRaises = #{@max_number_of_wagers.join(' ')}" unless @max_number_of_wagers.empty?
       list_of_lines << "numSuits = #{@number_of_suits}" if @number_of_suits
       list_of_lines << "numRanks = #{@number_of_ranks}" if @number_of_ranks
@@ -143,26 +143,43 @@ class GameDefinition
       @chip_stacks = []
    end
 
+   def set_defintion_if_present!(definition_symbol, line, definition_label_in_line)
+      new_definition = GameDefinition.check_game_def_line_for_definition line, definition_label_in_line
+      if new_definition
+         instance_variable_set(definition_symbol, new_definition)
+         true
+      else
+         false
+      end
+   end
+
    def parse_game_definition!(game_definition_file_name)      
       for_every_line_in_file game_definition_file_name do |line|
          break if line.match(/\bend\s*gamedef\b/i)
-         next if GameDefinition.game_def_line_not_informative? line
          
-         @betting_type = BETTING_TYPES[:limit] if line.match(/\b#{BETTING_TYPES[:limit]}\b/i)
-         @betting_type = BETTING_TYPES[:nolimit] if line.match(/\b#{BETTING_TYPES[:nolimit]}\b/i)
-         
-         @chip_stacks = GameDefinition.check_game_def_line_for_definition line, 'stack', @chip_stacks
-         @number_of_players = GameDefinition.check_game_def_line_for_definition line, 'numplayers', @number_of_players         
-         @blinds = GameDefinition.check_game_def_line_for_definition line, 'blind', @blinds
-         @min_wagers = GameDefinition.check_game_def_line_for_definition line, 'raisesize', @min_wagers
-         @number_of_rounds = GameDefinition.check_game_def_line_for_definition line, 'numrounds', @number_of_rounds
-         @first_player_positions = GameDefinition.check_game_def_line_for_definition line, 'firstplayer', @first_player_positions
-         @max_number_of_wagers = GameDefinition.check_game_def_line_for_definition line, 'maxraises', @max_number_of_wagers
-         @number_of_suits = GameDefinition.check_game_def_line_for_definition line, 'numsuits', @number_of_suits
-         @number_of_ranks = GameDefinition.check_game_def_line_for_definition line, 'numranks', @number_of_ranks
-         @number_of_hole_cards = GameDefinition.check_game_def_line_for_definition line, 'numholecards', @number_of_hole_cards
-         @number_of_board_cards = GameDefinition.check_game_def_line_for_definition line, 'numboardcards', @number_of_board_cards
-      end      
+         next if (GameDefinition.game_def_line_not_informative?(line) ||
+            BETTING_TYPES.inject(false) do |found, type_and_name|
+               type = type_and_name.first
+               name = type_and_name[1]
+               if line.match(/\b#{name}\b/i)
+                  @betting_type = type
+                  break true
+               end
+               false
+            end ||
+            set_defintion_if_present!(:@chip_stacks, line, 'stack') ||
+            set_defintion_if_present!(:@number_of_players, line, 'numplayers') ||
+            set_defintion_if_present!(:@blinds, line, 'blind') ||
+            set_defintion_if_present!(:@min_wagers, line, 'raisesize') ||
+            set_defintion_if_present!(:@number_of_rounds, line, 'numrounds') ||
+            set_defintion_if_present!(:@first_player_positions, line, 'firstplayer') ||
+            set_defintion_if_present!(:@max_number_of_wagers, line, 'maxraises') ||
+            set_defintion_if_present!(:@number_of_suits, line, 'numsuits') ||
+            set_defintion_if_present!(:@number_of_ranks, line, 'numranks') ||
+            set_defintion_if_present!(:@number_of_hole_cards, line, 'numholecards') ||
+            set_defintion_if_present!(:@number_of_board_cards, line, 'numboardcards')
+         )
+      end
    end
    
    # @raise GameDefinitionParseError
@@ -192,7 +209,7 @@ class GameDefinition
 
          (0..@number_of_rounds-1).each do |i|
             if invalid_first_player_position? i
-               error_message = "invalid first player #{@first_player_positions[i]} on round #{i+1}"
+               error_message = "Invalid first player #{@first_player_positions[i]} on round #{i+1}"
             end
          end
 
@@ -241,7 +258,7 @@ class GameDefinition
       0 == @number_of_suits || @number_of_suits > CARD_SUITS.length
    end
 
-   def invalid_first_player_position?(i)      
+   def invalid_first_player_position?(i)
       @first_player_positions[i] <= 0 || @first_player_positions[i] > @number_of_players
    end
 
