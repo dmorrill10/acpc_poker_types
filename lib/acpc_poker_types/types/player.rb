@@ -75,6 +75,7 @@ class Player
       to_hash.to_s
    end
    
+   # @todo Add all data to this hash
 	# @return [Hash] Hash map representation of this player.
 	def to_hash
       hash_rep = {}
