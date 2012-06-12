@@ -74,18 +74,6 @@ class Player
    def to_s
       to_hash.to_s
    end
-   
-   # @todo Add all data to this hash
-	# @return [Hash] Hash map representation of this player.
-	def to_hash
-      hash_rep = {}
-		self.instance_variables.each { |var| hash_rep.store(var.to_s.delete("@"), self.instance_variable_get(var)) }
-		hash_rep['chip_stack'] = @chip_stack.to_i
-		hash_rep['hole_cards'] = @hole_cards.to_s
-		hash_rep['actions_taken_this_hand'] = actions_taken_this_hand_to_string
-		
-		hash_rep
-	end
 	
 	def actions_taken_this_hand_to_string
       return '' unless @actions_taken_this_hand
