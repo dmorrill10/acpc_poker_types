@@ -6,6 +6,7 @@ require File.expand_path('../../support/spec_helper', __FILE__)
 require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/types/player", __FILE__)
 require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/types/poker_action", __FILE__)
 require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/types/hand", __FILE__)
+require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/types/match_state_string", __FILE__)
 
 # Local modules
 require File.expand_path('../../support/dealer_data', __FILE__)
@@ -71,17 +72,7 @@ describe Player do
       end
    end
    describe '#join_match' do
-      it 'initializes properly' do
-         @chip_stack = INITIAL_CHIP_STACK
-         @chip_balance = 0
-         @chip_contribution = [0]
-         @hole_cards = nil
-         @actions_taken_this_hand = [[]]
-         @has_folded = false
-         @is_all_in = false
-         @is_active = true
-         @round = 0
-         
+      it 'initializes properly' do         
          check_patient
       end
    end
@@ -120,10 +111,8 @@ describe Player do
    end
    describe 'reports it is not active if' do
       it 'it has folded' do   
-         action = mock 'PokerAction'
-         action.stubs(:to_sym).returns(:fold)
-         action.stubs(:amount_to_put_in_pot).returns(0)
-      
+         action = PokerAction.new :fold, {amount_to_put_in_pot: 0}
+         
          @patient.start_new_hand! BLIND, INITIAL_CHIP_STACK
          @patient.take_action! action
          
@@ -132,6 +121,7 @@ describe Player do
          @chip_contribution = [BLIND]
          @hole_cards = Hand.new
          @actions_taken_this_hand = [[action]]
+         @actions_taken_this_hand_string = action.to_acpc
          @has_folded = true
          @is_all_in = false
          @is_active = false
@@ -140,9 +130,7 @@ describe Player do
          check_patient
       end
       it 'it is all-in' do
-         action = mock 'PokerAction'
-         action.stubs(:to_sym).returns(:raise)
-         action.stubs(:amount_to_put_in_pot).returns(INITIAL_CHIP_STACK - BLIND)
+         action = PokerAction.new :raise, {amount_to_put_in_pot: INITIAL_CHIP_STACK - BLIND}
          
          hand = default_hand
          @patient.start_new_hand! BLIND, INITIAL_CHIP_STACK, hand
@@ -153,6 +141,7 @@ describe Player do
          @chip_contribution = [INITIAL_CHIP_STACK]
          @hole_cards = hand
          @actions_taken_this_hand = [[action]]
+         @actions_taken_this_hand_string = action.to_acpc
          @has_folded = false
          @is_all_in = true
          @is_active = false
@@ -167,11 +156,11 @@ describe Player do
       pot_size = 22
       @patient.take_winnings! pot_size
       
-      @patient.chip_stack.should be == default_chip_stack + pot_size
+      @patient.chip_stack.should be == INITIAL_CHIP_STACK + pot_size
       @patient.chip_balance.should be == pot_size
-      @patient.chip_contribution.should be == [-pot_size]
+      @patient.chip_contribution.should be == [0, -pot_size]
    end
-   it 'works properly over a sample of data from the ACPC Dealer' do
+   it 'works properly over samples of data from the ACPC Dealer' do
       DealerData::DATA.each do |num_players, data_by_num_players|
          ((0..(num_players-1)).map{ |i| (i+1).to_s }).each do |seat|
             data_by_num_players.each do |type, data_by_type|
@@ -184,53 +173,54 @@ describe Player do
                init_patient!
                
                check_patient
-               
-               @match_ended = false
 
+               @actions_taken_this_hand = [[]]
+
+               max_turns = 1000
                turns.each_index do |i|
-                  # @todo Won't be needed once data is separated better by game def
-                  next if @match_ended
+                  break if i == max_turns
+                  turn = turns[i]
+                  next_turn = turns[i + 1]
+                  from_player_message = turn[:from_players]
+                  match_state_string = turn[:to_players][seat]
+                  prev_round = if @match_state then @match_state.round else nil end
+                  @match_state = MatchStateString.parse match_state_string
+                  @round = @match_state.round
+                  @has_folded = false
+
+                  @hole_card_hands = order_by_seat_from_dealer_relative @match_state.list_of_hole_card_hands,
+                     @seat, @match_state.position_relative_to_dealer
+                  @hole_cards = @hole_card_hands[@seat]
+
+                  @blinds = order_by_seat_from_dealer_relative(
+                     DealerData::GAME_DEFS[type][:blinds],
+                     @seat, 
+                     @match_state.position_relative_to_dealer
+                  )
                   
-                  # turn = turns[i]
-                  # next_turn = turns[i + 1]
-                  # from_player_message = turn[:from_players]
-                  # match_state_string = turn[:to_players][seat]
-                  # prev_round = if @match_state then @match_state.round else nil end
+                  if @match_state.first_state_of_first_round?
+                     init_new_hand_data! type
+
+                     @patient.start_new_hand!(
+                        @blinds[@seat], 
+                        @chip_stack + @chip_contribution.first,
+                        @hole_cards
+                     ).should be @patient
+                  else
+                     init_new_turn_data! type, from_player_message, prev_round
+                  end
                   
-                  # @last_hand = ((GAME_DEFS[type][:number_of_hands] - 1) == @hand_num)
-                  
-                  # @next_player_to_act = if index_of_next_player_to_act(next_turn) < 0
-                  #    nil
-                  # else
-                  #    @players[index_of_next_player_to_act(next_turn)]
-                  # end
-                  # @users_turn_to_act = if @next_player_to_act
-                  #    @next_player_to_act.seat == users_seat
-                  # else
-                  #    false
-                  # end
-                  # @match_state = MatchStateString.parse match_state_string
-                  # @hole_card_hands = order_by_seat_from_dealer_relative @match_state.list_of_hole_card_hands,
-                  #    users_seat, @match_state.position_relative_to_dealer
-                  
-                  # if @match_state.first_state_of_first_round?
-                  #    init_new_hand_data! type
-                  # else
-                  #    init_new_turn_data! type, from_player_message, prev_round
-                  # end
-                  
-                  # if @match_state.round != prev_round || @match_state.first_state_of_first_round?
-                  #    @player_acting_sequence << []
-                  #    @betting_sequence << []
-                  # end
-                  
-                  # if !next_turn || MatchStateString.parse(next_turn[:to_players]['1']).first_state_of_first_round?
-                  #    init_hand_result_data! data_by_type
-                  # end
-                  
-                  # @patient.update! @match_state
-                  
-                  # init_after_update_data! type
+                  if !next_turn || MatchStateString.parse(next_turn[:to_players]['1']).first_state_of_first_round?
+                     @chip_balance += @chip_contribution.sum
+                     @chip_stack += @chip_contribution.sum
+
+                     @patient.take_winnings!(@chip_contribution.sum).should be @patient
+
+                     @chip_contribution << -@chip_contribution.sum
+                  end
+
+                  @is_all_in = @chip_stack <= 0
+                  @is_active = !(@has_folded || @is_all_in)
                   
                   check_patient
                end
@@ -248,16 +238,21 @@ describe Player do
       @patient.name.should == @name
       @patient.seat.should == @seat
       @patient.chip_stack.should == @chip_stack
+      @patient.chip_contribution.should == @chip_contribution
       @patient.chip_balance.should == @chip_balance
-      @patient.hole_cards.should == @hole_cards
+      if @hole_cards
+         (@patient.hole_cards.map { |card| card.to_s} ).should == @hole_cards.map { |card| card.to_s }
+      else
+         @patient.hole_cards.should be nil
+      end
       @patient.actions_taken_this_hand.should == @actions_taken_this_hand
+      @patient.actions_taken_this_hand_to_string.should == @actions_taken_this_hand_string
       @patient.folded?.should == @has_folded
       @patient.all_in?.should == @is_all_in
       @patient.active?.should == @is_active
       @patient.round.should == @round
-      @patient.chip_contribution.should == @chip_contribution
-      @patient.chip_contribution_over_hand.should == @chip_contribution.inject(0) { |sum, per_round| sum += per_round }
-      @patient.chip_balance_over_hand.should == -@chip_contribution.inject(0) { |sum, per_round| sum += per_round }
+      @patient.chip_contribution_over_hand.should == @chip_contribution.sum
+      @patient.chip_balance_over_hand.should == -@chip_contribution.sum
    end
    def various_actions
       various_amounts_to_put_in_pot do |amount|
@@ -273,9 +268,6 @@ describe Player do
       modifier = mock 'ChipStack'
       modifier.stubs(:to_s).returns(modifier_amount.to_s)
       modifier
-   end
-   def default_chip_stack
-      100000
    end
    def various_amounts_to_put_in_pot
       [0, 9002, -9002].each do |amount|
@@ -308,49 +300,43 @@ describe Player do
       end
    end
    def test_sequence_of_non_fold_actions(hole_cards=default_hand)
-      @patient.start_new_hand! BLIND, INITIAL_CHIP_STACK, hole_cards
-      
-      chip_balance = -BLIND
-      chip_stack = INITIAL_CHIP_STACK - BLIND
-      actions_taken_this_hand = []
-      chip_contribution = [BLIND]
-      
+      @hole_cards = hole_cards
+      @has_folded = false
+
+      @patient.start_new_hand! BLIND, INITIAL_CHIP_STACK, @hole_cards
+
+      init_new_hand_data!
+
       number_of_rounds = 4
       number_of_rounds.times do |round|
+         @round = round
+
          unless 0 == round
             @patient.start_new_round! 
-            chip_contribution << 0
+            @chip_contribution << 0
+            @actions_taken_this_hand_string += '/'
+            @actions_taken_this_hand << []
          end
-         actions_taken_this_hand << []
          
          various_actions do |action|
             next if :fold == action.to_sym
             
-            chip_stack_adjustment = if chip_stack - action.amount_to_put_in_pot >= 0
+            chip_stack_adjustment = if @chip_stack - action.amount_to_put_in_pot >= 0
                action.amount_to_put_in_pot
-            else chip_stack end
+            else @chip_stack end
             
-            chip_balance -= chip_stack_adjustment
-            chip_stack -= chip_stack_adjustment
-            chip_contribution[-1] += chip_stack_adjustment
+            @chip_balance -= chip_stack_adjustment
+            @chip_stack -= chip_stack_adjustment
+            @chip_contribution[-1] += chip_stack_adjustment
             
-            is_all_in = 0 == chip_stack
-            is_active = !is_all_in
+            @is_all_in = 0 == @chip_stack
+            @is_active = !@is_all_in
             
-            actions_taken_this_hand.last << action
+            @actions_taken_this_hand.last << action
+            @actions_taken_this_hand_string += action.to_acpc
             
             @patient.take_action! action
             
-            @chip_stack = chip_stack
-            @chip_balance = chip_balance
-            @chip_contribution = chip_contribution
-            @hole_cards = hole_cards
-            @actions_taken_this_hand = actions_taken_this_hand
-            @has_folded = false
-            @is_all_in = is_all_in
-            @is_active = is_active
-            @round = round
-
             check_patient
          end
       end
@@ -361,7 +347,7 @@ describe Player do
       end
    end
    def default_hand
-      hidden_cards = mock 'Hand'
+      hidden_cards = Hand.new
       
       hidden_cards
    end
@@ -376,10 +362,56 @@ describe Player do
 
       @hole_cards = nil
       @actions_taken_this_hand = [[]]
+      @actions_taken_this_hand_string = ''
       @has_folded = false
       @is_all_in = false
       @is_active = true
       @round = 0
       @chip_contribution = [0]
+   end
+      def init_new_hand_data!(type=nil)
+      @actions_taken_this_hand = [[]]
+      @actions_taken_this_hand_string = ''
+      init_new_hand_chip_data! type
+   end
+   def init_new_hand_chip_data!(type=nil)
+      # @todo Assumes Doyle's Game
+      @chip_contribution = [if type then @blinds[@seat] else BLIND end]
+      @chip_balance = -@chip_contribution.first
+      @chip_stack = (if type then DealerData::GAME_DEFS[type][:stack_size] else INITIAL_CHIP_STACK end) - @chip_contribution.first
+   end
+   def init_new_turn_data!(type, from_player_message, prev_round)
+      seat_taking_action = from_player_message.keys.first
+      seat_of_last_player_to_act = seat_taking_action.to_i - 1
+      
+      @last_action = PokerAction.new(
+         from_player_message[seat_taking_action], 
+         {
+            amount_to_put_in_pot: DealerData::GAME_DEFS[type][:small_bets][@match_state.round],
+         }
+      )
+
+      if seat_of_last_player_to_act == @seat
+         @actions_taken_this_hand.last << @last_action
+         @actions_taken_this_hand_string += @last_action.to_acpc
+
+         @chip_contribution[-1] += @last_action.amount_to_put_in_pot.to_i
+         @chip_stack -= @last_action.amount_to_put_in_pot
+         @chip_balance -= @last_action.amount_to_put_in_pot.to_i
+
+         @patient.take_action!(@last_action).should be @patient
+
+         if from_player_message[seat_taking_action] == 'f'
+            @has_folded = true
+         end
+      end
+      if @match_state.round != prev_round
+         @actions_taken_this_hand << []
+         @actions_taken_this_hand_string += '/'
+
+         @chip_contribution << 0
+         
+         @patient.start_new_round!.should be @patient
+      end
    end
 end

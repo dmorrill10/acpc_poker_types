@@ -92,13 +92,15 @@ class Player
       @chip_contribution = []
       
       start_new_round!
-      
-      pay_blind!(blind)
+
+      pay_blind! blind
 	end
 	
 	def start_new_round!
       @actions_taken_this_hand << []
       @chip_contribution << 0
+
+      self
 	end
 	
 	# @param [PokerAction] action The action to take.
@@ -134,19 +136,21 @@ class Player
    end
       
    # Adjusts this player's state when it takes chips from the pot.
-   # @param [Integer] number_of_chips_from_the_pot The number of chips
-   #  this player has won from the pot.
-   # @raise (see #take_from_chip_stack!)
-   def take_winnings!(number_of_chips_from_the_pot)
-      add_to_stack number_of_chips_from_the_pot
+   # @param [Integer] chips The number of chips this player has won from the pot.
+   def take_winnings!(chips)
+      @chip_contribution << 0
+
+      add_to_stack! chips
    end
    
    def assign_cards!(hole_cards)
       @hole_cards = hole_cards
+
+      self
    end
    
    def chip_contribution_over_hand
-      @chip_contribution.inject(0) { |sum, per_round| sum += per_round }
+      @chip_contribution.sum
    end
    
    def chip_balance_over_hand
@@ -160,10 +164,12 @@ class Player
       take_from_chip_stack! blind_amount
    end
    
-   def add_to_stack(chips)
+   def add_to_stack!(chips)
       @chip_stack += chips
       @chip_balance += chips.to_i
       @chip_contribution[-1] -= chips.to_i
+
+      self
    end
    
    # Take chips away from this player's chip stack.
@@ -173,5 +179,7 @@ class Player
       @chip_stack -= number_of_chips
       @chip_balance -= number_of_chips.to_i
       @chip_contribution[-1] += number_of_chips.to_i
+
+      self
    end
 end
