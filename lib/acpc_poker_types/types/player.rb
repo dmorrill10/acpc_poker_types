@@ -38,7 +38,7 @@ class Player
    
    # @return [Array<ChipStack>] This player's contribution to the pot in the
    #  current hand, organized by round.
-   attr_reader :chip_contribution
+   attr_reader :chip_contributions
    
    # @return [Integer] The amount this player has won or lost in the current
    #  match.  During a hand, this is a projected amount assuming that this
@@ -65,22 +65,14 @@ class Player
       @seat = seat
       @chip_balance = 0
       @chip_stack = chip_stack
-      @chip_contribution = [0]
+      @chip_contributions = [0]
       
       @actions_taken_this_hand = [[]]
    end
-   
-   # @return [String] String representation of this player.
+
    def to_s
-      to_hash.to_s
+      @name.to_s
    end
-	
-	def actions_taken_this_hand_to_string
-      return '' unless @actions_taken_this_hand
-      (@actions_taken_this_hand.map do |actions_per_round|
-         (actions_per_round.map { |action| action.to_acpc }).join('')
-      end).join('/')
-	end
 	
 	# @param [#to_i] blind_amount The blind amount for this player to pay.
 	# @param [#to_i] chip_stack (see #chip_stack)
@@ -89,7 +81,7 @@ class Player
       @chip_stack = chip_stack
       @hole_cards = hole_cards
       @actions_taken_this_hand = []
-      @chip_contribution = []
+      @chip_contributions = []
       
       start_new_round!
 
@@ -98,7 +90,7 @@ class Player
 	
 	def start_new_round!
       @actions_taken_this_hand << []
-      @chip_contribution << 0
+      @chip_contributions << 0
 
       self
 	end
@@ -138,7 +130,7 @@ class Player
    # Adjusts this player's state when it takes chips from the pot.
    # @param [Integer] chips The number of chips this player has won from the pot.
    def take_winnings!(chips)
-      @chip_contribution << 0
+      @chip_contributions << 0
 
       add_to_stack! chips
    end
@@ -149,12 +141,12 @@ class Player
       self
    end
    
-   def chip_contribution_over_hand
-      @chip_contribution.sum
+   def chip_contributions_over_hand
+      @chip_contributions.sum
    end
    
    def chip_balance_over_hand
-      -chip_contribution_over_hand
+      -chip_contributions_over_hand
    end
    
    private
@@ -167,7 +159,7 @@ class Player
    def add_to_stack!(chips)
       @chip_stack += chips
       @chip_balance += chips.to_i
-      @chip_contribution[-1] -= chips.to_i
+      @chip_contributions[-1] -= chips.to_i
 
       self
    end
@@ -178,7 +170,7 @@ class Player
    def take_from_chip_stack!(number_of_chips)
       @chip_stack -= number_of_chips
       @chip_balance -= number_of_chips.to_i
-      @chip_contribution[-1] += number_of_chips.to_i
+      @chip_contributions[-1] += number_of_chips.to_i
 
       self
    end

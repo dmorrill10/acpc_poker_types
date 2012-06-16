@@ -118,10 +118,9 @@ describe Player do
          
          @chip_stack = INITIAL_CHIP_STACK - BLIND
          @chip_balance = -BLIND
-         @chip_contribution = [BLIND]
+         @chip_contributions = [BLIND]
          @hole_cards = Hand.new
          @actions_taken_this_hand = [[action]]
-         @actions_taken_this_hand_string = action.to_acpc
          @has_folded = true
          @is_all_in = false
          @is_active = false
@@ -138,10 +137,9 @@ describe Player do
          
          @chip_stack = 0
          @chip_balance = -INITIAL_CHIP_STACK
-         @chip_contribution = [INITIAL_CHIP_STACK]
+         @chip_contributions = [INITIAL_CHIP_STACK]
          @hole_cards = hand
          @actions_taken_this_hand = [[action]]
-         @actions_taken_this_hand_string = action.to_acpc
          @has_folded = false
          @is_all_in = true
          @is_active = false
@@ -158,7 +156,7 @@ describe Player do
       
       @patient.chip_stack.should be == INITIAL_CHIP_STACK + pot_size
       @patient.chip_balance.should be == pot_size
-      @patient.chip_contribution.should be == [0, -pot_size]
+      @patient.chip_contributions.should be == [0, -pot_size]
    end
    it 'works properly over samples of data from the ACPC Dealer' do
       DealerData::DATA.each do |num_players, data_by_num_players|
@@ -203,7 +201,7 @@ describe Player do
 
                      @patient.start_new_hand!(
                         @blinds[@seat], 
-                        @chip_stack + @chip_contribution.first,
+                        @chip_stack + @chip_contributions.first,
                         @hole_cards
                      ).should be @patient
                   else
@@ -211,12 +209,12 @@ describe Player do
                   end
                   
                   if !next_turn || MatchStateString.parse(next_turn[:to_players]['1']).first_state_of_first_round?
-                     @chip_balance += @chip_contribution.sum
-                     @chip_stack += @chip_contribution.sum
+                     @chip_balance += @chip_contributions.sum
+                     @chip_stack += @chip_contributions.sum
 
-                     @patient.take_winnings!(@chip_contribution.sum).should be @patient
+                     @patient.take_winnings!(@chip_contributions.sum).should be @patient
 
-                     @chip_contribution << -@chip_contribution.sum
+                     @chip_contributions << -@chip_contributions.sum
                   end
 
                   @is_all_in = @chip_stack <= 0
@@ -238,7 +236,7 @@ describe Player do
       @patient.name.should == @name
       @patient.seat.should == @seat
       @patient.chip_stack.should == @chip_stack
-      @patient.chip_contribution.should == @chip_contribution
+      @patient.chip_contributions.should == @chip_contributions
       @patient.chip_balance.should == @chip_balance
       if @hole_cards
          (@patient.hole_cards.map { |card| card.to_s} ).should == @hole_cards.map { |card| card.to_s }
@@ -246,13 +244,12 @@ describe Player do
          @patient.hole_cards.should be nil
       end
       @patient.actions_taken_this_hand.should == @actions_taken_this_hand
-      @patient.actions_taken_this_hand_to_string.should == @actions_taken_this_hand_string
       @patient.folded?.should == @has_folded
       @patient.all_in?.should == @is_all_in
       @patient.active?.should == @is_active
       @patient.round.should == @round
-      @patient.chip_contribution_over_hand.should == @chip_contribution.sum
-      @patient.chip_balance_over_hand.should == -@chip_contribution.sum
+      @patient.chip_contributions_over_hand.should == @chip_contributions.sum
+      @patient.chip_balance_over_hand.should == -@chip_contributions.sum
    end
    def various_actions
       various_amounts_to_put_in_pot do |amount|
@@ -313,8 +310,7 @@ describe Player do
 
          unless 0 == round
             @patient.start_new_round! 
-            @chip_contribution << 0
-            @actions_taken_this_hand_string += '/'
+            @chip_contributions << 0
             @actions_taken_this_hand << []
          end
          
@@ -327,13 +323,12 @@ describe Player do
             
             @chip_balance -= chip_stack_adjustment
             @chip_stack -= chip_stack_adjustment
-            @chip_contribution[-1] += chip_stack_adjustment
+            @chip_contributions[-1] += chip_stack_adjustment
             
             @is_all_in = 0 == @chip_stack
             @is_active = !@is_all_in
             
             @actions_taken_this_hand.last << action
-            @actions_taken_this_hand_string += action.to_acpc
             
             @patient.take_action! action
             
@@ -362,23 +357,21 @@ describe Player do
 
       @hole_cards = nil
       @actions_taken_this_hand = [[]]
-      @actions_taken_this_hand_string = ''
       @has_folded = false
       @is_all_in = false
       @is_active = true
       @round = 0
-      @chip_contribution = [0]
+      @chip_contributions = [0]
    end
       def init_new_hand_data!(type=nil)
       @actions_taken_this_hand = [[]]
-      @actions_taken_this_hand_string = ''
       init_new_hand_chip_data! type
    end
    def init_new_hand_chip_data!(type=nil)
       # @todo Assumes Doyle's Game
-      @chip_contribution = [if type then @blinds[@seat] else BLIND end]
-      @chip_balance = -@chip_contribution.first
-      @chip_stack = (if type then DealerData::GAME_DEFS[type][:stack_size] else INITIAL_CHIP_STACK end) - @chip_contribution.first
+      @chip_contributions = [if type then @blinds[@seat] else BLIND end]
+      @chip_balance = -@chip_contributions.first
+      @chip_stack = (if type then DealerData::GAME_DEFS[type][:stack_size] else INITIAL_CHIP_STACK end) - @chip_contributions.first
    end
    def init_new_turn_data!(type, from_player_message, prev_round)
       seat_taking_action = from_player_message.keys.first
@@ -393,9 +386,8 @@ describe Player do
 
       if seat_of_last_player_to_act == @seat
          @actions_taken_this_hand.last << @last_action
-         @actions_taken_this_hand_string += @last_action.to_acpc
 
-         @chip_contribution[-1] += @last_action.amount_to_put_in_pot.to_i
+         @chip_contributions[-1] += @last_action.amount_to_put_in_pot.to_i
          @chip_stack -= @last_action.amount_to_put_in_pot
          @chip_balance -= @last_action.amount_to_put_in_pot.to_i
 
@@ -407,9 +399,8 @@ describe Player do
       end
       if @match_state.round != prev_round
          @actions_taken_this_hand << []
-         @actions_taken_this_hand_string += '/'
 
-         @chip_contribution << 0
+         @chip_contributions << 0
          
          @patient.start_new_round!.should be @patient
       end
