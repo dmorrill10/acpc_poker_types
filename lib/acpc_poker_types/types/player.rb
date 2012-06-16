@@ -141,14 +141,6 @@ class Player
       self
    end
    
-   def chip_contributions_over_hand
-      @chip_contributions.sum
-   end
-   
-   def chip_balance_over_hand
-      -chip_contributions_over_hand
-   end
-   
    private
    
    # @param [#to_i] blind_amount The blind amount for this player to pay.

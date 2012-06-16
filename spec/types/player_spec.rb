@@ -248,8 +248,6 @@ describe Player do
       @patient.all_in?.should == @is_all_in
       @patient.active?.should == @is_active
       @patient.round.should == @round
-      @patient.chip_contributions_over_hand.should == @chip_contributions.sum
-      @patient.chip_balance_over_hand.should == -@chip_contributions.sum
    end
    def various_actions
       various_amounts_to_put_in_pot do |amount|
