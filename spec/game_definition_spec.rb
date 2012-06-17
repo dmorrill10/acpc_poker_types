@@ -1,59 +1,67 @@
 
 # Spec helper (must include first to track code coverage with SimpleCov)
-require File.expand_path('../../support/spec_helper', __FILE__)
+require File.expand_path('../support/spec_helper', __FILE__)
 
-# System classes
-require 'tempfile'
+require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/game_definition", __FILE__)
 
-# Local modules
-require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/acpc_poker_types_defs", __FILE__)
-require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/helpers/acpc_poker_types_helper", __FILE__)
-
-# Local classes
-require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/types/game_definition", __FILE__)
+require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/../acpc_poker_types", __FILE__)
 
 describe GameDefinition do
-   include AcpcPokerTypesDefs
-   include AcpcPokerTypesHelper
-   
-   describe '#initialize' do
-      it "parses all available game definitions properly" do      
-         AcpcPokerTypesDefs::GAME_DEFINITION_FILE_NAMES.values.each do |game_definition_file_name|
-            patient = GameDefinition.new game_definition_file_name
-            
-            # I reason that if the GameDefinition produced by the string version of the patient is identical to the patient, then it's likley that everything works
-            temporary_game_definition_file_name = 'test_game_definition.game'
-            temporary_game_definition_file = Tempfile.new(temporary_game_definition_file_name)
-            temporary_game_definition_file.write patient.to_s
-            temporary_game_definition_file.close false
-            
-            second_game_definition = GameDefinition.new temporary_game_definition_file.path
-            
-            patient.should be ==(second_game_definition)
-            
-            temporary_game_definition_file.unlink
-         end
-      end
-   end
-   
-   # @todo While this procedure is decently accurate for ensuring the game definitions match, it is often buggy, so I'm going to try a simpler route (I'm not using this function right now).
-   def parsed_game_definitions_match_original_definitions?(patient, game_definition_file_name)
-      game_definition_string = patient.to_s
-      game_definition_array = game_definition_string.split("\n")
-      remaining_lines = []
-      begin
-         for_every_line_in_file game_definition_file_name do |definition|
-            next if GameDefinition.game_def_line_not_informative? definition
-            remaining_lines << definition
-            game_definition_array.each do |definition_from_game|               
-               remaining_lines.delete definition if definition.match("^\s*#{definition_from_game}")
-            end
-         end         
-         remaining_lines.empty?
-      rescue => unable_to_open_or_read_file
-         warn unable_to_open_or_read_file.message + "\n"
-         false
-      end
-   end
-end
+  include AcpcPokerTypes
 
+  describe '::default_first_player_positions' do
+    it 'works' do
+      100.times do |number_of_rounds|
+        expected_positions = number_of_rounds.times.inject([]) do |list, j|
+          list << 0
+        end
+
+        GameDefinition.default_first_player_positions(number_of_rounds).should == expected_positions
+      end
+    end
+  end
+  describe '::default_max_number_of_wagers' do
+    it 'works' do
+      100.times do |number_of_rounds|
+        expected_number_of_wagers = number_of_rounds.times.inject([]) do |list, j|
+          list << (2**8 - 1)
+        end
+
+        GameDefinition.default_max_number_of_wagers(number_of_rounds).should == expected_number_of_wagers
+      end
+    end
+  end
+  describe '::default_chip_stacks' do
+    it 'works' do
+      100.times do |number_of_players|
+        expected_chip_stacks = number_of_players.times.inject([]) do |list, j|
+          list << ChipStack.new(2**31 - 1)
+        end
+
+        GameDefinition.default_chip_stacks(number_of_players).should == expected_chip_stacks
+      end
+    end
+  end
+
+  describe '#parse_file and #parse' do
+    it "parses all available game definitions properly" do
+      AcpcPokerTypes::GAME_DEFINITION_FILE_NAMES.values.each do |game_definition_file_name|
+        @patient = GameDefinition.parse_file game_definition_file_name
+
+        @expected = File.readlines(game_definition_file_name).map do |line|
+          line.chomp
+        end.reject { |line| line.match(/GAMEDEF/i) }
+
+        check_patient
+
+        patient = GameDefinition.parse @expected
+
+        check_patient
+      end
+    end
+  end
+
+  def check_patient
+    Set.new(@patient.to_a).superset?(Set.new(@expected)).should be true
+  end
+end

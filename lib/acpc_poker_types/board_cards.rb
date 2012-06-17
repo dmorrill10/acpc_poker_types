@@ -1,5 +1,5 @@
 
-require 'dmorrill10-utils'
+require 'dmorrill10-utils/class'
 
 require File.expand_path('../pile_of_cards', __FILE__)
 
@@ -26,13 +26,25 @@ class BoardCards < PileOfCards
   alias_method :<<, :push
 
   # @return [String] The string representation of these board cards.
-  def to_str
-    return '' if inject(true) do |no_board_cards_shown, pile_for_round|
-      no_board_cards_shown &= pile_for_round.empty?
+  def to_s
+    if all? { |pile_for_round| pile_for_round.empty? }
+      ''
+    else
+      '/' + (map { |pile_for_round| pile_for_round.join }).join('/')
     end
-    '/' + (map { |pile_for_round| pile_for_round.join }).join('/')
   end
 
-  # @see #to_str
-  alias_method :to_s, :to_str
+  # @see #to_s
+  alias_method :to_str, :to_s
+
+  # @return [String] The string representation of these board cards.
+  def to_acpc
+    if all? { |pile_for_round| pile_for_round.empty? }
+      ''
+    else
+      '/' + (map do |pile_for_round| 
+        (pile_for_round.map { |card| card.to_acpc }).join
+      end).join('/')
+    end
+  end
 end

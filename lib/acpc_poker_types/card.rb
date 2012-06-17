@@ -5,17 +5,31 @@ require File.expand_path('../rank', __FILE__)
 require File.expand_path('../suit', __FILE__)
 
 class Card
-
   exceptions :unable_to_parse_acpc_card
 
-  # @return [Array<String>] A list of all possible ACPC cards.
-  ACPC_CARDS = Rank::DOMAIN.map do |rank, rank_properties| 
-    Suit::DOMAIN.map do |suit, suit_properties| 
-      rank_properties[:acpc_character] + suit_properties[:acpc_character]
-    end
-  end.flatten
+  # @param [String] acpc_string_of_cards A string of cards in ACPC format
+  # @return [Array<Card>]
+  def self.cards(acpc_string_of_cards)
+    all_ranks = Rank::DOMAIN.map do |rank, rank_properties|
+     rank_properties[:acpc_character]
+    end.join
+    all_suits = Suit::DOMAIN.map do |suit, suit_properties| 
+      suit_properties[:acpc_character]
+    end.join
 
-  # @return [Card]
+    acpc_string_of_cards.scan(/[#{all_ranks}][#{all_suits}]/).inject([]) do |pile, acpc_card|
+      pile.push << Card.from_acpc(acpc_card)
+    end
+  end
+
+  # @return [Integer] The numeric ACPC representation of the card.
+  def self.acpc_card_number(rank, suit)
+    rank.to_i * Suit::DOMAIN.length + suit.to_i
+  end
+
+  attr_reader :rank, :suit
+
+  # @return Card
   def self.from_acpc(acpc_card)
     all_ranks = Rank::DOMAIN.values.map do |card_rank|
       card_rank[:acpc_character]
@@ -33,13 +47,6 @@ class Card
       raise UnableToParseAcpcCard, acpc_card
     end
   end
-
-  # @return [Integer] The numeric ACPC representation of the card.
-  def self.acpc_card_number(rank, suit)
-    rank.to_i * Suit::DOMAIN.length + suit.to_i
-  end
-
-  attr_reader :rank, :suit
 
   alias_new :from_components
 
