@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.version     = AcpcPokerTypes::VERSION
   s.authors     = ["Dustin Morrill"]
   s.email       = ["morrill@ualberta.ca"]
-  s.homepage    = ""
+  s.homepage    = "https://github.com/dmorrill10/acpc_poker_types"
   s.summary     = %q{ACPC Poker Types}
   s.description = %q{Poker classes and constants that conform to the standards of the Annual Computer Poker Competition.}
 

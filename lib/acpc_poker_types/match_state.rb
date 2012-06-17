@@ -47,7 +47,7 @@ class MatchState
   # @param [#to_s] hand_number The hand number.
   # @param [#to_s] betting_sequence The betting sequence.
   # @param [#to_s] all_hole_cards All the hole cards visible.
-  # @param [#to_s, #empty?] board_cards All the community cards on the board.
+  # @param [#to_acpc, #empty?] board_cards All the community cards on the board.
   # @return [String] The constructed match state string.
   def self.build_match_state_string(
     position_relative_to_dealer,
@@ -59,7 +59,7 @@ class MatchState
     string = LABEL +
       ":#{position_relative_to_dealer}:#{hand_number}:#{betting_sequence}:#{all_hole_cards}"
 
-      string += "#{board_cards}" if board_cards && !board_cards.empty?
+      string += board_cards.to_acpc if board_cards && !board_cards.empty?
     string
   end
 
