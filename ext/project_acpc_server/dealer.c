@@ -4,6 +4,8 @@ Copyright (C) 2011 by the Computer Poker Research Group, University of Alberta
 
 #include <stdlib.h>
 #include <stdio.h>
+#define __STDC_LIMIT_MACROS
+#include <stdint.h>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -12,6 +14,7 @@ Copyright (C) 2011 by the Computer Poker Research Group, University of Alberta
 #include <netinet/tcp.h>
 #include <getopt.h>
 #include "game.h"
+#include "net.h"
 
 
 /* the ports for players to connect to will be printed on standard out
@@ -35,11 +38,9 @@ Copyright (C) 2011 by the Computer Poker Research Group, University of Alberta
 
 
 #define DEFAULT_MAX_INVALID_ACTIONS UINT32_MAX
-#define DEFAULT_MAX_RESPONSE_MICROS -1
-#define DEFAULT_MAX_USED_HAND_MICROS -1
-#define DEFAULT_MAX_USED_PER_HAND_MICROS -1
-
-#define NUM_PORT_CREATION_ATTEMPTS 10
+#define DEFAULT_MAX_RESPONSE_MICROS 600000000
+#define DEFAULT_MAX_USED_HAND_MICROS 600000000
+#define DEFAULT_MAX_USED_PER_HAND_MICROS 7000000
 
 
 typedef struct {
@@ -53,15 +54,6 @@ typedef struct {
   uint64_t usedMatchMicros[ MAX_PLAYERS ];
 } ErrorInfo;
 
-/* Yes... this is basically re-implementing bits of a standard FILE.
-   Unfortunately, trying to mix timeouts and FILE streams either
-   a) doesn't work, or b) is fairly system specific */
-typedef struct {
-  char buf[ MAX_LINE_LEN ];
-  int bufStart;
-  int bufEnd;
-} ReadBuf;
-
 
 static void printUsage( FILE *file, int verbose )
 {
@@ -71,70 +63,12 @@ static void printUsage( FILE *file, int verbose )
   fprintf( file, "  -p player1_port,player2_port,... [default is random]\n" );
   fprintf( file, "  -q only print errors, warnings, and final value to stderr\n" );
   fprintf( file, "  -t/T disable/enable transaction file - disabled by default\n" );
+  fprintf( file, "  -a append to log/transaction files - disabled by default\n" );
   fprintf( file, "  --t_response [milliseconds] maximum time per response\n" );
   fprintf( file, "  --t_hand [milliseconds] maximum player time per hand\n" );
   fprintf( file, "  --t_per_hand [milliseconds] maximum average player time for match\n" );
-}
-
-/* try opening a socket suitable for connecting to
-   if *desiredPort>0, uses specified port, otherwise use a random port
-   returns actual port in *desiredPort
-   returns file descriptor for socket, or -1 on failure */
-static int getListenSocket( uint16_t *desiredPort )
-{
-  int sock, t;
-  struct sockaddr_in addr;
-
-  if( ( sock = socket( AF_INET, SOCK_STREAM, 0 ) ) < 0 ) {
-
-    return -1;
-  }
-
-  /* allow fast socket reuse - ignore failure */
-  t = 1;
-  setsockopt( sock, SOL_SOCKET, SO_REUSEADDR, &t, sizeof( int ) );
-
-  /* bind the socket to the port */
-  if( *desiredPort != 0 ) {
-
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons( *desiredPort );
-    addr.sin_addr.s_addr = htonl( INADDR_ANY );
-    if( bind( sock, (struct sockaddr *)&addr, sizeof( addr ) ) < 0 ) {
-
-      return -1;
-    }
-  } else {
-
-    t = 0;
-    while( 1 ) {
-      addr.sin_family = AF_INET;
-      *desiredPort = ( random() % 64512 ) + 1024;
-      addr.sin_port = htons( *desiredPort );
-      addr.sin_addr.s_addr = htonl( INADDR_ANY );
-      if( bind( sock, (struct sockaddr *)&addr, sizeof( addr ) ) < 0 ) {
-
-	if( t < NUM_PORT_CREATION_ATTEMPTS ) {
-
-	  ++t;
-	  continue;
-	} else {
-
-	  return -1;
-	}
-      }
-
-      break;
-    }
-  }
-
-  /* listen on the socket */
-  if( listen( sock, 8 ) < 0 ) {
-
-    return -1;
-  }
-
-  return sock;
+  fprintf( file, "  --start_timeout [milliseconds] maximum time to wait for players to connect\n" );
+  fprintf( file, "    <0 [default] is no timeout\n" );
 }
 
 /* returns >= 0 on success, -1 on error */
@@ -263,110 +197,6 @@ static int checkErrorNewHand( const Game *game, ErrorInfo *info )
   return 0;
 }
 
-ReadBuf *createReadBuf()
-{
-  ReadBuf *readBuf = malloc( sizeof( ReadBuf ) );
-  if( readBuf != 0 ) {
-
-    readBuf->bufStart = 0;
-    readBuf->bufEnd = 0;
-  }
-
-  return readBuf;
-}
-
-void destroyReadBuf( ReadBuf *readBuf )
-{
-  free( readBuf );
-}
-
-/* get a newline terminated line and place it as a string in 'line'
-   terminates the string with a 0 character
-   if timeoutMicros is non-negative, do not spend more than
-   that number of microseconds waiting to read data
-   return number of characters read (including newline, excluding 0)
-   0 on end of file, or -1 on error or timeout */
-ssize_t getLine( const int readFD, ReadBuf *readBuf,
-		 size_t maxLen, char *line, int64_t timeoutMicros )
-{
-  int haveStartTime, c;
-  ssize_t len;
-  fd_set fds;
-  struct timeval start, tv;
-
-  /* reserve space for string terminator */
-  --maxLen;
-  if( maxLen < 0 ) {
-    return -1;
-  }
-
-  /* read the line */
-  haveStartTime = 0;
-  len = 0;
-  while( len < maxLen ) {
-
-    if( readBuf->bufStart >= readBuf->bufEnd ) {
-      /* buffer is empty */
-
-      if( timeoutMicros >= 0 ) {
-	/* figure out how much time is left for reading */
-
-	if( haveStartTime ) {
-
-	  gettimeofday( &tv, NULL );
-	  tv.tv_sec += timeoutMicros / 1000000 - start.tv_sec;
-	  tv.tv_usec += timeoutMicros % 1000000 - start.tv_usec;
-	  tv.tv_sec += tv.tv_usec / 1000000;
-	  tv.tv_usec = tv.tv_usec % 1000000;
-	} else {
-
-	  haveStartTime = 1;
-	  gettimeofday( &start, NULL );
-	  tv.tv_sec = timeoutMicros / 1000000;
-	  tv.tv_usec = timeoutMicros % 1000000;
-	}
-
-	/* wait for file descriptor to be ready */
-	FD_ZERO( &fds );
-	FD_SET( readFD, &fds );
-	if( select( readFD + 1, &fds, NULL, NULL, &tv ) < 1 ) {
-	  /* no input ready within time, or an actual error */
-	
-	  return -1;
-	}
-      }
-
-      /* try reading a buffer full of data */
-      readBuf->bufStart = 0;
-      readBuf->bufEnd = read( readFD, readBuf->buf, MAX_LINE_LEN );
-      if( readBuf->bufEnd == 0 ) {
-	/* end of input */
-
-	break;
-      } else if( readBuf->bufEnd < 0 ) {
-	/* error condition */
-
-	readBuf->bufEnd = 0;
-	return -1;
-      }
-    }
-
-    /* keep adding to the string until we see a newline */
-    c = readBuf->buf[ readBuf->bufStart ];
-    ++readBuf->bufStart;
-    line[ len ] = c;
-    ++len;
-    if( c == '\n' ) {
-
-      break;
-    }
-  }
-
-  /* terminate the string */
-  line[ len ] = 0;
-  return len;
-}
-
 
 static uint8_t seatToPlayer( const Game *game, const uint8_t player0Seat,
 			     const uint8_t seat )
@@ -424,12 +254,15 @@ static int sendPlayerMessage( const Game *game, const MatchState *state,
 
 /* returns >= 0 if action/size has been set to a valid action
    returns -1 for failure (disconnect, timeout, too many bad actions, etc) */
-static int readPlayerResponse( const Game *game, const MatchState *state,
-			       const int quiet, const uint8_t seat,
+static int readPlayerResponse( const Game *game,
+			       const MatchState *state,
+			       const int quiet,
+			       const uint8_t seat,
 			       const struct timeval *sendTime,
 			       ErrorInfo *errorInfo,
-			       int seatFD, ReadBuf *readBuf,
-			       Action *action, struct timeval *recvTime )
+			       ReadBuf *readBuf,
+			       Action *action,
+			       struct timeval *recvTime )
 {
   int c, r;
   MatchState tempState;
@@ -438,12 +271,25 @@ static int readPlayerResponse( const Game *game, const MatchState *state,
   while( 1 ) {
 
     /* read a line of input from player */
-    if( getLine( seatFD, readBuf, MAX_LINE_LEN, line,
+    struct timeval start;
+    gettimeofday( &start, NULL );
+    if( getLine( readBuf, MAX_LINE_LEN, line,
 		 errorInfo->maxResponseMicros ) <= 0 ) {
       /* couldn't get any input from player */
 
+      struct timeval after;
+      gettimeofday( &after, NULL );
+      uint64_t micros_spent =
+	(uint64_t)( after.tv_sec - start.tv_sec ) * 1000000
+	+ ( after.tv_usec - start.tv_usec );
       fprintf( stderr, "ERROR: could not get action from seat %"PRIu8"\n",
 	       seat + 1 );
+      // Print out how much time has passed so we can see if this was a
+      // timeout as opposed to some other sort of failure (e.g., socket
+      // closing).
+      fprintf( stderr, "%.1f seconds spent waiting; timeout %.1f\n",
+	       micros_spent / 1000000.0,
+	       errorInfo->maxResponseMicros / 1000000.0);
       return -1;
     }
 
@@ -495,7 +341,7 @@ static int readPlayerResponse( const Game *game, const MatchState *state,
 
       fprintf( stderr,
 	       "WARNING: bad action format in response, changed to call\n" );
-      action->type = call;
+      action->type = a_call;
       action->size = 0;
       goto doneRead;
     }
@@ -511,7 +357,7 @@ static int readPlayerResponse( const Game *game, const MatchState *state,
       }
 
       fprintf( stderr, "WARNING: invalid action, changed to call\n" );
-      action->type = call;
+      action->type = a_call;
       action->size = 0;
     }
 
@@ -672,13 +518,13 @@ static int logTransaction( const Game *game, const State *state,
 
 /* returns >= 0 if match should continue, -1 on failure */
 static int checkVersion( const uint8_t seat,
-			 const int seatFD, ReadBuf *readBuf )
+			 ReadBuf *readBuf )
 {
   uint32_t major, minor, rev;
   char line[ MAX_LINE_LEN ];
 
 
-  if( getLine( seatFD, readBuf, MAX_LINE_LEN, line, -1 ) <= 0 ) {
+  if( getLine( readBuf, MAX_LINE_LEN, line, -1 ) <= 0 ) {
 
     fprintf( stderr,
 	     "ERROR: could not read version string from seat %"PRIu8"\n",
@@ -887,7 +733,7 @@ static int gameLoop( const Game *game, char *seatName[ MAX_PLAYERS ],
   /* check version string for each player */
   for( seat = 0; seat < game->numPlayers; ++seat ) {
 
-    if( checkVersion( seat, seatFD[ seat ], readBuf[ seat ] ) < 0 ) {
+    if( checkVersion( seat, readBuf[ seat ] ) < 0 ) {
       /* error messages already handled in function */
 
       return -1;
@@ -963,8 +809,7 @@ static int gameLoop( const Game *game, char *seatName[ MAX_PLAYERS ],
       state.viewingPlayer = currentP;
       currentSeat = playerToSeat( game, player0Seat, currentP );
       if( readPlayerResponse( game, &state, quiet, currentSeat, &sendTime,
-			      errorInfo,
-			      seatFD[ currentSeat ], readBuf[ currentSeat ],
+			      errorInfo, readBuf[ currentSeat ],
 			      &action, &recvTime ) < 0 ) {
 	/* error messages already handled in function */
 
@@ -1047,7 +892,7 @@ static int gameLoop( const Game *game, char *seatName[ MAX_PLAYERS ],
 int main( int argc, char **argv )
 {
   int i, listenSocket[ MAX_PLAYERS ], v, longOpt;
-  int fixedSeats, quiet;
+  int fixedSeats, quiet, append;
   int seatFD[ MAX_PLAYERS ];
   FILE *file, *logFile, *transactionFile;
   ReadBuf *readBuf[ MAX_PLAYERS ];
@@ -1060,14 +905,18 @@ int main( int argc, char **argv )
 
   int useLogFile, useTransactionFile;
   uint64_t maxResponseMicros, maxUsedHandMicros, maxUsedPerHandMicros;
+  int64_t startTimeoutMicros;
   uint32_t numHands, seed, maxInvalidActions;
   uint16_t listenPort[ MAX_PLAYERS ];
+
+  struct timeval startTime, tv;
 
   char name[ MAX_LINE_LEN ];
   static struct option longOptions[] = {
     { "t_response", 1, 0, 0 },
     { "t_hand", 1, 0, 0 },
     { "t_per_hand", 1, 0, 0 },
+    { "start_timeout", 1, 0, 0 },
     { 0, 0, 0, 0 }
   };
 
@@ -1092,13 +941,19 @@ int main( int argc, char **argv )
   /* print all messages */
   quiet = 0;
 
+  /* by default, overwrite preexisting log/transaction files */
+  append = 0;
+
   /* players rotate around the table */
   fixedSeats = 0;
+
+  /* no timeout on startup */
+  startTimeoutMicros = -1;
 
   /* parse options */
   while( 1 ) {
 
-    i = getopt_long( argc, argv, "flLp:qtT", longOptions, &longOpt );
+    i = getopt_long( argc, argv, "flLp:qtTa", longOptions, &longOpt );
     if( i < 0 ) {
 
       break;
@@ -1151,6 +1006,22 @@ int main( int argc, char **argv )
 	maxUsedPerHandMicros *= 1000;
 	break;
 
+      case 3:
+	/* start_timeout */
+
+	if( sscanf( optarg, "%"SCNd64, &startTimeoutMicros ) < 1 ) {
+
+	  fprintf( stderr, "ERROR: could not get start timeout %s\n", optarg );
+	  exit( EXIT_FAILURE );
+	}
+
+	/* convert from milliseconds to microseconds */
+	if( startTimeoutMicros > 0 ) {
+
+	  startTimeoutMicros *= 1000;
+	}
+	break;
+
       }
       break;
 
@@ -1198,6 +1069,11 @@ int main( int argc, char **argv )
       /* use transactionFile */
 
       useTransactionFile = 1;
+      break;
+
+    case 'a':
+
+      append = 1;
       break;
 
     default:
@@ -1266,7 +1142,11 @@ int main( int argc, char **argv )
       fprintf( stderr, "ERROR: match file name too long %s\n", argv[ optind ] );
       exit( EXIT_FAILURE );
     }
-    logFile = fopen( name, "a+" );
+    if (append) {
+      logFile = fopen( name, "a+" );
+    } else {
+      logFile = fopen( name, "w" );
+    }
     if( logFile == NULL ) {
 
       fprintf( stderr, "ERROR: could not open log file %s\n", name );
@@ -1286,7 +1166,11 @@ int main( int argc, char **argv )
       fprintf( stderr, "ERROR: match file name too long %s\n", argv[ optind ] );
       exit( EXIT_FAILURE );
     }
-    transactionFile = fopen( name, "a+" );
+    if (append) {
+      transactionFile = fopen( name, "a+" );
+    } else {
+      transactionFile = fopen( name, "w" );
+    }
     if( transactionFile == NULL ) {
 
       fprintf( stderr, "ERROR: could not open transaction file %s\n", name );
@@ -1327,7 +1211,34 @@ int main( int argc, char **argv )
 		       numHands, seed, &errorInfo, logFile );
 
   /* wait for each player to connect */
+  gettimeofday( &startTime, NULL );
   for( i = 0; i < game->numPlayers; ++i ) {
+
+    if( startTimeoutMicros >= 0 ) {
+      uint64_t startTimeLeft;
+      fd_set fds;
+
+      gettimeofday( &tv, NULL );
+      startTimeLeft = startTimeoutMicros
+	- (uint64_t)( tv.tv_sec - startTime.tv_sec ) * 1000000
+	- ( tv.tv_usec - startTime.tv_usec );
+      if( startTimeLeft < 0 ) {
+
+	startTimeLeft = 0;
+      }
+      tv.tv_sec = startTimeLeft / 1000000;
+      tv.tv_usec = startTimeLeft % 1000000;
+
+      FD_ZERO( &fds );
+      FD_SET( listenSocket[ i ], &fds );
+      if( select( listenSocket[ i ] + 1, &fds, NULL, NULL, &tv ) < 1 ) {
+	/* no input ready within time, or an actual error */
+
+	fprintf( stderr, "ERROR: timed out wating for seat %d to connect\n",
+		 i + 1 );
+	exit( EXIT_FAILURE );
+      }
+    }
 
     addrLen = sizeof( addr );
     seatFD[ i ] = accept( listenSocket[ i ],
@@ -1343,7 +1254,7 @@ int main( int argc, char **argv )
     setsockopt( seatFD[ i ], IPPROTO_TCP, TCP_NODELAY,
 		(char *)&v, sizeof(int) );
 
-    readBuf[ i ] = createReadBuf();
+    readBuf[ i ] = createReadBuf( seatFD[ i ] );
   }
 
   /* play the match */
