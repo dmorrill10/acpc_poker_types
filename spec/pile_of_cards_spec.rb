@@ -2,7 +2,8 @@
 # Spec helper (must include first to track code coverage with SimpleCov)
 require File.expand_path('../support/spec_helper', __FILE__)
 
-require File.expand_path('../../lib/hand_evaluator', __FILE__)
+require 'hand_evaluator'
+
 require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/card", __FILE__)
 
 require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/pile_of_cards", __FILE__)

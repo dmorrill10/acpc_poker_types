@@ -1,5 +1,5 @@
 
-require File.expand_path('../../hand_evaluator', __FILE__)
+require 'hand_evaluator'
 
 class PileOfCards < Array
   # @return [Integer] The strength of the strongest poker hand that can be made from this pile of cards.

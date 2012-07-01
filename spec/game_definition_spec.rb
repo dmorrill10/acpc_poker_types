@@ -2,12 +2,14 @@
 # Spec helper (must include first to track code coverage with SimpleCov)
 require File.expand_path('../support/spec_helper', __FILE__)
 
+require 'acpc_dealer'
+
 require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/game_definition", __FILE__)
 
 require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/../acpc_poker_types", __FILE__)
 
 describe GameDefinition do
-  include AcpcPokerTypes
+  include AcpcDealer
 
   describe '::default_first_player_positions' do
     it 'works' do
@@ -45,7 +47,11 @@ describe GameDefinition do
 
   describe '#parse_file and #parse' do
     it "parses all available game definitions properly" do
-      AcpcPokerTypes::GAME_DEFINITION_FILE_NAMES.values.each do |game_definition_file_name|
+      AcpcDealer::GAME_DEFINITION_FILE_PATHS.map do |key, groups_of_defs|
+        groups_of_defs.map do |key, game_def|
+          game_def
+        end.flatten
+      end.flatten.each do |game_definition_file_name|
         @patient = GameDefinition.parse_file game_definition_file_name
 
         @expected = File.readlines(game_definition_file_name).map do |line|
