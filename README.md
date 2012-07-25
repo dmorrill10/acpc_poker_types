@@ -1,42 +1,45 @@
 ACPC Poker Types
 ========
 
-This is a library of poker classes and constants that conform to ACPC standards.
+The [Annual Computer Poker Competition Poker Types][ACPC Poker Types] gem provides basic poker types and constants that conform to standards and protocols set by the [<em>ACPC Dealer Server</em>][ACPC competition server].
 
-Project Tracking
-----------------
+## Installation
 
-* [Documentation](http://www.ualberta.ca/~morrill/doc/acpc_poker_types)
-* [Issue tracker](http://bitbucket.org/morrill/acpcpokertypes/issues?status=new&status=open)
+Add this line to your application's Gemfile:
 
-License
--------
+    gem 'acpc_poker_types'
 
-Copyright (C) 2012 by the Computer Poker Research Group, University of Alberta
+And then execute:
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicence, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
+    $ bundle
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Or install it yourself as:
 
-Except as contained in this notice, the name(s) of the above copyright holders
-shall not be used in advertising or otherwise to promote the sale, use or other
-dealings in this Software without prior written authorization.
+    $ gem install acpc_poker_types
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+## Usage
 
-Credits
--------
+See the [documentation][docs] for information on available classes, modules, and constants.
 
-Dustin Morrill: morrill@ualberta.ca
+## Contributing
+
+See the [issue tracker](https://github.com/dmorrill10/acpc_poker_types/issues) for currently known issues, or to log new ones.
+
+1. Fork it
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Added some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create new Pull Request
+
+Copyright
+---------
+Copyright &copy; 2012 by the Computer Poker Research Group, University of Alberta. See [LICENSE](LICENSE.md) for details.
+
+<!---
+    Link references
+    ================
+-->
+
+[ACPC Poker Types]: https://github.com/dmorrill10/acpc_poker_types#readme
+[ACPC competition server]: http://www.computerpokercompetition.org/index.php?option=com_rokdownloads&view=folder&Itemid=59
+[docs]: http://rubydoc.info/github/dmorrill10/acpc_poker_types/frames

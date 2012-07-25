@@ -1,7 +1,7 @@
 --protected
 --no-private
-src/**/*.rb
 lib/**/*.rb
-*.gem
-*.gemspec
 ext/**/*.c
+-
+*.md
+doc/**/*

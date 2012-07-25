@@ -10,11 +10,8 @@ RSpec::Core::RakeTask.new(:spec) do |t|
   ruby_opts = "-w"
 end
 
-desc 'Compile, build, tag, and run specs'
-task :default do
-  Rake::Task[:spec].invoke
-  Rake::Task[:tag].invoke
-end
+desc 'Build gem'
+task :default => :build
 
 task :build => :spec do
   system "gem build acpc_poker_types.gemspec"

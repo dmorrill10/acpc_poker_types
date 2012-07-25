@@ -47,22 +47,20 @@ describe GameDefinition do
 
   describe '#parse_file and #parse' do
     it "parses all available game definitions properly" do
-      AcpcDealer::GAME_DEFINITION_FILE_PATHS.map do |key, groups_of_defs|
-        groups_of_defs.map do |key, game_def|
-          game_def
-        end.flatten
-      end.flatten.each do |game_definition_file_name|
-        @patient = GameDefinition.parse_file game_definition_file_name
+      AcpcDealer::GAME_DEFINITION_FILE_PATHS.each do |key, groups_of_defs|
+        groups_of_defs.each do |key, game_definition_file_name|
+          @patient = GameDefinition.parse_file game_definition_file_name
 
-        @expected = File.readlines(game_definition_file_name).map do |line|
-          line.chomp
-        end.reject { |line| line.match(/GAMEDEF/i) }
+          @expected = File.readlines(game_definition_file_name).map do |line|
+            line.chomp
+          end.reject { |line| line.match(/GAMEDEF/i) }
 
-        check_patient
+          check_patient
 
-        patient = GameDefinition.parse @expected
+          @patient = GameDefinition.parse @expected
 
-        check_patient
+          check_patient
+        end
       end
     end
   end
