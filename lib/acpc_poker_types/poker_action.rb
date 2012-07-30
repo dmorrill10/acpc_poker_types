@@ -38,12 +38,15 @@ class PokerAction
   #  +:acting_player_sees_wager+, and +:amount_to_put_in_pot+.
   # @raise IllegalPokerAction
   def initialize(action, context={})
-    (@symbol, @modifier) = validate_action(action, context[:modifier], (if context[:acting_player_sees_wager].nil?
-                                                                          true
-                                                                        else
-                                                                          context[:acting_player_sees_wager]
-                                           end)
-                                           )
+    (@symbol, @modifier) = validate_action(
+      action, 
+      context[:modifier], 
+      if context[:acting_player_sees_wager].nil?
+        true
+      else
+        context[:acting_player_sees_wager]
+      end
+    )
     @amount_to_put_in_pot = context[:amount_to_put_in_pot].to_i
   end
 

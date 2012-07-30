@@ -2,24 +2,34 @@
 # Spec helper (must include first to track code coverage with SimpleCov)
 require File.expand_path('../support/spec_helper', __FILE__)
 
-# Local classes
+require 'celluloid'
+
+require 'acpc_dealer'
+require 'acpc_dealer_data'
+
 require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/player", __FILE__)
 require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/poker_action", __FILE__)
 require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/hand", __FILE__)
 require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/match_state", __FILE__)
 
-require File.expand_path('../support/dealer_data', __FILE__)
-
 describe Player do
-  include DealerData
-
   NAME = 'p1'
   SEAT = '1'
   INITIAL_CHIP_STACK = 100000
   BLIND = 100
 
   before(:each) do
-    init_before_first_turn_data!
+    @name = NAME
+    @seat = SEAT.to_i - 1
+    @chip_stack = INITIAL_CHIP_STACK
+    @chip_balance = 0
+    @hole_cards = nil
+    @actions_taken_this_hand = [[]]
+    @has_folded = false
+    @is_all_in = false
+    @is_active = true
+    @round = 0
+    @chip_contributions = [0]
 
     init_patient!
   end
@@ -158,79 +168,59 @@ describe Player do
     @patient.chip_contributions.should be == [0, -pot_size]
   end
   it 'works properly over samples of data from the ACPC Dealer' do
-    DealerData::DATA.each do |num_players, data_by_num_players|
-      ((0..(num_players-1)).map{ |i| (i+1).to_s }).each do |seat|
-        data_by_num_players.each do |type, data_by_type|
-          @hand_num = 0
-          @seat = seat.to_i - 1
-          turns = data_by_type[:actions]
+    dealer_log_directory = File.expand_path('../support/dealer_logs', __FILE__)
+    match_logs.each do |log_description|
+      match = PokerMatchData.parse_files(
+        "#{dealer_log_directory}/#{log_description.actions_file_name}",
+        "#{dealer_log_directory}/#{log_description.results_file_name}",
+        log_description.player_names,
+        AcpcDealer::DEALER_DIRECTORY
+      )
+      match.for_every_seat! do |seat|
+        @patient = Player.join_match(
+          match.match_def.player_names[seat], 
+          seat,
+          match.match_def.game_def.chip_stacks[seat]
+        )
 
-          init_before_first_turn_data!
+        match.for_every_hand! do
 
-          init_patient!
-
-          check_patient
-
-          @actions_taken_this_hand = [[]]
-
-          max_turns = 1000
-          turns.each_index do |i|
-            break if i == max_turns
-            turn = turns[i]
-            next_turn = turns[i + 1]
-            from_player_message = turn[:from_players]
-            match_state = turn[:to_players][seat]
-            prev_round = if @match_state then @match_state.round else nil end
-            @match_state = MatchState.parse match_state
-            @round = @match_state.round
-            @has_folded = false
-
-            @hole_card_hands = order_by_seat_from_dealer_relative @match_state.list_of_hole_card_hands,
-              @seat, @match_state.position_relative_to_dealer
-            @hole_cards = @hole_card_hands[@seat]
-
-            @blinds = order_by_seat_from_dealer_relative(
-              DealerData::GAME_DEFS[type][:blinds],
-              @seat,
-              @match_state.position_relative_to_dealer
-            )
-
-            if @match_state.first_state_of_first_round?
-              init_new_hand_data! type
-
-              @patient.start_new_hand!(
-                @blinds[@seat],
-                @chip_stack + @chip_contributions.first,
-                @hole_cards
-              ).should be @patient
-            else
-              init_new_turn_data! type, from_player_message, prev_round
+          @patient.start_new_hand!(
+            match.match_def.game_def.blinds[seat],
+            match.match_def.game_def.chip_stacks[seat],
+            match.current_hand.data.first.state_messages[seat].users_hole_cards
+          )
+          match.for_every_turn! do
+            if match.current_hand.next_action && @patient.seat == match.current_hand.next_action[:seat]
+              @patient.take_action!(match.current_hand.next_action[:action])
             end
 
-            if !next_turn || MatchState.parse(next_turn[:to_players]['1']).first_state_of_first_round?
-              @chip_balance += @chip_contributions.sum
-              @chip_stack += @chip_contributions.sum
+            match_state = match.current_hand.current_match_state
+            last_match_state = match.current_hand.last_match_state
 
-              @patient.take_winnings!(@chip_contributions.sum).should be @patient
-
-              @chip_contributions << -@chip_contributions.sum
+            if !match_state.first_state_of_first_round? && match_state.round > last_match_state.round
+              @patient.start_new_round!
+            end
+            if match.current_hand.final_turn?
+              @patient.take_winnings!(match.current_hand.chip_distribution[seat] + match.match_def.game_def.blinds[seat])
             end
 
-            @is_all_in = @chip_stack <= 0
-            @is_active = !(@has_folded || @is_all_in)
-
-            check_patient
+            @patient.name.should == match.player_name
+            @patient.seat.should == seat
+            @patient.hole_cards.should == match.hole_cards
+            @patient.actions_taken_this_hand.should == match.actions_taken_this_hand
+            @patient.folded?.should == match.folded?
+            @patient.all_in?.should == match.all_in?
+            @patient.active?.should == match.active?
+            @patient.round.should == match.current_hand.current_match_state.round
           end
+          
+          @patient.chip_balance.should == match.chip_balance
         end
       end
     end
   end
 
-  def various_numbers_of_players
-    (1..100).each do |number_of_players|
-      yield number_of_players
-    end
-  end
   def check_patient
     @patient.name.should == @name
     @patient.seat.should == @seat
@@ -248,6 +238,43 @@ describe Player do
     @patient.active?.should == @is_active
     @patient.round.should == @round
   end
+  def various_numbers_of_players
+    (1..100).each do |number_of_players|
+      yield number_of_players
+    end
+  end
+
+  MatchLog = Struct.new(
+    :results_file_name, 
+    :actions_file_name,
+    :player_names
+  )
+
+  def match_logs
+    [
+      MatchLog.new(
+        '2p.limit.h1000.r0.log',
+        '2p.limit.h1000.r0.actions.log',
+        ['p1', 'p2']
+      ),
+      MatchLog.new(
+        '2p.nolimit.h1000.r0.log',
+        '2p.nolimit.h1000.r0.actions.log',
+        ['p1', 'p2']
+      ),
+      MatchLog.new(
+        '3p.limit.h1000.r0.log',
+        '3p.limit.h1000.r0.actions.log',
+        ['p1', 'p2', 'p3']
+      ),
+      MatchLog.new(
+        '3p.nolimit.h1000.r0.log',
+        '3p.nolimit.h1000.r0.actions.log',
+        ['p1', 'p2', 'p3']
+      )
+    ]
+  end
+
   def various_actions
     various_amounts_to_put_in_pot do |amount|
       with_and_without_a_modifier do |modifier|
@@ -345,20 +372,6 @@ describe Player do
   end
   def init_patient!
     @patient = Player.join_match @name, @seat, @chip_stack
-  end
-  def init_before_first_turn_data!
-    @name = NAME
-    @seat = SEAT.to_i - 1
-    @chip_stack = INITIAL_CHIP_STACK
-    @chip_balance = 0
-
-    @hole_cards = nil
-    @actions_taken_this_hand = [[]]
-    @has_folded = false
-    @is_all_in = false
-    @is_active = true
-    @round = 0
-    @chip_contributions = [0]
   end
   def init_new_hand_data!(type=nil)
     @actions_taken_this_hand = [[]]

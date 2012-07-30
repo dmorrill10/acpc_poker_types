@@ -86,7 +86,7 @@ describe ChipStack do
     end
   end
   describe '#coerce converts Integers to ChipStacks when in' do
-    it 'Integer#+' do
+    it 'Rational#+' do
       amount_added = 50
       patient = ChipStack.new amount_added
 
@@ -95,7 +95,7 @@ describe ChipStack do
 
       (initial_number_of_chips + patient).should ==(number_of_chips)
     end
-    it 'Integer#-' do
+    it 'Rational#-' do
       amount_taken = 50
       patient = ChipStack.new amount_taken
 
@@ -104,7 +104,7 @@ describe ChipStack do
 
       (initial_number_of_chips - patient).should ==(number_of_chips)
     end
-    it 'Integer#*' do
+    it 'Rational#*' do
       initial_number_of_chips = 100
       patient = ChipStack.new initial_number_of_chips
 

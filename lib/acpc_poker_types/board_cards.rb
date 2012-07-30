@@ -10,7 +10,7 @@ class BoardCards < PileOfCards
 
   attr_reader :round
 
-  def initialize() next_round! end
+  def initialize() @round = nil; next_round! end
 
   def next_round!
     @round = if @round then @round + 1 else 0 end

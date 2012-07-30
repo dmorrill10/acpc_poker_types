@@ -148,8 +148,8 @@ class Player
 
   def add_to_stack!(chips)
     @chip_stack += chips
-    @chip_balance += chips.to_i
-    @chip_contributions[-1] -= chips.to_i
+    @chip_balance += chips.to_r
+    @chip_contributions[-1] -= chips.to_r
 
     self
   end
@@ -159,8 +159,8 @@ class Player
   # @raise (see ChipStack#-)
   def take_from_chip_stack!(number_of_chips)
     @chip_stack -= number_of_chips
-    @chip_balance -= number_of_chips.to_i
-    @chip_contributions[-1] += number_of_chips.to_i
+    @chip_balance -= number_of_chips.to_r
+    @chip_contributions[-1] += number_of_chips.to_r
 
     self
   end

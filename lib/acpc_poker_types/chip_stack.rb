@@ -3,7 +3,7 @@ require 'dmorrill10-utils/class'
 
 require 'delegate'
 
-class ChipStack < DelegateClass(Integer)
+class ChipStack < DelegateClass(Rational)
   exceptions :illegal_number_of_chips
 
   # @param [#to_i] number_of_chips The number of chips to be made into a stack.
@@ -33,6 +33,6 @@ class ChipStack < DelegateClass(Integer)
 
   # @raise IllegalNumberOfChips
   def assert_valid_value
-    raise IllegalNumberOfChips if @value < 0 or @value.round != @value
+    raise IllegalNumberOfChips if @value < 0
   end
 end
