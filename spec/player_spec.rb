@@ -214,7 +214,7 @@ describe Player do
             @patient.active?.should == match.active?
             @patient.round.should == match.current_hand.current_match_state.round
           end
-          
+
           @patient.chip_balance.should == match.chip_balance
         end
       end
@@ -382,37 +382,5 @@ describe Player do
     @chip_contributions = [if type then @blinds[@seat] else BLIND end]
     @chip_balance = -@chip_contributions.first
     @chip_stack = (if type then DealerData::GAME_DEFS[type][:stack_size] else INITIAL_CHIP_STACK end) - @chip_contributions.first
-  end
-  def init_new_turn_data!(type, from_player_message, prev_round)
-    seat_taking_action = from_player_message.keys.first
-    seat_of_last_player_to_act = seat_taking_action.to_i - 1
-
-    @last_action = PokerAction.new(
-      from_player_message[seat_taking_action],
-      {
-        amount_to_put_in_pot: DealerData::GAME_DEFS[type][:small_bets][@match_state.round],
-      }
-    )
-
-    if seat_of_last_player_to_act == @seat
-      @actions_taken_this_hand.last << @last_action
-
-      @chip_contributions[-1] += @last_action.amount_to_put_in_pot.to_i
-      @chip_stack -= @last_action.amount_to_put_in_pot
-      @chip_balance -= @last_action.amount_to_put_in_pot.to_i
-
-      @patient.take_action!(@last_action).should be @patient
-
-      if from_player_message[seat_taking_action] == 'f'
-        @has_folded = true
-      end
-    end
-    if @match_state.round != prev_round
-      @actions_taken_this_hand << []
-
-      @chip_contributions << 0
-
-      @patient.start_new_round!.should be @patient
-    end
   end
 end
