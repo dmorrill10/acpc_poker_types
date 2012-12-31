@@ -191,8 +191,8 @@ describe Player do
             match.current_hand.data.first.state_messages[seat].users_hole_cards
           )
           match.for_every_turn! do
-            if match.current_hand.next_action && @patient.seat == match.current_hand.next_action[:seat]
-              @patient.take_action!(match.current_hand.next_action[:action])
+            if match.current_hand.next_action && @patient.seat == match.current_hand.next_action.seat
+              @patient.take_action!(match.current_hand.next_action.action)
             end
 
             match_state = match.current_hand.current_match_state
