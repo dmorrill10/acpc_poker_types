@@ -68,8 +68,18 @@ class Player
     @actions_taken_this_hand = [[]]
   end
 
-  def to_s
-    @name.to_s
+  def ==(other)
+    equal_on_public_info?(other) &&
+    @hole_cards == other.hole_cards
+  end
+
+  def equal_on_public_info?(other)
+    @name == other.name && 
+    @seat == other.seat && 
+    @chip_stack == other.chip_stack &&
+    @chip_contributions == other.chip_contributions &&
+    @chip_balance == other.chip_balance &&
+    @actions_taken_this_hand == other.actions_taken_this_hand
   end
 
   # @param [#to_i] blind_amount The blind amount for this player to pay.

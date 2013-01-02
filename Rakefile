@@ -13,10 +13,6 @@ end
 desc 'Build gem'
 task :default => :build
 
-task :build => :spec do
-  system "gem build acpc_poker_types.gemspec"
-end
-
 task :tag => :build do
   puts "Tagging #{AcpcPokerTypes::VERSION}..."
   system "git tag -a #{AcpcPokerTypes::VERSION} -m 'Tagging #{AcpcPokerTypes::VERSION}'"
