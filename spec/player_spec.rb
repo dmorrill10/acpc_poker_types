@@ -174,7 +174,8 @@ describe Player do
         "#{dealer_log_directory}/#{log_description.actions_file_name}",
         "#{dealer_log_directory}/#{log_description.results_file_name}",
         log_description.player_names,
-        AcpcDealer::DEALER_DIRECTORY
+        AcpcDealer::DEALER_DIRECTORY,
+        40
       )
       match.for_every_seat! do |seat|
         @patient = Player.join_match(
@@ -191,8 +192,11 @@ describe Player do
             match.current_hand.data.first.state_messages[seat].users_hole_cards
           )
           match.for_every_turn! do
-            if match.current_hand.next_action && @patient.seat == match.current_hand.next_action.seat
-              @patient.take_action!(match.current_hand.next_action.action)
+            if (
+              match.current_hand.last_action && 
+              @patient.seat == match.current_hand.last_action.seat
+            )
+              @patient.take_action!(match.current_hand.last_action.action)
             end
 
             match_state = match.current_hand.current_match_state
