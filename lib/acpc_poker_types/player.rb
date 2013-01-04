@@ -112,10 +112,8 @@ class Player
 
   # @return [Boolean] Reports whether or not this player has folded.
   def folded?
-    if @actions_taken_this_hand.last.empty?
-      false
-    else
-      :fold == @actions_taken_this_hand.last.last.to_sym
+    @actions_taken_this_hand.any? do |actions| 
+      actions.any? { |action| action.to_sym == :fold }
     end
   end
 

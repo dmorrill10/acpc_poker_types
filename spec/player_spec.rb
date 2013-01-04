@@ -6,6 +6,7 @@ require 'celluloid'
 
 require 'acpc_dealer'
 require 'acpc_dealer_data'
+require 'dmorrill10-utils'
 
 require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/player", __FILE__)
 require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/poker_action", __FILE__)
@@ -209,17 +210,18 @@ describe Player do
               @patient.take_winnings!(match.current_hand.chip_distribution[seat] + match.match_def.game_def.blinds[seat])
             end
 
-            @patient.name.should == match.player_name
+            @patient.name.should == match.player.name
             @patient.seat.should == seat
-            @patient.hole_cards.should == match.hole_cards
-            @patient.actions_taken_this_hand.should == match.actions_taken_this_hand
-            @patient.folded?.should == match.folded?
-            @patient.all_in?.should == match.all_in?
-            @patient.active?.should == match.active?
+            @patient.hole_cards.should == match.player.hole_cards
+            @patient.actions_taken_this_hand.reject_empty_elements.should == match.player.actions_taken_this_hand.reject_empty_elements
+
+            @patient.folded?.should == match.player.folded?
+            @patient.all_in?.should == match.player.all_in?
+            @patient.active?.should == match.player.active?
             @patient.round.should == match.current_hand.current_match_state.round
           end
 
-          @patient.chip_balance.should == match.chip_balance
+          @patient.chip_balance.should == match.player.chip_balance
         end
       end
     end
@@ -236,6 +238,7 @@ describe Player do
     else
       @patient.hole_cards.should be nil
     end
+
     @patient.actions_taken_this_hand.should == @actions_taken_this_hand
     @patient.folded?.should == @has_folded
     @patient.all_in?.should == @is_all_in
@@ -247,6 +250,14 @@ describe Player do
       yield number_of_players
     end
   end
+
+class Array
+  def reject_empty_elements
+    reject do |elem|
+      elem.empty?
+    end
+  end
+end
 
   MatchLog = Struct.new(
     :results_file_name, 
