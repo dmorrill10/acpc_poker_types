@@ -86,7 +86,7 @@ class GameDefinition
     :@chip_stacks => 'stack',
     :@number_of_players => 'numPlayers',
     :@blinds => 'blind',
-    :@min_wagers => 'raiseSize',
+    :@raise_sizes => 'raiseSize',
     :@number_of_rounds => 'numRounds',
     :@first_player_positions => 'firstPlayer',
     :@max_number_of_wagers => 'maxRaises',
@@ -177,7 +177,6 @@ class GameDefinition
     end
 
     @chip_stacks = GameDefinition.default_chip_stacks(@number_of_players) if @chip_stacks.empty?
-    @min_wagers = default_min_wagers(@number_of_rounds) if @min_wagers.empty?
 
     unless @first_player_positions.any? { |pos| pos <= 0 }
       @first_player_positions.map! { |position| position - 1 }
@@ -198,7 +197,7 @@ class GameDefinition
     list_of_lines << "stack = #{@chip_stacks.join(' ')}" unless @chip_stacks.empty?
     list_of_lines << "numPlayers = #{@number_of_players}" if @number_of_players
     list_of_lines << "blind = #{@blinds.join(' ')}" unless @blinds.empty?
-    list_of_lines << "raiseSize = #{@min_wagers.join(' ')}" unless @min_wagers.empty?
+    list_of_lines << "raiseSize = #{min_wagers.join(' ')}" unless min_wagers.empty?
     list_of_lines << "numRounds = #{@number_of_rounds}" if @number_of_rounds
     list_of_lines << "firstPlayer = #{(@first_player_positions.map{|p| p + 1}).join(' ')}" unless @first_player_positions.empty?
     list_of_lines << "maxRaises = #{@max_number_of_wagers.join(' ')}" unless @max_number_of_wagers.empty?
@@ -213,6 +212,14 @@ class GameDefinition
     Set.new(to_a) == Set.new(other_game_definition.to_a)
   end
 
+  def min_wagers
+    if @raise_sizes
+      @raise_sizes
+    else
+      @number_of_rounds.times.map { |i| @blinds.max }
+    end
+  end
+
   private
 
   def initialize_members!
@@ -221,7 +228,6 @@ class GameDefinition
     @blinds = @number_of_players.times.inject([]) { |blinds, i| blinds << 0 }
     @number_of_rounds = MIN_VALUES[:@number_of_rounds]
     @number_of_board_cards = @number_of_rounds.times.inject([]) { |cards, i| cards << 0 }
-    @min_wagers = @number_of_rounds.times.inject([]) { |wagers, i| wagers << @blinds.max }
     @first_player_positions = GameDefinition.default_first_player_positions @number_of_rounds
     @max_number_of_wagers = GameDefinition.default_max_number_of_wagers @number_of_rounds
     @chip_stacks = GameDefinition.default_chip_stacks @number_of_players
@@ -273,7 +279,7 @@ class GameDefinition
 
     raise GameDefinitionParseError, "list of player stacks not specified" unless @chip_stacks
     raise GameDefinitionParseError, "list of blinds not specified" unless @blinds
-    raise GameDefinitionParseError, "raise size in each round not specified" unless @min_wagers
+    raise GameDefinitionParseError, "raise size in each round not specified" unless min_wagers
     raise GameDefinitionParseError, "first player position in each round not specified" unless @first_player_positions
     raise GameDefinitionParseError, "maximum raise in each round not specified" unless @max_number_of_wagers
     raise GameDefinitionParseError, "number of board cards in each round not specified" unless @number_of_board_cards
@@ -332,8 +338,6 @@ class GameDefinition
     @number_of_rounds.times do |i|
       @first_player_positions << 0 unless @first_player_positions.length > i
       @number_of_board_cards << 0 unless @number_of_board_cards.length > i
-
-      @min_wagers << @blinds.max unless @min_wagers.length > i
     end
   end
 end

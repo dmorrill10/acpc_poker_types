@@ -158,15 +158,27 @@ describe Player do
       check_patient
     end
   end
-  it 'properly changes its state when it wins chips' do
-    @patient.chip_balance.should be == 0
+  describe 'properly changes its state when it wins chips' do
+    it 'when the number of chips is an integer' do
+      @patient.chip_balance.should be == 0
 
-    pot_size = 22
-    @patient.take_winnings! pot_size
+      pot_size = 22
+      @patient.take_winnings! pot_size
 
-    @patient.chip_stack.should be == INITIAL_CHIP_STACK + pot_size
-    @patient.chip_balance.should be == pot_size
-    @patient.chip_contributions.should be == [0, -pot_size]
+      @patient.chip_stack.should be == INITIAL_CHIP_STACK + pot_size
+      @patient.chip_balance.should be == pot_size
+      @patient.chip_contributions.should be == [0, -pot_size]
+    end
+    it 'when the number of chips is a rational' do
+      @patient.chip_balance.should be == 0
+
+      pot_size = 22/3.to_r
+      @patient.take_winnings! pot_size
+
+      @patient.chip_stack.should be == INITIAL_CHIP_STACK + pot_size
+      @patient.chip_balance.should be == pot_size
+      @patient.chip_contributions.should be == [0, -pot_size]
+    end
   end
   it 'works properly over samples of data from the ACPC Dealer' do
     dealer_log_directory = File.expand_path('../support/dealer_logs', __FILE__)
@@ -180,7 +192,7 @@ describe Player do
       )
       match.for_every_seat! do |seat|
         @patient = Player.join_match(
-          match.match_def.player_names[seat], 
+          match.match_def.player_names[seat],
           seat,
           match.match_def.game_def.chip_stacks[seat]
         )
@@ -194,7 +206,7 @@ describe Player do
           )
           match.for_every_turn! do
             if (
-              match.current_hand.last_action && 
+              match.current_hand.last_action &&
               @patient.seat == match.current_hand.last_action.seat
             )
               @patient.take_action!(match.current_hand.last_action.action)
@@ -260,7 +272,7 @@ class Array
 end
 
   MatchLog = Struct.new(
-    :results_file_name, 
+    :results_file_name,
     :actions_file_name,
     :player_names
   )

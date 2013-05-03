@@ -2,7 +2,7 @@
 require 'simplecov'
 SimpleCov.start
 
-require 'mocha'
+require 'mocha/api'
 
 RSpec.configure do |config|
    # == Mock Framework
