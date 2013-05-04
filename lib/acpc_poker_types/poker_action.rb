@@ -2,9 +2,9 @@
 require 'set'
 require 'dmorrill10-utils/class'
 
-require File.expand_path('../chip_stack', __FILE__)
+require 'acpc_poker_types/chip_stack'
 
-class PokerAction
+class AcpcPokerTypes::PokerAction
 
   exceptions :illegal_poker_action, :illegal_poker_action_modification
 
@@ -36,11 +36,11 @@ class PokerAction
   # @param [Symbol, String] action A representation of this action.
   # @param [Hash] context The context in which this action is being made. Recognized keys include +:modifier+,
   #  +:acting_player_sees_wager+, and +:amount_to_put_in_pot+.
-  # @raise IllegalPokerAction
+  # @raise IllegalAcpcPokerTypes::PokerAction
   def initialize(action, context={})
     (@symbol, @modifier) = validate_action(
-      action, 
-      context[:modifier], 
+      action,
+      context[:modifier],
       if context[:acting_player_sees_wager].nil?
         true
       else
@@ -95,7 +95,7 @@ class PokerAction
     modifier_to_use = if modifier
       modifier
     elsif !in_place_modifier.empty?
-      ChipStack.new in_place_modifier.to_i
+      AcpcPokerTypes::ChipStack.new in_place_modifier.to_i
     end
 
     symbol_betting_type = LEGAL_ACTIONS.key(action_type) || action_type.to_sym

@@ -13,9 +13,11 @@ Gem::Specification.new do |s|
   s.add_dependency 'dmorrill10-utils'
   s.add_dependency 'acpc_dealer', '~> 0.0'
 
-  s.add_development_dependency 'acpc_dealer_data', '~> 1.0'
   s.add_development_dependency 'celluloid', '~> 0.13'
-  s.add_development_dependency 'rspec'
+  s.add_development_dependency 'awesome_print'
+  s.add_development_dependency 'minitest'
+  s.add_development_dependency 'turn'
+  s.add_development_dependency 'pry-rescue'
   s.add_development_dependency 'mocha'
   s.add_development_dependency 'simplecov'
 

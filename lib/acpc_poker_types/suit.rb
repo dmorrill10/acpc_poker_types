@@ -1,7 +1,7 @@
 
 require 'dmorrill10-utils'
 
-class Suit
+class AcpcPokerTypes::Suit
   exceptions :unrecognized_suit
 
   DOMAIN = {
@@ -29,12 +29,12 @@ class Suit
     suit_hash = hash_from_suit_token suit
 
     raise UnrecognizedSuit, suit.to_s unless suit_hash
-    
+
     suit_hash.first
   end
 
   def initialize(suit)
-    @symbol = Suit.symbol_from_suit_token suit
+    @symbol = AcpcPokerTypes::Suit.symbol_from_suit_token suit
   end
 
   def to_sym
@@ -54,5 +54,5 @@ class Suit
 
   def to_html
     DOMAIN[@symbol][:html_character]
-  end  
+  end
 end

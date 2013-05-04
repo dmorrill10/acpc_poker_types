@@ -1,9 +1,12 @@
 #!/usr/bin/env rake
+require "bundler/gem_tasks"
 
-require 'bundler/gem_tasks'
 require 'rake'
-require 'rspec/core/rake_task'
+require 'rake/testtask'
 
-RSpec::Core::RakeTask.new(:spec) do |t|
-  ruby_opts = "-w"
+Rake::TestTask.new do |t|
+  t.libs << "lib" << 'spec/support'
+  t.test_files = FileList['spec/**/*_spec.rb']
+  t.verbose = false
+  t.warning = false # pry-rescue has a lot of warnings
 end

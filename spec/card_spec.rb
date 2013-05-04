@@ -2,30 +2,30 @@
 # Spec helper (must include first to track code coverage with SimpleCov)
 require File.expand_path('../support/spec_helper', __FILE__)
 
-require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/card", __FILE__)
+require 'acpc_poker_types/card'
 
-describe Card do
+describe AcpcPokerTypes::Card do
   describe '::from_acpc' do
     it 'raises an exception if the given ACPC card string could not be parsed properly' do
-      expect do 
-        Card.from_acpc('not a card')
-      end.to raise_exception(Card::UnableToParseAcpcCard)
+      -> do
+        AcpcPokerTypes::Card.from_acpc('not a card')
+      end.must_raise(AcpcPokerTypes::Card::ParseError)
     end
     it 'works properly in all cases' do
       for_every_card! do
-        @patient = Card.from_acpc @acpc
+        @patient = AcpcPokerTypes::Card.from_acpc @acpc
 
         check_patient
 
-        @patient = Card.from_components @rank, @suit
+        @patient = AcpcPokerTypes::Card.from_components @rank, @suit
 
         check_patient
 
-        @patient = Card.from_components @rank.to_sym, @suit.to_sym
+        @patient = AcpcPokerTypes::Card.from_components @rank.to_sym, @suit.to_sym
 
         check_patient
 
-        @patient = Card.from_components @rank.to_s, @suit.to_i
+        @patient = AcpcPokerTypes::Card.from_components @rank.to_s, @suit.to_i
 
         check_patient
       end
@@ -33,10 +33,10 @@ describe Card do
   end
 
   def for_every_card!
-    Rank::DOMAIN.map do |rank, rank_properties|
-      @rank = Rank.new rank
-      Suit::DOMAIN.map do |suit, suit_properties|
-        @suit = Suit.new suit
+    AcpcPokerTypes::Rank::DOMAIN.map do |rank, rank_properties|
+      @rank = AcpcPokerTypes::Rank.new rank
+      AcpcPokerTypes::Suit::DOMAIN.map do |suit, suit_properties|
+        @suit = AcpcPokerTypes::Suit.new suit
         @number = acpc_card_number @rank, @suit
         @string = rank_properties[:text] + suit_properties[:acpc_character]
         @acpc = rank_properties[:acpc_character] + suit_properties[:acpc_character]
@@ -47,15 +47,15 @@ describe Card do
   end
 
   def acpc_card_number(rank, suit)
-    rank.to_i * Suit::DOMAIN.length + suit.to_i
+    rank.to_i * AcpcPokerTypes::Suit::DOMAIN.length + suit.to_i
   end
 
   def check_patient
-    @patient.rank.to_sym.should == @rank.to_sym
-    @patient.suit.to_sym.should == @suit.to_sym
-    @patient.to_i.should == @number
-    @patient.to_s.should == @string
-    @patient.to_str.should == @string
-    @patient.to_acpc.should == @acpc
+    @patient.rank.to_sym.must_equal @rank.to_sym
+    @patient.suit.to_sym.must_equal @suit.to_sym
+    @patient.to_i.must_equal @number
+    @patient.to_s.must_equal @string
+    @patient.to_str.must_equal @string
+    @patient.to_acpc.must_equal @acpc
   end
 end

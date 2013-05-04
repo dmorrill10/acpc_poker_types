@@ -3,7 +3,7 @@ require 'dmorrill10-utils/class'
 
 require 'delegate'
 
-class ChipStack < DelegateClass(Rational)
+class AcpcPokerTypes::ChipStack < DelegateClass(Rational)
   exceptions :illegal_number_of_chips
 
   # @param [#to_i] number_of_chips The number of chips to be made into a stack.
