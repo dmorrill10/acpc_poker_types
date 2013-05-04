@@ -2,11 +2,11 @@
 require 'set'
 require 'dmorrill10-utils/class'
 
-require File.expand_path('../chip_stack', __FILE__)
+require 'acpc_poker_types/chip_stack'
 
-class PokerAction
+class AcpcPokerTypes::PokerAction
 
-  exceptions :illegal_poker_action, :illegal_poker_action_modification
+  exceptions :illegal_action, :illegal_amount
 
   # @return The amount that the player taking this action needs to put in the pot.
   #  Could be negative to imply the acting player takes chips from the pot.
@@ -36,11 +36,11 @@ class PokerAction
   # @param [Symbol, String] action A representation of this action.
   # @param [Hash] context The context in which this action is being made. Recognized keys include +:modifier+,
   #  +:acting_player_sees_wager+, and +:amount_to_put_in_pot+.
-  # @raise IllegalPokerAction
+  # @raise IllegalAction
   def initialize(action, context={})
     (@symbol, @modifier) = validate_action(
-      action, 
-      context[:modifier], 
+      action,
+      context[:modifier],
       if context[:acting_player_sees_wager].nil?
         true
       else
@@ -86,11 +86,11 @@ class PokerAction
     elsif action.to_s.match(/^(#{LEGAL_STRINGS.to_a.join('|')})\s*(\d*)$/)
     elsif action.to_s.match(/^([#{LEGAL_ACPC_CHARACTERS.to_a.join('')}])\s*(\d*)$/)
     else
-      raise(IllegalPokerAction, action.to_s)
+      raise(IllegalAction, action.to_s)
     end
     action_type, in_place_modifier = $1, $2
 
-    raise(IllegalPokerActionModification, "in-place modifier: #{in_place_modifier}, explicit modifier: #{modifier}") if modifier && !in_place_modifier.empty?
+    raise(IllegalAmount, "in-place modifier: #{in_place_modifier}, explicit modifier: #{modifier}") if modifier && !in_place_modifier.empty?
 
     modifier_to_use = if modifier
       modifier
@@ -101,14 +101,14 @@ class PokerAction
     symbol_betting_type = LEGAL_ACTIONS.key(action_type) || action_type.to_sym
     action_symbol = increase_resolution_of_action(symbol_betting_type, acting_player_sees_wager)
 
-    raise(IllegalPokerAction, 'Players may only fold if they are faced with a wager.') if :fold == symbol_betting_type && !acting_player_sees_wager
+    raise(IllegalAction, 'Players may only fold if they are faced with a wager.') if :fold == symbol_betting_type && !acting_player_sees_wager
 
     action_modifier = validate_modifier(modifier_to_use, action_symbol)
     [action_symbol, action_modifier]
   end
 
   def validate_modifier(modifier, action_symbol)
-    raise(IllegalPokerActionModification, modifier.to_s) unless modifier.nil? || MODIFIABLE_ACTIONS.keys.include?(action_symbol)
+    raise(IllegalAmount, modifier.to_s) unless modifier.nil? || MODIFIABLE_ACTIONS.keys.include?(action_symbol)
     modifier
   end
 

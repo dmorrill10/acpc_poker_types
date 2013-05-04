@@ -1,17 +1,15 @@
 
 # Spec helper (must include first to track code coverage with SimpleCov)
-require File.expand_path('../support/spec_helper', __FILE__)
-
-require 'celluloid'
+require_relative 'support/spec_helper'
 
 require 'acpc_dealer'
 require 'acpc_dealer_data'
 require 'dmorrill10-utils'
 
-require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/player", __FILE__)
-require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/poker_action", __FILE__)
-require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/hand", __FILE__)
-require File.expand_path("#{LIB_ACPC_POKER_TYPES_PATH}/match_state", __FILE__)
+require 'acpc_poker_types/player'
+require 'acpc_poker_types/poker_action'
+require 'acpc_poker_types/hand'
+require 'acpc_poker_types/match_state'
 
 describe Player do
   NAME = 'p1'
