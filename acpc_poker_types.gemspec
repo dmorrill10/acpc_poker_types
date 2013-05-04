@@ -9,12 +9,12 @@ Gem::Specification.new do |s|
   s.homepage    = "https://github.com/dmorrill10/acpc_poker_types"
   s.summary     = %q{ACPC Poker Types}
   s.description = %q{Poker classes and constants that conform to the standards of the Annual Computer Poker Competition.}
-  
-  s.add_dependency 'dmorrill10-utils'
-  s.add_dependency 'acpc_dealer'
 
-  s.add_development_dependency 'acpc_dealer_data'
-  s.add_development_dependency 'celluloid'
+  s.add_dependency 'dmorrill10-utils'
+  s.add_dependency 'acpc_dealer', '~> 0.0'
+
+  s.add_development_dependency 'acpc_dealer_data', '~> 0.0'
+  s.add_development_dependency 'celluloid', '~> 0.13'
   s.add_development_dependency 'rspec'
   s.add_development_dependency 'mocha'
   s.add_development_dependency 'simplecov'
