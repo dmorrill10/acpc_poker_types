@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'dmorrill10-utils'
   s.add_dependency 'acpc_dealer', '~> 0.0'
 
-  s.add_development_dependency 'acpc_dealer_data', '~> 0.0'
+  s.add_development_dependency 'acpc_dealer_data', '~> 1.0'
   s.add_development_dependency 'celluloid', '~> 0.13'
   s.add_development_dependency 'rspec'
   s.add_development_dependency 'mocha'

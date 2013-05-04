@@ -183,7 +183,7 @@ describe Player do
   it 'works properly over samples of data from the ACPC Dealer' do
     dealer_log_directory = File.expand_path('../support/dealer_logs', __FILE__)
     match_logs.each do |log_description|
-      match = PokerMatchData.parse_files(
+      match = AcpcDealerData::PokerMatchData.parse_files(
         "#{dealer_log_directory}/#{log_description.actions_file_name}",
         "#{dealer_log_directory}/#{log_description.results_file_name}",
         log_description.player_names,
