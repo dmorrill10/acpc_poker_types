@@ -2,17 +2,17 @@
 # Spec helper (must include first to track code coverage with SimpleCov)
 require File.expand_path('../support/spec_helper', __FILE__)
 
-require "#{LIB_ACPC_POKER_TYPES_PATH}/card"
+require "acpc_poker_types/card"
 
-require "#{LIB_ACPC_POKER_TYPES_PATH}/board_cards"
+require 'acpc_poker_types/board_cards'
 
-describe BoardCards do
+describe AcpcPokerTypes::BoardCards do
   describe '#to_s' do
     it 'prints itself properly' do
-      @patient = BoardCards.new
+      @patient = AcpcPokerTypes::BoardCards.new
 
       @string = ''
-      
+
       check_patient
 
       for_many_rounds do |round|
@@ -28,11 +28,11 @@ describe BoardCards do
     end
   end
 
-  def check_patient() @patient.to_s.should == @string end
+  def check_patient() @patient.to_s.must_equal @string end
   def for_every_card
-    Rank::DOMAIN.map do |rank, rank_properties|
-      Suit::DOMAIN.map do |suit, suit_properties|
-        yield Card.from_components(rank, suit)
+    AcpcPokerTypes::Rank::DOMAIN.map do |rank, rank_properties|
+      AcpcPokerTypes::Suit::DOMAIN.map do |suit, suit_properties|
+        yield AcpcPokerTypes::Card.from_components(rank, suit)
       end
     end
   end

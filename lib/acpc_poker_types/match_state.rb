@@ -1,15 +1,14 @@
 
 require 'dmorrill10-utils'
 
-require File.expand_path('../board_cards', __FILE__)
-require File.expand_path('../hand', __FILE__)
-require File.expand_path('../rank', __FILE__)
-require File.expand_path('../suit', __FILE__)
-require File.expand_path('../poker_action', __FILE__)
-
+require 'acpc_poker_types/board_cards'
+require 'acpc_poker_types/hand'
+require 'acpc_poker_types/rank'
+require 'acpc_poker_types/suit'
+require 'acpc_poker_types/poker_action'
 
 # Model to parse and manage information from a given match state string.
-class MatchState
+class AcpcPokerTypes::MatchState
   exceptions :incomplete_match_state
 
   # @return [Integer] The position relative to the dealer of the player that
@@ -24,13 +23,13 @@ class MatchState
   # @return [Integer] The hand number.
   attr_reader :hand_number
 
-  # @return [Array<Array<PokerAction>>] The sequence of betting actions.
+  # @return [Array<Array<AcpcPokerTypes::PokerAction>>] The sequence of betting actions.
   attr_reader :betting_sequence
 
-  # @return [Array<Hand>] The list of visible hole card sets for each player.
+  # @return [Array<AcpcPokerTypes::Hand>] The list of visible hole card sets for each player.
   attr_reader :list_of_hole_card_hands
 
-  # @return [BoardCards] All visible community cards on the board.
+  # @return [AcpcPokerTypes::BoardCards] All visible community cards on the board.
   attr_reader :board_cards
 
   # @return [Array<Integer>] The list of first seats for each round.
@@ -51,9 +50,9 @@ class MatchState
   # @return [String] The constructed match state string.
   def self.build_match_state_string(
     position_relative_to_dealer,
-    hand_number, 
+    hand_number,
     betting_sequence,
-    all_hole_cards, 
+    all_hole_cards,
     board_cards
   )
     string = LABEL +
@@ -74,11 +73,11 @@ class MatchState
   # @param [String] raw_match_state A raw match state string to be parsed.
   # @raise IncompleteMatchState
   def initialize(raw_match_state)
-    raise IncompleteMatchState, raw_match_state if MatchState.line_is_comment_or_empty? raw_match_state
+    raise IncompleteMatchState, raw_match_state if AcpcPokerTypes::MatchState.line_is_comment_or_empty? raw_match_state
 
-    all_actions = PokerAction::LEGAL_ACPC_CHARACTERS.to_a.join
-    all_ranks = (Rank::DOMAIN.map { |rank, properties| properties[:acpc_character] }).join
-    all_suits = (Suit::DOMAIN.map { |suit, properties| properties[:acpc_character] }).join
+    all_actions = AcpcPokerTypes::PokerAction::LEGAL_ACPC_CHARACTERS.to_a.join
+    all_ranks = (AcpcPokerTypes::Rank::DOMAIN.map { |rank, properties| properties[:acpc_character] }).join
+    all_suits = (AcpcPokerTypes::Suit::DOMAIN.map { |suit, properties| properties[:acpc_character] }).join
     all_card_tokens = all_ranks + all_suits
     if raw_match_state.match(
       /#{LABEL}:(\d+):(\d+):([\d#{all_actions}\/]*):([|#{all_card_tokens}]+)\/*([\/#{all_card_tokens}]*)/)
@@ -92,12 +91,12 @@ class MatchState
     raise IncompleteMatchState, raw_match_state if incomplete_match_state?
   end
 
-  # @return [String] The MatchState in raw text form.
+  # @return [String] The AcpcPokerTypes::MatchState in raw text form.
   def to_str
-    MatchState.build_match_state_string(
+    AcpcPokerTypes::MatchState.build_match_state_string(
       @position_relative_to_dealer,
       @hand_number, betting_sequence_string,
-      hole_card_strings, 
+      hole_card_strings,
       @board_cards
     )
   end
@@ -105,7 +104,7 @@ class MatchState
   # @see to_str
   alias_method :to_s, :to_str
 
-  # @param [MatchState] another_match_state A match state string to compare against this one.
+  # @param [AcpcPokerTypes::MatchState] another_match_state A match state string to compare against this one.
   # @return [Boolean] +true+ if this match state string is equivalent to +another_match_state+, +false+ otherwise.
   def ==(another_match_state)
     another_match_state.to_s == to_s
@@ -114,8 +113,8 @@ class MatchState
   # @return [Integer] The number of players in this match.
   def number_of_players() @list_of_hole_card_hands.length end
 
-  # @param [Array<Array<PokerAction>>] betting_sequence The betting sequence from which the last action should be retrieved.
-  # @return [PokerAction] The last action taken.
+  # @param [Array<Array<AcpcPokerTypes::PokerAction>>] betting_sequence The betting sequence from which the last action should be retrieved.
+  # @return [AcpcPokerTypes::PokerAction] The last action taken.
   # @raise NoActionsHaveBeenTaken if no actions have been taken.
   def last_action(betting_sequence=@betting_sequence)
     if betting_sequence.nil? || betting_sequence.empty?
@@ -127,7 +126,7 @@ class MatchState
     end
   end
 
-  # @return [Hand] The user's hole cards.
+  # @return [AcpcPokerTypes::Hand] The user's hole cards.
   # @example An ace of diamonds and a 4 of clubs is represented as
   #     'Ad4c'
   def users_hole_cards
@@ -136,7 +135,7 @@ class MatchState
 
   # @return [Array] The list of opponent hole cards that are visible.
   # @example If there are two opponents, one with AhKs and the other with QdJc, then
-  #     list_of_opponents_hole_cards == [AhKs:Hand, QdJc:Hand]
+  #     list_of_opponents_hole_cards == [AhKs:AcpcPokerTypes::Hand, QdJc:AcpcPokerTypes::Hand]
   def list_of_opponents_hole_cards
     local_list_of_hole_card_hands = @list_of_hole_card_hands.dup
     local_list_of_hole_card_hands.delete_at @position_relative_to_dealer
@@ -209,7 +208,7 @@ class MatchState
   end
 
   def list_of_actions_from_acpc_characters(betting_sequence)
-    all_actions = PokerAction::LEGAL_ACPC_CHARACTERS.to_a.join ''
+    all_actions = AcpcPokerTypes::PokerAction::LEGAL_ACPC_CHARACTERS.to_a.join ''
     betting_sequence.scan(/[#{all_actions}]\d*/)
   end
 
@@ -221,11 +220,11 @@ class MatchState
   def parse_list_of_hole_card_hands(string_of_hole_cards)
     list_of_hole_card_hands = []
     for_every_set_of_cards(string_of_hole_cards, '\|') do |string_hand|
-      hand = Hand.from_acpc string_hand
+      hand = AcpcPokerTypes::Hand.from_acpc string_hand
       list_of_hole_card_hands.push hand
     end
     while list_of_hole_card_hands.length < (string_of_hole_cards.count('|') + 1)
-      list_of_hole_card_hands.push Hand.new
+      list_of_hole_card_hands.push AcpcPokerTypes::Hand.new
     end
     list_of_hole_card_hands
   end
@@ -236,13 +235,13 @@ class MatchState
     list_of_actions_by_round = string_betting_sequence.split(/\//)
     betting_sequence = list_of_actions_by_round.inject([]) do |list_of_actions, betting_string_in_a_particular_round|
       list_of_actions_in_a_particular_round = list_of_actions_from_acpc_characters(betting_string_in_a_particular_round).inject([]) do |list, action|
-        list.push PokerAction.new(action)
+        list.push AcpcPokerTypes::PokerAction.new(action)
       end
       list_of_actions.push list_of_actions_in_a_particular_round
     end
     # Increase the resolution of the last action
-    # @todo I'm creating one too many PokerActions, but I'm not going to worry about it for now.
-    betting_sequence[-1][-1] = PokerAction.new(
+    # @todo I'm creating one too many AcpcPokerTypes::PokerActions, but I'm not going to worry about it for now.
+    betting_sequence[-1][-1] = AcpcPokerTypes::PokerAction.new(
       last_action(betting_sequence).to_acpc_character,
       {
         amount_to_put_in_pot: last_action(betting_sequence).amount_to_put_in_pot,
@@ -259,7 +258,7 @@ class MatchState
   end
 
   def parse_board_cards(string_board_cards)
-    board_cards = BoardCards.new
+    board_cards = AcpcPokerTypes::BoardCards.new
     for_every_set_of_cards(string_board_cards, '\/') do |string_board_card_set|
       next if string_board_card_set.match(/^\s*$/)
       for_every_card(string_board_card_set) do |card|
@@ -277,7 +276,7 @@ class MatchState
   end
 
   def for_every_card(string_of_cards)
-    Card.cards(string_of_cards).each do |card|
+    AcpcPokerTypes::Card.cards(string_of_cards).each do |card|
       yield card
     end
   end

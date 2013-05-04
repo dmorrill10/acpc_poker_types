@@ -1,10 +1,10 @@
 
 require 'dmorrill10-utils/class'
 
-require File.expand_path('../pile_of_cards', __FILE__)
+require 'acpc_poker_types/pile_of_cards'
 
 # List of community board cards.
-class BoardCards < PileOfCards
+class AcpcPokerTypes::BoardCards < AcpcPokerTypes::PileOfCards
 
   exceptions :too_many_board_cards
 
@@ -14,7 +14,7 @@ class BoardCards < PileOfCards
 
   def next_round!
     @round = if @round then @round + 1 else 0 end
-    self[@round] = PileOfCards.new
+    self[@round] = AcpcPokerTypes::PileOfCards.new
     self
   end
 
@@ -42,7 +42,7 @@ class BoardCards < PileOfCards
     if all? { |pile_for_round| pile_for_round.empty? }
       ''
     else
-      '/' + (map do |pile_for_round| 
+      '/' + (map do |pile_for_round|
         (pile_for_round.map { |card| card.to_acpc }).join
       end).join('/')
     end

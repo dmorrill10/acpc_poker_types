@@ -95,7 +95,7 @@ class AcpcPokerTypes::PokerAction
     modifier_to_use = if modifier
       modifier
     elsif !in_place_modifier.empty?
-      ChipStack.new in_place_modifier.to_i
+      AcpcPokerTypes::ChipStack.new in_place_modifier.to_i
     end
 
     symbol_betting_type = LEGAL_ACTIONS.key(action_type) || action_type.to_sym

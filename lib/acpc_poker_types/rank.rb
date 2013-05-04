@@ -1,7 +1,7 @@
 
 require 'dmorrill10-utils'
 
-class Rank
+class AcpcPokerTypes::Rank
   exceptions :unrecognized_rank
 
   DOMAIN = {
@@ -43,7 +43,7 @@ class Rank
   end
 
   def initialize(rank)
-    @symbol = Rank.symbol_from_rank_token rank
+    @symbol = AcpcPokerTypes::Rank.symbol_from_rank_token rank
   end
 
   def to_sym

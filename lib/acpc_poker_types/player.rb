@@ -1,11 +1,11 @@
 
 require 'dmorrill10-utils'
 
-require File.expand_path('../chip_stack', __FILE__)
-require File.expand_path('../game_definition', __FILE__)
+require 'acpc_poker_types/chip_stack'
+require 'acpc_poker_types/hand'
 
 # Class to model a player.
-class Player
+class AcpcPokerTypes::Player
   exceptions :incorrect_number_of_player_names
 
   def self.create_players(player_names, game_def)
@@ -17,10 +17,11 @@ class Player
     end
 
     game_def.number_of_players.times.inject([]) do |players, seat|
-      players << Player.join_match(player_names[seat],
-                                   seat,
-                                   ChipStack.new(game_def.chip_stacks[seat])
-                                   )
+      players << AcpcPokerTypes::Player.join_match(
+        player_names[seat],
+        seat,
+        AcpcPokerTypes::ChipStack.new(game_def.chip_stacks[seat])
+      )
     end
   end
 
@@ -31,10 +32,10 @@ class Player
   #  number that represents the order that this player joined the dealer.
   attr_reader :seat
 
-  # @return [ChipStack] This player's chip stack.
+  # @return [AcpcPokerTypes::ChipStack] This player's chip stack.
   attr_reader :chip_stack
 
-  # @return [Array<ChipStack>] This player's contribution to the pot in the
+  # @return [Array<AcpcPokerTypes::ChipStack>] This player's contribution to the pot in the
   #  current hand, organized by round.
   attr_reader :chip_contributions
 
@@ -74,8 +75,8 @@ class Player
   end
 
   def equal_on_public_info?(other)
-    @name == other.name && 
-    @seat == other.seat && 
+    @name == other.name &&
+    @seat == other.seat &&
     @chip_stack == other.chip_stack &&
     @chip_contributions == other.chip_contributions &&
     @chip_balance == other.chip_balance &&
@@ -85,7 +86,7 @@ class Player
   # @param [#to_i] blind_amount The blind amount for this player to pay.
   # @param [#to_i] chip_stack (see #chip_stack)
   # @param [Hand] hole_cards (see #hole_cards)
-  def start_new_hand!(blind=ChipStack.new(0), chip_stack=@chip_stack, hole_cards=Hand.new)
+  def start_new_hand!(blind=AcpcPokerTypes::ChipStack.new(0), chip_stack=@chip_stack, hole_cards=AcpcPokerTypes::Hand.new)
     @chip_stack = chip_stack
     @hole_cards = hole_cards
     @actions_taken_this_hand = []
@@ -112,7 +113,7 @@ class Player
 
   # @return [Boolean] Reports whether or not this player has folded.
   def folded?
-    @actions_taken_this_hand.any? do |actions| 
+    @actions_taken_this_hand.any? do |actions|
       actions.any? { |action| action.to_sym == :fold }
     end
   end
@@ -163,8 +164,8 @@ class Player
   end
 
   # Take chips away from this player's chip stack.
-  # @param (see ChipStack#-)
-  # @raise (see ChipStack#-)
+  # @param (see AcpcPokerTypes::ChipStack#-)
+  # @raise (see AcpcPokerTypes::ChipStack#-)
   def take_from_chip_stack!(number_of_chips)
     @chip_stack -= number_of_chips
     @chip_balance -= number_of_chips.to_r

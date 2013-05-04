@@ -3,13 +3,13 @@ require 'dmorrill10-utils/enumerable'
 require 'dmorrill10-utils/integer'
 require 'set'
 
-require File.expand_path('../chip_stack', __FILE__)
-require File.expand_path('../suit', __FILE__)
-require File.expand_path('../rank', __FILE__)
+require 'acpc_poker_types/chip_stack'
+require 'acpc_poker_types/suit'
+require 'acpc_poker_types/rank'
 
 # Class that parses and manages game definition information from a game definition file.
-class GameDefinition
-  exceptions :game_definition_parse_error
+class AcpcPokerTypes::GameDefinition
+  exceptions :parse_error
 
   # @return [String] The string designating the betting type.
   attr_reader :betting_type
@@ -72,8 +72,8 @@ class GameDefinition
   }
 
   MAX_VALUES = {
-    :@number_of_suits => Suit::DOMAIN.length,
-    :@number_of_ranks => Rank::DOMAIN.length
+    :@number_of_suits => AcpcPokerTypes::Suit::DOMAIN.length,
+    :@number_of_ranks => AcpcPokerTypes::Rank::DOMAIN.length
   }
 
   # @return [Hash] Betting types understood by this class.
@@ -110,10 +110,10 @@ class GameDefinition
   end
 
   # @param [Integer] number_of_players The number of players that require stacks.
-  # @return [Array<ChipStack>] The default list of initial stacks for every player.
+  # @return [Array<AcpcPokerTypes::ChipStack>] The default list of initial stacks for every player.
   def self.default_chip_stacks(number_of_players)
     number_of_players.to_i.times.inject([]) do |list, i|
-      list << ChipStack.new(DEFAULT_CHIP_STACK)
+      list << AcpcPokerTypes::ChipStack.new(DEFAULT_CHIP_STACK)
     end
   end
 
@@ -145,7 +145,7 @@ class GameDefinition
       (0..values.length-1).each do |i|
         values[i] = values[i].to_i
       end
-      GameDefinition.flatten_if_single_element_array values
+      flatten_if_single_element_array values
     end
   end
 
@@ -156,27 +156,21 @@ class GameDefinition
   # @return [String] line The line to check.
   # @return [Boolean] +true+ if the line is not informative, +false+ otherwise.
   def self.game_def_line_not_informative?(line)
-    GameDefinition.line_is_comment_or_empty?(line) || line.match(/\s*gamedef\s*/i)
+    line_is_comment_or_empty?(line) || line.match(/\s*gamedef\s*/i)
   end
 
   # @param [String] game_definition_file_name The name of the game definition file that this instance should parse.
-  # @raise (see #initialize)
   def self.parse_file(game_definition_file_name)
-    File.open(game_definition_file_name, 'r') { |file|  GameDefinition.parse file }
+    File.open(game_definition_file_name, 'r') { |file|  parse file }
   end
 
   alias_new :parse
 
-  # @raise GameDefinitionParseError
   def initialize(definitions)
     initialize_members!
-    begin
-      parse_definitions! definitions
-    rescue => unable_to_read_or_open_file_error
-      raise GameDefinitionParseError, unable_to_read_or_open_file_error.message
-    end
+    parse_definitions! definitions
 
-    @chip_stacks = GameDefinition.default_chip_stacks(@number_of_players) if @chip_stacks.empty?
+    @chip_stacks = AcpcPokerTypes::GameDefinition.default_chip_stacks(@number_of_players) if @chip_stacks.empty?
 
     unless @first_player_positions.any? { |pos| pos <= 0 }
       @first_player_positions.map! { |position| position - 1 }
@@ -228,9 +222,9 @@ class GameDefinition
     @blinds = @number_of_players.times.inject([]) { |blinds, i| blinds << 0 }
     @number_of_rounds = MIN_VALUES[:@number_of_rounds]
     @number_of_board_cards = @number_of_rounds.times.inject([]) { |cards, i| cards << 0 }
-    @first_player_positions = GameDefinition.default_first_player_positions @number_of_rounds
-    @max_number_of_wagers = GameDefinition.default_max_number_of_wagers @number_of_rounds
-    @chip_stacks = GameDefinition.default_chip_stacks @number_of_players
+    @first_player_positions = AcpcPokerTypes::GameDefinition.default_first_player_positions @number_of_rounds
+    @max_number_of_wagers = AcpcPokerTypes::GameDefinition.default_max_number_of_wagers @number_of_rounds
+    @chip_stacks = AcpcPokerTypes::GameDefinition.default_chip_stacks @number_of_players
     @number_of_suits = MIN_VALUES[:@number_of_suits]
     @number_of_ranks = MIN_VALUES[:@number_of_ranks]
     @number_of_hole_cards = MIN_VALUES[:@number_of_hole_cards]
@@ -239,7 +233,10 @@ class GameDefinition
   end
 
   def set_defintion_if_present!(definition_symbol, line, definition_label_in_line)
-    new_definition = GameDefinition.check_game_def_line_for_definition line, definition_label_in_line
+    new_definition = AcpcPokerTypes::GameDefinition.check_game_def_line_for_definition(
+      line,
+      definition_label_in_line
+    )
     if new_definition
       instance_variable_set(definition_symbol, new_definition)
       true
@@ -251,9 +248,8 @@ class GameDefinition
   def parse_definitions!(definitions)
     definitions.each do |line|
       break if line.match(/\bend\s*gamedef\b/i)
-
       next if (
-        GameDefinition.game_def_line_not_informative?(line) ||
+        AcpcPokerTypes::GameDefinition.game_def_line_not_informative?(line) ||
         BETTING_TYPES.any? do |type_and_name|
           type = type_and_name.first
           name = type_and_name[1]
@@ -273,21 +269,21 @@ class GameDefinition
     self
   end
 
-  # @raise GameDefinitionParseError
+  # @raise ParseError
   def sanity_check_game_definitions!
     adjust_definitions_if_necessary!
 
-    raise GameDefinitionParseError, "list of player stacks not specified" unless @chip_stacks
-    raise GameDefinitionParseError, "list of blinds not specified" unless @blinds
-    raise GameDefinitionParseError, "raise size in each round not specified" unless min_wagers
-    raise GameDefinitionParseError, "first player position in each round not specified" unless @first_player_positions
-    raise GameDefinitionParseError, "maximum raise in each round not specified" unless @max_number_of_wagers
-    raise GameDefinitionParseError, "number of board cards in each round not specified" unless @number_of_board_cards
+    raise ParseError, "list of player stacks not specified" unless @chip_stacks
+    raise ParseError, "list of blinds not specified" unless @blinds
+    raise ParseError, "raise size in each round not specified" unless min_wagers
+    raise ParseError, "first player position in each round not specified" unless @first_player_positions
+    raise ParseError, "maximum raise in each round not specified" unless @max_number_of_wagers
+    raise ParseError, "number of board cards in each round not specified" unless @number_of_board_cards
 
     MIN_VALUES.each do |symbol, min_value|
       if instance_variable_get(symbol) < min_value
         raise(
-          GameDefinitionParseError,
+          ParseError,
           "Invalid definition, #{DEFINITION[symbol]} must be greater than #{min_value} but was set to #{instance_variable_get(symbol)}"
         )
       end
@@ -296,7 +292,7 @@ class GameDefinition
     (0..@number_of_players-1).each do |i|
       if @blinds[i] > @chip_stacks[i]
         raise(
-          GameDefinitionParseError,
+          ParseError,
           "Blind for player #{i+1} (#{@blinds[i]}) is greater than stack size (#{@chip_stacks[i]})"
         )
       end
@@ -305,7 +301,7 @@ class GameDefinition
     @number_of_rounds.times do |i|
       unless @first_player_positions[i].seat_in_bounds? @number_of_players
         raise(
-          GameDefinitionParseError,
+          ParseError,
           "Invalid first player #{@first_player_positions[i]} on round #{i+1}"
         )
       end
@@ -314,7 +310,7 @@ class GameDefinition
     MAX_VALUES.each do |symbol, max_value|
       if instance_variable_get(symbol) > max_value
         raise(
-          GameDefinitionParseError,
+          ParseError,
           "Invalid definition, #{DEFINITIONS[symbol]} must be less than #{max_value} but was set to #{instance_variable_get(symbol)}"
         )
       end
@@ -324,7 +320,7 @@ class GameDefinition
 
     if number_of_cards_required > (@number_of_suits * @number_of_ranks)
       raise(
-        GameDefinitionParseError,
+        ParseError,
         "Too many hole and board cards (#{number_of_cards_required}) for specified deck (#{(@number_of_suits * @number_of_ranks)})"
       )
     end

@@ -1,17 +1,17 @@
 
-require File.expand_path('../pile_of_cards', __FILE__)
-require File.expand_path('../card', __FILE__)
+require 'acpc_poker_types/pile_of_cards'
+require 'acpc_poker_types/card'
 
-class Hand < PileOfCards
+class AcpcPokerTypes::Hand < AcpcPokerTypes::PileOfCards
   # @return [Hand]
   def self.draw_cards(*cards)
-    Hand.new cards
+    AcpcPokerTypes::Hand.new cards
   end
 
   # @param [String] acpc_string_hand ACPC string description of a hand.
   # @return [Hand]
   def self.from_acpc(acpc_string_hand)
-    Hand.new Card.cards(acpc_string_hand)
+    AcpcPokerTypes::Hand.new AcpcPokerTypes::Card.cards(acpc_string_hand)
   end
 
   def to_s
