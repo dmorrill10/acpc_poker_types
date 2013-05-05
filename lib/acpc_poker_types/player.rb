@@ -108,7 +108,7 @@ class AcpcPokerTypes::Player
   def take_action!(action)
     @actions_taken_this_hand.last << action
 
-    take_from_chip_stack! action.amount_to_put_in_pot
+    take_from_chip_stack! action.cost
   end
 
   # @return [Boolean] Reports whether or not this player has folded.

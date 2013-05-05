@@ -119,7 +119,7 @@ describe AcpcPokerTypes::Player do
   end
   describe 'reports it is not active if' do
     it 'it has folded' do
-      action = AcpcPokerTypes::PokerAction.new :fold, {amount_to_put_in_pot: 0}
+      action = AcpcPokerTypes::PokerAction.new :fold, {cost: 0}
 
       @patient.start_new_hand! BLIND, INITIAL_CHIP_STACK
       @patient.take_action! action
@@ -137,7 +137,7 @@ describe AcpcPokerTypes::Player do
       check_patient
     end
     it 'it is all-in' do
-      action = AcpcPokerTypes::PokerAction.new :raise, {amount_to_put_in_pot: INITIAL_CHIP_STACK - BLIND}
+      action = AcpcPokerTypes::PokerAction.new :raise, {cost: INITIAL_CHIP_STACK - BLIND}
 
       hand = default_hand
       @patient.start_new_hand! BLIND, INITIAL_CHIP_STACK, hand
@@ -325,7 +325,7 @@ end
       yield modifier
     end
   end
-  def instantiate_each_action_from_symbols(amount_to_put_in_pot=0,
+  def instantiate_each_action_from_symbols(cost=0,
                                            modifier=nil)
     AcpcPokerTypes::PokerAction::LEGAL_SYMBOLS.each do |sym|
       modifier = if AcpcPokerTypes::PokerAction::MODIFIABLE_ACTIONS.keys.include? sym
@@ -339,7 +339,7 @@ end
       action.stubs(:to_s).returns(sym.to_s + modifier.to_s)
       action.stubs(:to_acpc).returns(AcpcPokerTypes::PokerAction::LEGAL_ACTIONS[sym] + modifier.to_s)
       action.stubs(:to_acpc_character).returns(AcpcPokerTypes::PokerAction::LEGAL_ACTIONS[sym])
-      action.stubs(:amount_to_put_in_pot).returns(amount_to_put_in_pot)
+      action.stubs(:cost).returns(cost)
       action.stubs(:modifier).returns(modifier)
 
       yield action
@@ -366,8 +366,8 @@ end
       various_actions do |action|
         next if :fold == action.to_sym
 
-        chip_stack_adjustment = if @chip_stack - action.amount_to_put_in_pot >= 0
-          action.amount_to_put_in_pot
+        chip_stack_adjustment = if @chip_stack - action.cost >= 0
+          action.cost
         else @chip_stack end
 
         @chip_balance -= chip_stack_adjustment

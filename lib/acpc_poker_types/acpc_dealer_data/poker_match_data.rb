@@ -330,7 +330,7 @@ module AcpcPokerTypes::AcpcDealerData
     #   return nil unless current_hand
 
     #   @match_def.game_def.min_wagers[current_hand.next_state.round]
-    #   ChipStack.new [@min_wager.to_i, action_with_context.amount_to_put_in_pot.to_i].max
+    #   ChipStack.new [@min_wager.to_i, action_with_context.cost.to_i].max
     # end
 
     protected

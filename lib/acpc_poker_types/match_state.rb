@@ -244,7 +244,7 @@ class AcpcPokerTypes::MatchState
     betting_sequence[-1][-1] = AcpcPokerTypes::PokerAction.new(
       last_action(betting_sequence).to_acpc_character,
       {
-        amount_to_put_in_pot: last_action(betting_sequence).amount_to_put_in_pot,
+        cost: last_action(betting_sequence).cost,
         modifier: last_action(betting_sequence).modifier,
         acting_player_sees_wager: acting_player_sees_wager
       }
