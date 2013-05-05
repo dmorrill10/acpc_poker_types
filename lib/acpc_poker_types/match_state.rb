@@ -75,12 +75,8 @@ class AcpcPokerTypes::MatchState
   def initialize(raw_match_state)
     raise IncompleteMatchState, raw_match_state if AcpcPokerTypes::MatchState.line_is_comment_or_empty? raw_match_state
 
-    all_actions = AcpcPokerTypes::PokerAction::LEGAL_ACPC_CHARACTERS.to_a.join
-    all_ranks = (AcpcPokerTypes::Rank::DOMAIN.map { |rank, properties| properties[:acpc_character] }).join
-    all_suits = (AcpcPokerTypes::Suit::DOMAIN.map { |suit, properties| properties[:acpc_character] }).join
-    all_card_tokens = all_ranks + all_suits
     if raw_match_state.match(
-      /#{LABEL}:(\d+):(\d+):([\d#{all_actions}\/]*):([|#{all_card_tokens}]+)\/*([\/#{all_card_tokens}]*)/)
+      /#{LABEL}:(\d+):(\d+):([\d#{AcpcPokerTypes::PokerAction::CONCATONATED_ACTIONS}\/]*):([|#{AcpcPokerTypes::Card::CONCATONATED_CARDS}]+)\/*([\/#{AcpcPokerTypes::Card::CONCATONATED_CARDS}]*)/)
       @position_relative_to_dealer = $1.to_i
       @hand_number = $2.to_i
       @betting_sequence = parse_betting_sequence $3
@@ -163,7 +159,7 @@ class AcpcPokerTypes::MatchState
   #  +betting_sequence+.
   def betting_sequence_string(betting_sequence=@betting_sequence)
     (round + 1).times.inject('') do |string, i|
-      string += (betting_sequence[i].map { |action| action.to_acpc }).join('')
+      string += (betting_sequence[i].map { |action| action.to_s }).join('')
       string += '/' unless i == round
       string
     end
@@ -208,8 +204,7 @@ class AcpcPokerTypes::MatchState
   end
 
   def list_of_actions_from_acpc_characters(betting_sequence)
-    all_actions = AcpcPokerTypes::PokerAction::LEGAL_ACPC_CHARACTERS.to_a.join ''
-    betting_sequence.scan(/[#{all_actions}]\d*/)
+    betting_sequence.scan(/[#{AcpcPokerTypes::PokerAction::CONCATONATED_ACTIONS}]\d*/)
   end
 
   def incomplete_match_state?
@@ -218,10 +213,8 @@ class AcpcPokerTypes::MatchState
   end
 
   def parse_list_of_hole_card_hands(string_of_hole_cards)
-    list_of_hole_card_hands = []
-    for_every_set_of_cards(string_of_hole_cards, '\|') do |string_hand|
-      hand = AcpcPokerTypes::Hand.from_acpc string_hand
-      list_of_hole_card_hands.push hand
+    list_of_hole_card_hands = every_set_of_cards(string_of_hole_cards, '\|').map do |string_hand|
+      AcpcPokerTypes::Hand.from_acpc string_hand
     end
     while list_of_hole_card_hands.length < (string_of_hole_cards.count('|') + 1)
       list_of_hole_card_hands.push AcpcPokerTypes::Hand.new
@@ -229,56 +222,34 @@ class AcpcPokerTypes::MatchState
     list_of_hole_card_hands
   end
 
-  def parse_betting_sequence(string_betting_sequence, acting_player_sees_wager=true)
+  def parse_betting_sequence(string_betting_sequence)
     return [[]] if string_betting_sequence.empty?
 
-    list_of_actions_by_round = string_betting_sequence.split(/\//)
-    betting_sequence = list_of_actions_by_round.inject([]) do |list_of_actions, betting_string_in_a_particular_round|
-      list_of_actions_in_a_particular_round = list_of_actions_from_acpc_characters(betting_string_in_a_particular_round).inject([]) do |list, action|
-        list.push AcpcPokerTypes::PokerAction.new(action)
+    betting_sequence = string_betting_sequence.split(/\//).map do |betting_string_per_round|
+      list_of_actions_in_a_particular_round = list_of_actions_from_acpc_characters(
+        betting_string_per_round
+      ).map do |action|
+        AcpcPokerTypes::PokerAction.new(action)
       end
-      list_of_actions.push list_of_actions_in_a_particular_round
     end
-    # Increase the resolution of the last action
-    # @todo I'm creating one too many AcpcPokerTypes::PokerActions, but I'm not going to worry about it for now.
-    betting_sequence[-1][-1] = AcpcPokerTypes::PokerAction.new(
-      last_action(betting_sequence).to_acpc_character,
-      {
-        cost: last_action(betting_sequence).cost,
-        modifier: last_action(betting_sequence).modifier,
-        acting_player_sees_wager: acting_player_sees_wager
-      }
-    )
 
     # Adjust the number of rounds if the last action was the last action in the round
-    if string_betting_sequence.match(/\//)
-      betting_sequence << [] if string_betting_sequence.count('/') > (betting_sequence.length - 1)
-    end
+    betting_sequence << [] if string_betting_sequence.match(/\/$/)
     betting_sequence
   end
 
   def parse_board_cards(string_board_cards)
-    board_cards = AcpcPokerTypes::BoardCards.new
-    for_every_set_of_cards(string_board_cards, '\/') do |string_board_card_set|
-      next if string_board_card_set.match(/^\s*$/)
-      for_every_card(string_board_card_set) do |card|
-        board_cards << card
+    board_cards = AcpcPokerTypes::BoardCards.new(
+      every_set_of_cards(string_board_cards, '\/').map do |cards_in_round|
+        AcpcPokerTypes::Card.cards(cards_in_round)
       end
-      board_cards.next_round! if board_cards.round < string_board_cards.count('/')
-    end
+    )
+    board_cards.next_round! if board_cards.round < string_board_cards.count('/')
     board_cards
   end
 
-  def for_every_set_of_cards(string_of_card_sets, divider)
-    string_of_card_sets.split(/#{divider}/).each do |string_card_set|
-      yield string_card_set
-    end
-  end
-
-  def for_every_card(string_of_cards)
-    AcpcPokerTypes::Card.cards(string_of_cards).each do |card|
-      yield card
-    end
+  def every_set_of_cards(string_of_card_sets, divider)
+    string_of_card_sets.split(/#{divider}/)
   end
 
   def hole_card_strings

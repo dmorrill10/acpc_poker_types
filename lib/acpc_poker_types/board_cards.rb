@@ -1,25 +1,24 @@
-
-require 'dmorrill10-utils/class'
-
 require 'acpc_poker_types/pile_of_cards'
 
 # List of community board cards.
-class AcpcPokerTypes::BoardCards < AcpcPokerTypes::PileOfCards
+class AcpcPokerTypes::BoardCards < Array
+  def initialize(board_cards=[[]])
+    super(board_cards.map { |elem| AcpcPokerTypes::PileOfCards.new elem })
+  end
 
-  exceptions :too_many_board_cards
+  def round
+    self.length - 1
+  end
 
-  attr_reader :round
-
-  def initialize() @round = nil; next_round! end
+  alias_method :array_push, :push
 
   def next_round!
-    @round = if @round then @round + 1 else 0 end
-    self[@round] = AcpcPokerTypes::PileOfCards.new
+    self.array_push AcpcPokerTypes::PileOfCards.new
     self
   end
 
   def push(new_element)
-    self[@round].push new_element
+    self.last.push new_element
     self
   end
 

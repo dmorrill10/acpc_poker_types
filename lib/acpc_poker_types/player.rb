@@ -49,7 +49,7 @@ class AcpcPokerTypes::Player
   # @example (see MatchState#users_hole_cards)
   attr_reader :hole_cards
 
-  # @return [Array<Array<PokerAction>>] The list of actions this player has taken in
+  # @return [Array<Array<String>>] The list of actions this player has taken in
   #  the current hand, separated by round.
   attr_reader :actions_taken_this_hand
 
@@ -105,16 +105,19 @@ class AcpcPokerTypes::Player
   end
 
   # @param [PokerAction] action The action to take.
-  def take_action!(action)
-    @actions_taken_this_hand.last << action
+  # @param pot_gained_chips [Boolean] Whether or not the pot had gained chips before this action. Defaults to true.
+  # @param sees_wager [Boolean] Whether or not the player is reacting to a wager.
+  #   Defaults to the value of +pot_gained_chips+.
+  def take_action!(action, pot_gained_chips: true, sees_wager: pot_gained_chips)
+    @actions_taken_this_hand.last << action.to_s(pot_gained_chips: pot_gained_chips, player_sees_wager: sees_wager)
 
-    take_from_chip_stack! action.cost
+    take_from_chip_stack! action.cost.to_r
   end
 
   # @return [Boolean] Reports whether or not this player has folded.
   def folded?
     @actions_taken_this_hand.any? do |actions|
-      actions.any? { |action| action.to_sym == :fold }
+      actions.any? { |action| action == AcpcPokerTypes::PokerAction::FOLD }
     end
   end
 

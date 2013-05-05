@@ -28,8 +28,8 @@ class AcpcPokerTypes::Rank
     else
       DOMAIN.find do |rank_symbol, properties|
         rank_symbol == rank.to_sym ||
-          properties[:acpc_character] == rank.to_s ||
-          properties[:text] == rank.to_s
+        properties[:acpc_character] == rank.to_s ||
+        properties[:text] == rank.to_s
       end
     end
   end

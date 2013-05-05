@@ -6,11 +6,6 @@ require 'acpc_poker_types/card'
 
 describe AcpcPokerTypes::Card do
   describe '::from_acpc' do
-    it 'raises an exception if the given ACPC card string could not be parsed properly' do
-      -> do
-        AcpcPokerTypes::Card.from_acpc('not a card')
-      end.must_raise(AcpcPokerTypes::Card::ParseError)
-    end
     it 'works properly in all cases' do
       for_every_card! do
         @patient = AcpcPokerTypes::Card.from_acpc @acpc

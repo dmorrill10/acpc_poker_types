@@ -10,7 +10,7 @@ describe AcpcPokerTypes::PokerAction do
 
   describe 'legal actions can be retrieved' do
     it 'with ::legal_actions' do
-      AcpcPokerTypes::PokerAction.actions.wont_be_empty
+      AcpcPokerTypes::PokerAction::ACTIONS.wont_be_empty
     end
   end
   describe '#new' do
@@ -18,7 +18,7 @@ describe AcpcPokerTypes::PokerAction do
       ->{AcpcPokerTypes::PokerAction.new('not_an_action')}.must_raise(AcpcPokerTypes::PokerAction::IllegalAction)
     end
     it 'raises an exception if a modifier accompanies an unmodifiable action' do
-      unmodifiable_actions = AcpcPokerTypes::PokerAction.actions - AcpcPokerTypes::PokerAction.modifiable_actions
+      unmodifiable_actions = AcpcPokerTypes::PokerAction::ACTIONS - AcpcPokerTypes::PokerAction::MODIFIABLE_ACTIONS
       unmodifiable_actions.each do |a|
         ->{AcpcPokerTypes::PokerAction.new(a, modifier: DEFAULT_MODIFIER)}.must_raise(AcpcPokerTypes::PokerAction::IllegalModification)
       end
@@ -28,37 +28,44 @@ describe AcpcPokerTypes::PokerAction do
     end
     describe 'creates actions properly' do
       it 'without modifiers' do
-        AcpcPokerTypes::PokerAction.actions.each do |a|
+        AcpcPokerTypes::PokerAction::ACTIONS.each do |a|
           AcpcPokerTypes::PokerAction.new(a)
         end
       end
       it 'with an explicit modifier' do
-        AcpcPokerTypes::PokerAction.modifiable_actions.each do |a|
+        AcpcPokerTypes::PokerAction::MODIFIABLE_ACTIONS.each do |a|
           AcpcPokerTypes::PokerAction.new(a, modifier: DEFAULT_MODIFIER)
         end
       end
       it 'with an implicit modifier' do
-        AcpcPokerTypes::PokerAction.modifiable_actions.each do |a|
+        AcpcPokerTypes::PokerAction::MODIFIABLE_ACTIONS.each do |a|
           AcpcPokerTypes::PokerAction.new(a + DEFAULT_MODIFIER)
         end
       end
       describe 'with explicit cost' do
         it 'when the cost is positive' do
-          AcpcPokerTypes::PokerAction.actions.each do |a|
+          AcpcPokerTypes::PokerAction::ACTIONS.each do |a|
             AcpcPokerTypes::PokerAction.new(a, cost: DEFAULT_COST).cost.must_equal DEFAULT_COST
           end
         end
         it 'when the cost is negative' do
-          AcpcPokerTypes::PokerAction.actions.each do |a|
+          AcpcPokerTypes::PokerAction::ACTIONS.each do |a|
             AcpcPokerTypes::PokerAction.new(a, cost: -DEFAULT_COST).cost.must_equal -DEFAULT_COST
           end
+        end
+      end
+    end
+    it 'performs reasonably well' do
+      1000.times do
+        AcpcPokerTypes::PokerAction::ACTIONS.each do |a|
+          AcpcPokerTypes::PokerAction.new(a)
         end
       end
     end
   end
   describe '#to_s' do
     it "prints in the dealer's canonical representation by default" do
-      AcpcPokerTypes::PokerAction.actions.each do |a|
+      AcpcPokerTypes::PokerAction::ACTIONS.each do |a|
         AcpcPokerTypes::PokerAction.new(a).to_s.must_equal (
           case a
           when AcpcPokerTypes::PokerAction::BET
@@ -76,7 +83,7 @@ describe AcpcPokerTypes::PokerAction do
       end
     end
     it 'works properly when no chips have been added to the pot' do
-      AcpcPokerTypes::PokerAction.actions.each do |a|
+      AcpcPokerTypes::PokerAction::ACTIONS.each do |a|
         AcpcPokerTypes::PokerAction.new(a).to_s(pot_gained_chips: false).must_equal (
           case a
           when AcpcPokerTypes::PokerAction::BET
@@ -94,7 +101,7 @@ describe AcpcPokerTypes::PokerAction do
       end
     end
     it 'works properly when the player is not facing a wager' do
-      AcpcPokerTypes::PokerAction.actions.each do |a|
+      AcpcPokerTypes::PokerAction::ACTIONS.each do |a|
         AcpcPokerTypes::PokerAction.new(a).to_s(player_sees_wager: false).must_equal (
           case a
           when AcpcPokerTypes::PokerAction::BET
@@ -112,7 +119,7 @@ describe AcpcPokerTypes::PokerAction do
       end
     end
     it 'works properly when the player is not facing a wager, nor have chips been added to the pot' do
-      AcpcPokerTypes::PokerAction.actions.each do |a|
+      AcpcPokerTypes::PokerAction::ACTIONS.each do |a|
         AcpcPokerTypes::PokerAction.new(a).to_s(player_sees_wager: false, pot_gained_chips: false).must_equal (
           case a
           when AcpcPokerTypes::PokerAction::BET

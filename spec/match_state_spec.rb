@@ -37,10 +37,10 @@ describe AcpcPokerTypes::MatchState do
     it "parses every possible limit action" do
       partial_match_state = AcpcPokerTypes::MatchState::LABEL + ":1:1:"
       hole_cards = arbitrary_hole_card_hand
-      AcpcPokerTypes::PokerAction::LEGAL_ACPC_CHARACTERS.each do |action|
+      AcpcPokerTypes::PokerAction::CANONICAL_ACTIONS.each do |action|
         match_state = partial_match_state + action + ":" + hole_cards.to_acpc
         patient = test_match_state_success match_state
-        patient.last_action.to_acpc.must_equal action
+        patient.last_action.to_s.must_equal action
       end
     end
     it "parses every possible hole card hand" do
@@ -105,7 +105,7 @@ describe AcpcPokerTypes::MatchState do
     end
     it "parses a valid two player final match state" do
       partial_match_state = AcpcPokerTypes::MatchState::LABEL + ":20:22:"
-      all_actions = AcpcPokerTypes::PokerAction::LEGAL_ACPC_CHARACTERS.to_a.join ''
+      all_actions = AcpcPokerTypes::PokerAction::CANONICAL_ACTIONS.to_a.join ''
       betting = all_actions
       number_of_rounds = 100
       (number_of_rounds-1).times do
@@ -120,7 +120,7 @@ describe AcpcPokerTypes::MatchState do
     end
     it "parses a valid three player final match state" do
       partial_match_state = AcpcPokerTypes::MatchState::LABEL + ":20:22:"
-      all_actions = AcpcPokerTypes::PokerAction::LEGAL_ACPC_CHARACTERS.to_a.join ''
+      all_actions = AcpcPokerTypes::PokerAction::CANONICAL_ACTIONS.to_a.join ''
       betting = all_actions
       number_of_rounds = 100
       (number_of_rounds-1).times do
@@ -179,9 +179,9 @@ describe AcpcPokerTypes::MatchState do
       patient.first_state_of_first_round?.must_equal true
     end
     it 'works properly if a previous action exists' do
-      AcpcPokerTypes::PokerAction::LEGAL_ACPC_CHARACTERS.each do |first_action|
-        AcpcPokerTypes::PokerAction::LEGAL_ACPC_CHARACTERS.each do |second_action|
-          AcpcPokerTypes::PokerAction::LEGAL_ACPC_CHARACTERS.each do |third_action|
+      AcpcPokerTypes::PokerAction::CANONICAL_ACTIONS.each do |first_action|
+        AcpcPokerTypes::PokerAction::CANONICAL_ACTIONS.each do |second_action|
+          AcpcPokerTypes::PokerAction::CANONICAL_ACTIONS.each do |third_action|
             partial_match_state = "#{AcpcPokerTypes::MatchState::LABEL}:1:1:"
 
             partial_match_state += first_action
@@ -228,14 +228,12 @@ def for_every_hand
     end
   end
 end
-
 def test_match_state_initialization_error(incomplete_match_state)
   ->{AcpcPokerTypes::MatchState.parse incomplete_match_state}.must_raise(AcpcPokerTypes::MatchState::IncompleteMatchState)
 end
 def test_match_state_success(match_state)
   patient = AcpcPokerTypes::MatchState.parse match_state
   patient.to_s.must_equal match_state
-
   patient
 end
 def arbitrary_flop
@@ -263,7 +261,7 @@ end
 
 # Construct an arbitrary hole card hand.
 #
-# @return [Mock AcpcPokerTypes::Hand] An arbitrary hole card hand.
+# @return [AcpcPokerTypes::Hand] An arbitrary hole card hand.
 def arbitrary_hole_card_hand
   AcpcPokerTypes::Hand.from_acpc(
     AcpcPokerTypes::Rank::DOMAIN[:two][:acpc_character] +

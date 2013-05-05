@@ -119,7 +119,7 @@ describe AcpcPokerTypes::Player do
   end
   describe 'reports it is not active if' do
     it 'it has folded' do
-      action = AcpcPokerTypes::PokerAction.new :fold, {cost: 0}
+      action = AcpcPokerTypes::PokerAction.new AcpcPokerTypes::PokerAction::FOLD
 
       @patient.start_new_hand! BLIND, INITIAL_CHIP_STACK
       @patient.take_action! action
@@ -137,7 +137,7 @@ describe AcpcPokerTypes::Player do
       check_patient
     end
     it 'it is all-in' do
-      action = AcpcPokerTypes::PokerAction.new :raise, {cost: INITIAL_CHIP_STACK - BLIND}
+      action = AcpcPokerTypes::PokerAction.new AcpcPokerTypes::PokerAction::RAISE, cost: INITIAL_CHIP_STACK - BLIND
 
       hand = default_hand
       @patient.start_new_hand! BLIND, INITIAL_CHIP_STACK, hand
@@ -186,7 +186,7 @@ describe AcpcPokerTypes::Player do
         "#{dealer_log_directory}/#{log_description.results_file_name}",
         log_description.player_names,
         AcpcDealer::DEALER_DIRECTORY,
-        40
+        120
       )
       match.for_every_seat! do |seat|
         @patient = AcpcPokerTypes::Player.join_match(
@@ -325,24 +325,17 @@ end
       yield modifier
     end
   end
-  def instantiate_each_action_from_symbols(cost=0,
-                                           modifier=nil)
-    AcpcPokerTypes::PokerAction::LEGAL_SYMBOLS.each do |sym|
-      modifier = if AcpcPokerTypes::PokerAction::MODIFIABLE_ACTIONS.keys.include? sym
+  def instantiate_each_action_from_symbols(
+    cost=0, modifier=nil
+  )
+    AcpcPokerTypes::PokerAction::CANONICAL_ACTIONS.each do |action|
+      modifier = if AcpcPokerTypes::PokerAction::MODIFIABLE_ACTIONS.include? action
         modifier
       else
         nil
       end
 
-      action = mock 'AcpcPokerTypes::PokerAction'
-      action.stubs(:to_sym).returns(sym)
-      action.stubs(:to_s).returns(sym.to_s + modifier.to_s)
-      action.stubs(:to_acpc).returns(AcpcPokerTypes::PokerAction::LEGAL_ACTIONS[sym] + modifier.to_s)
-      action.stubs(:to_acpc_character).returns(AcpcPokerTypes::PokerAction::LEGAL_ACTIONS[sym])
-      action.stubs(:cost).returns(cost)
-      action.stubs(:modifier).returns(modifier)
-
-      yield action
+      yield AcpcPokerTypes::PokerAction.new(action, cost: cost, modifier: modifier)
     end
   end
   def test_sequence_of_non_fold_actions(hole_cards=default_hand)
@@ -364,7 +357,7 @@ end
       end
 
       various_actions do |action|
-        next if :fold == action.to_sym
+        next if AcpcPokerTypes::PokerAction::FOLD == action.to_s
 
         chip_stack_adjustment = if @chip_stack - action.cost >= 0
           action.cost

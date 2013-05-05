@@ -13,14 +13,14 @@ class AcpcPokerTypes::PokerAction
   FOLD = 'f'
   RAISE = 'r'
 
-  # @return [Set<String>] The set of legal ACPC action characters.
-  def self.actions
-    Set.new [BET, CALL, CHECK, FOLD, RAISE]
-  end
+  ACTIONS = Set.new [BET, CALL, CHECK, FOLD, RAISE]
 
-  def self.modifiable_actions
-    Set.new [BET, RAISE]
-  end
+  # @return [Set<String>] The set of legal ACPC action characters.
+  CANONICAL_ACTIONS = Set.new [CALL, FOLD, RAISE]
+
+  MODIFIABLE_ACTIONS = Set.new [BET, RAISE]
+
+  CONCATONATED_ACTIONS = ACTIONS.to_a.join
 
   # @return [Rational] The amount that the player taking this action needs to put in the pot.
   #  Could be negative to imply the acting player takes chips from the pot.
@@ -51,7 +51,8 @@ class AcpcPokerTypes::PokerAction
 
   # @return [String] String representation of this action.
   # @param pot_gained_chips [Boolean] Whether or not the pot had gained chips before this action. Defaults to true.
-  # @param player_sees_wager [Boolean] Whether or not the player is reacting to a wager. Defaults to true.
+  # @param player_sees_wager [Boolean] Whether or not the player is reacting to a wager.
+  #   Defaults to the value of +pot_gained_chips+.
   def to_s(pot_gained_chips: true, player_sees_wager: pot_gained_chips)
     combine_action_and_modifier(
       if @action == FOLD
@@ -78,7 +79,7 @@ class AcpcPokerTypes::PokerAction
   end
 
   def validate_action!(action, given_modifier)
-    if action.to_s.match(/^([#{AcpcPokerTypes::PokerAction.actions.to_a.join('')}])\s*(\d*)$/)
+    if action.to_s.match(/^([#{CONCATONATED_ACTIONS}])\s*(\d*)$/)
     else
       raise IllegalAction, action.to_s
     end
@@ -103,6 +104,6 @@ class AcpcPokerTypes::PokerAction
   end
 
   def validate_modifier
-    raise(IllegalModification, "Illegal modifier: #{@modifier}") unless @modifier.nil? || AcpcPokerTypes::PokerAction.modifiable_actions.include?(@action)
+    raise(IllegalModification, "Illegal modifier: #{@modifier}") unless @modifier.nil? || AcpcPokerTypes::PokerAction::MODIFIABLE_ACTIONS.include?(@action)
   end
 end

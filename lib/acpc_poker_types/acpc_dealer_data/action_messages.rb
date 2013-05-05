@@ -41,12 +41,10 @@ module AcpcPokerTypes::AcpcDealerData
       end
     end
 
-    CONCATONATED_ACTIONS = AcpcPokerTypes::PokerAction::LEGAL_ACPC_CHARACTERS.to_a.join('')
-
     # @param [String] from_message FROM message (message from player)
     def self.parse_from_message(from_message)
       if from_message.strip.match(
-  /^FROM\s*(\d+)\s*at\s*[\d\.]+\s*(#{AcpcPokerTypes::MatchState::LABEL}\S+):([#{CONCATONATED_ACTIONS}]\s*\d*)$/
+  /^FROM\s*(\d+)\s*at\s*[\d\.]+\s*(#{AcpcPokerTypes::MatchState::LABEL}\S+):([#{AcpcPokerTypes::PokerAction::CONCATONATED_ACTIONS}]\s*\d*)$/
       )
         FromMessage.new(
           $1.to_i - 1,

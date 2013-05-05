@@ -1,24 +1,19 @@
 
 require 'dmorrill10-utils'
 
-require File.expand_path('../rank', __FILE__)
-require File.expand_path('../suit', __FILE__)
+require 'acpc_poker_types/rank'
+require 'acpc_poker_types/suit'
 
 class AcpcPokerTypes::Card
-  exceptions :parse_error
+  CONCATONATED_RANKS = (AcpcPokerTypes::Rank::DOMAIN.map { |rank, properties| properties[:acpc_character] }).join
+  CONCATONATED_SUITS = (AcpcPokerTypes::Suit::DOMAIN.map { |suit, properties| properties[:acpc_character] }).join
+  CONCATONATED_CARDS = CONCATONATED_RANKS + CONCATONATED_SUITS
 
   # @param [String] acpc_string_of_cards A string of cards in ACPC format
   # @return [Array<AcpcPokerTypes::Card>]
   def self.cards(acpc_string_of_cards)
-    all_ranks = AcpcPokerTypes::Rank::DOMAIN.map do |rank, rank_properties|
-     rank_properties[:acpc_character]
-    end.join
-    all_suits = AcpcPokerTypes::Suit::DOMAIN.map do |suit, suit_properties|
-      suit_properties[:acpc_character]
-    end.join
-
-    acpc_string_of_cards.scan(/[#{all_ranks}][#{all_suits}]/).inject([]) do |pile, acpc_card|
-      pile.push << AcpcPokerTypes::Card.from_acpc(acpc_card)
+    acpc_string_of_cards.scan(/[#{CONCATONATED_RANKS}][#{CONCATONATED_SUITS}]/).map do |acpc_card|
+      AcpcPokerTypes::Card.from_acpc(acpc_card)
     end
   end
 
@@ -31,21 +26,10 @@ class AcpcPokerTypes::Card
 
   # @return AcpcPokerTypes::Card
   def self.from_acpc(acpc_card)
-    all_ranks = AcpcPokerTypes::Rank::DOMAIN.values.map do |card_rank|
-      card_rank[:acpc_character]
-    end.join
-    all_suits = AcpcPokerTypes::Suit::DOMAIN.values.map do |card_suit|
-      card_suit[:acpc_character]
-    end.join
+    rank = acpc_card[0]
+    suit = acpc_card[1]
 
-    if acpc_card.match(/([#{all_ranks}])([#{all_suits}])/)
-      rank = $1
-      suit = $2
-
-      AcpcPokerTypes::Card.from_components rank, suit
-    else
-      raise ParseError, acpc_card
-    end
+    AcpcPokerTypes::Card.from_components rank, suit
   end
 
   alias_new :from_components
