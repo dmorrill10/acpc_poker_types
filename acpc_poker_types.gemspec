@@ -10,10 +10,10 @@ Gem::Specification.new do |s|
   s.summary     = %q{ACPC Poker Types}
   s.description = %q{Poker classes and constants that conform to the standards of the Annual Computer Poker Competition.}
 
-  s.add_dependency 'dmorrill10-utils'
+  s.add_dependency 'dmorrill10-utils', '~> 1.0'
   s.add_dependency 'acpc_dealer', '~> 0.0'
+  s.add_dependency 'celluloid', '~> 0.13'
 
-  s.add_development_dependency 'celluloid', '~> 0.13'
   s.add_development_dependency 'awesome_print'
   s.add_development_dependency 'minitest'
   s.add_development_dependency 'turn'
