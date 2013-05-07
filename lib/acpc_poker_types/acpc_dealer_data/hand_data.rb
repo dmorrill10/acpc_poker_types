@@ -43,7 +43,9 @@ module AcpcPokerTypes::AcpcDealerData
       set_data! action_data
 
       @turn_number = nil
-      @seat = nil
+
+      # Zero-indexed seat
+      @seat = 0
     end
 
     def ==(other)
@@ -52,16 +54,28 @@ module AcpcPokerTypes::AcpcDealerData
       @data == other.data
     end
 
-    def for_every_turn!(seat=0)
+    def start_hand!(seat=@seat)
       @seat = seat
-      @data.each_index do |i|
-        @turn_number = i
+    end
 
+    def next_turn!
+      init_or_increment_turn_num!
+    end
+
+    def end_hand!
+      @turn_number = nil
+      self
+    end
+
+    def for_every_turn!(seat=@seat)
+      start_hand! seat
+
+      while @turn_number.nil? || (@turn_number < @data.length - 1) do
+        next_turn!
         yield @turn_number
       end
 
-      @turn_number = nil
-      self
+      end_hand!
     end
 
     def current_match_state(seat=@seat)
@@ -177,6 +191,14 @@ module AcpcPokerTypes::AcpcDealerData
         state_messages.last.round == action_data[message_number+1].state.round
         raise InvalidData, action_data[message_number].inspect
       end
+    end
+    def init_or_increment_turn_num!
+      if @turn_number
+        @turn_number += 1
+      else
+        @turn_number = 0
+      end
+      self
     end
   end
 end

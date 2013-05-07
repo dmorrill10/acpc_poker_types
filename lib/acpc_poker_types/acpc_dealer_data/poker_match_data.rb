@@ -144,23 +144,13 @@ module AcpcPokerTypes::AcpcDealerData
 
     def player(seat=@seat) @players[seat] end
 
-    def for_every_hand!
-      initialize_players!
+    def next_hand!
+      provide_players_with_new_hand!
+      init_or_increment_hand_num!
+      current_hand.start_hand! @seat
+    end
 
-      @data.each_index do |i|
-        @hand_number = i
-
-        @players.each_with_index do |player, seat|
-          player.start_new_hand!(
-            @match_def.game_def.blinds[current_hand.data.first.state_messages[seat].position_relative_to_dealer],
-            @match_def.game_def.chip_stacks[current_hand.data.first.state_messages[seat].position_relative_to_dealer],
-            current_hand.data.first.state_messages[seat].users_hole_cards
-          )
-        end
-
-        yield @hand_number
-      end
-
+    def end_match!
       if @chip_distribution && @chip_distribution != @players.map { |p| p.chip_balance }
         raise AcpcPokerTypes::DataInconsistent, "chip distribution: #{@chip_distribution}, player balances: #{@players.map { |p| p.chip_balance }}"
       end
@@ -168,32 +158,49 @@ module AcpcPokerTypes::AcpcDealerData
       @hand_number = nil
       self
     end
+# @todo Not working yet
+    def for_every_hand!
+      while @hand_number < @data.length do
+        next_hand!
+        yield @hand_number
+        current_hand.end_hand!
+      end
+
+      end_match!
+    end
+
+    def next_turn!
+      current_hand.next_turn!
+
+      @players.each_with_index do |player, seat|
+        last_match_state = current_hand.last_match_state(seat)
+        match_state = current_hand.current_match_state(seat)
+
+        if current_hand.last_action && player.seat == current_hand.last_action.seat
+
+          player.take_action!(current_hand.last_action.action)
+        end
+
+        if (
+          player.active? &&
+          !match_state.first_state_of_first_round? &&
+          match_state.round > last_match_state.round
+        )
+          player.start_new_round!
+        end
+
+        if current_hand.final_turn?
+          player.take_winnings!(
+            current_hand.chip_distribution[seat] + @match_def.game_def.blinds[current_hand.current_match_state(seat).position_relative_to_dealer]
+          )
+        end
+      end
+      self
+    end
 
     def for_every_turn!
       current_hand.for_every_turn!(@seat) do |turn_number|
-        @players.each_with_index do |player, seat|
-          last_match_state = current_hand.last_match_state(seat)
-          match_state = current_hand.current_match_state(seat)
-
-          if current_hand.last_action && player.seat == current_hand.last_action.seat
-
-            player.take_action!(current_hand.last_action.action)
-          end
-
-          if (
-            player.active? &&
-            !match_state.first_state_of_first_round? &&
-            match_state.round > last_match_state.round
-          )
-            player.start_new_round!
-          end
-
-          if current_hand.final_turn?
-            player.take_winnings!(
-              current_hand.chip_distribution[seat] + @match_def.game_def.blinds[current_hand.current_match_state(seat).position_relative_to_dealer]
-            )
-          end
-        end
+        next_turn!
 
         yield turn_number
       end
@@ -343,7 +350,6 @@ module AcpcPokerTypes::AcpcDealerData
           @match_def.game_def.chip_stacks[seat]
         )
       end
-
       self
     end
 
@@ -356,7 +362,6 @@ module AcpcPokerTypes::AcpcDealerData
           raise AcpcPokerTypes::NamesDoNotMatch
         end
       end
-
       self
     end
 
@@ -369,7 +374,6 @@ module AcpcPokerTypes::AcpcDealerData
           hand_result
         )
       end
-
       self
     end
 
@@ -379,15 +383,31 @@ module AcpcPokerTypes::AcpcDealerData
       current_hand.data.length == turn_index + 2 &&
       current_round < (@match_def.game_def.number_of_rounds - 1) &&
       (turns_taken[0..turn_index].count do |t|
-        # @todo Use FOLD constant instead once poker action has one
-        t.action_message.action.to_acpc_character == 'f'
+        t.action_message.action.to_acpc_character == AcpcPokerTypes::PokerAction::FOLD
       end) != @players.length - 1
     end
-
     def new_round?(current_round, turn_index)
       current_hand.data.length > turn_index + 1 &&
       current_hand.data[turn_index + 1].action_message &&
       current_hand.data[turn_index + 1].action_message.state.round > current_round
+    end
+    def provide_players_with_new_hand!
+      @players.each_with_index do |player, seat|
+        player.start_new_hand!(
+          @match_def.game_def.blinds[current_hand.data.first.state_messages[seat].position_relative_to_dealer],
+          @match_def.game_def.chip_stacks[current_hand.data.first.state_messages[seat].position_relative_to_dealer],
+          current_hand.data.first.state_messages[seat].users_hole_cards
+        )
+      end
+      self
+    end
+    def init_or_increment_hand_num!
+      if @hand_number
+        @hand_number += 1
+      else
+        @hand_number = 0
+      end
+      self
     end
   end
 end

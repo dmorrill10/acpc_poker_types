@@ -21,7 +21,7 @@ describe AcpcPokerTypes::AcpcDealerData::HandData do
     @current_match_state = nil
     @last_match_state = nil
     @turn_number = nil
-    @seat = nil
+    @seat = 0
     @turn_data = nil
     @next_action = nil
     @last_action = nil
