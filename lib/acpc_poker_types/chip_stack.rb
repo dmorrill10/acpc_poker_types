@@ -1,5 +1,7 @@
-require 'dmorrill10-utils/class'
 require 'delegate'
+
+require 'contextual_exceptions'
+using ContextualExceptions::ClassRefinement
 
 module AcpcPokerTypes
   class ChipStack < DelegateClass(Rational)
@@ -32,7 +34,7 @@ module AcpcPokerTypes
 
     # @raise IllegalNumberOfChips
     def assert_valid_value
-      raise IllegalNumberOfChips if @value < 0
+      raise IllegalNumberOfChips, "\"#{@value.to_s}\" is an invalid value of chips (cannot be negative)" if @value < 0
     end
   end
 end

@@ -1,5 +1,5 @@
 
-require 'dmorrill10-utils'
+require 'dmorrill10-utils' # For alias_new
 
 require 'acpc_poker_types/rank'
 require 'acpc_poker_types/suit'
@@ -8,7 +8,7 @@ module AcpcPokerTypes
   class Card
     CONCATONATED_RANKS = (AcpcPokerTypes::Rank::DOMAIN.map { |rank, properties| properties[:acpc_character] }).join
     CONCATONATED_SUITS = (AcpcPokerTypes::Suit::DOMAIN.map { |suit, properties| properties[:acpc_character] }).join
-    CONCATONATED_CARDS = CONCATONATED_RANKS + CONCATONATED_SUITS
+    CONCATONATED_CARDS = "#{CONCATONATED_RANKS}#{CONCATONATED_SUITS}"
 
     # @param [String] acpc_string_of_cards A string of cards in ACPC format
     # @return [Array<AcpcPokerTypes::Card>]
@@ -45,13 +45,13 @@ module AcpcPokerTypes
     end
 
     def to_str
-      @rank.to_s + @suit.to_s
+      "#{@rank}#{@suit}"
     end
 
     alias_method :to_s, :to_str
 
     def to_acpc
-      @rank.to_acpc + @suit.to_acpc
+      "#{@rank.to_acpc}#{@suit.to_acpc}"
     end
   end
 end

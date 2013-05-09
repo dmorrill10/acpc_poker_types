@@ -11,17 +11,18 @@ Gem::Specification.new do |s|
   s.description = %q{Poker classes and constants that conform to the standards of the Annual Computer Poker Competition.}
 
   s.add_dependency 'dmorrill10-utils', '~> 1.0'
-  s.add_dependency 'acpc_dealer', '~> 0.0'
-  s.add_dependency 'celluloid', '~> 0.13'
-
-  s.add_development_dependency 'awesome_print'
-  s.add_development_dependency 'minitest'
-  s.add_development_dependency 'turn'
-  s.add_development_dependency 'pry-rescue'
-  s.add_development_dependency 'mocha'
-  s.add_development_dependency 'simplecov'
+  s.add_dependency 'acpc_dealer', '~> 1.0'
+  s.add_dependency 'celluloid', '~> 0.14'
+  s.add_dependency 'contextual_exceptions', '~> 0.0'
 
   s.files         = Dir.glob("lib/**/*") + %w(Rakefile acpc_poker_types.gemspec README.md)
   s.test_files    = Dir.glob "spec/**/*"
   s.require_paths = ["lib"]
+
+  s.add_development_dependency 'turn', '~> 0.9'
+  s.add_development_dependency 'minitest', '~> 4.7'
+  s.add_development_dependency 'mocha', '~> 0.13'
+  s.add_development_dependency 'awesome_print', '~> 1.0'
+  s.add_development_dependency 'pry-rescue', '~> 1.0'
+  s.add_development_dependency 'simplecov', '~> 0.7'
 end

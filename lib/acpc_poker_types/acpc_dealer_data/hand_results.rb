@@ -1,5 +1,4 @@
-
-require 'dmorrill10-utils/class'
+require 'dmorrill10-utils/class' # For alias_new
 
 require 'acpc_poker_types/acpc_dealer_data/match_definition'
 require 'acpc_poker_types/acpc_dealer_data/log_file'

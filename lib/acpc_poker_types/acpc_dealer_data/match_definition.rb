@@ -1,14 +1,14 @@
-
 require 'set'
 
 require 'acpc_poker_types/game_definition'
 
-require 'dmorrill10-utils/class'
+require 'contextual_exceptions'
+using ContextualExceptions::ClassRefinement
 
 module AcpcPokerTypes::AcpcDealerData
   class MatchDefinition
 
-    exceptions :unable_to_parse, :incorrect_number_of_player_names
+    exceptions :incorrect_number_of_player_names
 
     attr_reader :name, :game_def, :number_of_hands, :random_seed, :player_names
 

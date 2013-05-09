@@ -1,8 +1,9 @@
-
 require 'set'
-require 'dmorrill10-utils/class'
 
 require 'acpc_poker_types/chip_stack'
+
+require 'contextual_exceptions'
+using ContextualExceptions::ClassRefinement
 
 module AcpcPokerTypes
   class PokerAction
@@ -76,7 +77,7 @@ module AcpcPokerTypes
     private
 
     def combine_action_and_modifier(action=@action, modifier=@modifier)
-      action + modifier.to_s
+      "#{action}#{modifier}"
     end
 
     def validate_action!(action, given_modifier)

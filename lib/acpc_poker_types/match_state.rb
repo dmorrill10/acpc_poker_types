@@ -56,10 +56,8 @@ module AcpcPokerTypes
       all_hole_cards,
       board_cards
     )
-      string = LABEL +
-        ":#{position_relative_to_dealer}:#{hand_number}:#{betting_sequence}:#{all_hole_cards}"
-
-        string += board_cards.to_acpc if board_cards && !board_cards.empty?
+      string = "#{LABEL}:#{position_relative_to_dealer}:#{hand_number}:#{betting_sequence}:#{all_hole_cards}"
+      string << board_cards.to_acpc if board_cards && !board_cards.empty?
       string
     end
 
@@ -160,8 +158,8 @@ module AcpcPokerTypes
     #  +betting_sequence+.
     def betting_sequence_string(betting_sequence=@betting_sequence)
       (round + 1).times.inject('') do |string, i|
-        string += (betting_sequence[i].map { |action| action.to_s }).join('')
-        string += '/' unless i == round
+        string << (betting_sequence[i].map { |action| action.to_s }).join('')
+        string << '/' unless i == round
         string
       end
     end

@@ -1,5 +1,5 @@
-
-require 'dmorrill10-utils'
+require 'contextual_exceptions'
+using ContextualExceptions::ClassRefinement
 
 module AcpcPokerTypes
   class Suit

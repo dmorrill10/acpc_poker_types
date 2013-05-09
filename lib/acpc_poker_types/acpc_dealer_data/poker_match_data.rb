@@ -3,17 +3,18 @@ require 'acpc_poker_types/player'
 
 require 'celluloid/autostart'
 
-require 'dmorrill10-utils/class'
-
 require 'acpc_poker_types/acpc_dealer_data/action_messages'
 require 'acpc_poker_types/acpc_dealer_data/hand_data'
 require 'acpc_poker_types/acpc_dealer_data/hand_results'
 require 'acpc_poker_types/acpc_dealer_data/match_definition'
 
+require 'contextual_exceptions'
+using ContextualExceptions::ClassRefinement
+
 module AcpcPokerTypes::AcpcDealerData
   class PokerMatchData
 
-    exceptions :match_definitions_do_not_match, :final_scores_do_not_match, :player_data_inconsistent
+    exceptions :match_definitions_do_not_match, :final_scores_do_not_match, :data_inconsistent, :names_do_not_match
 
     attr_accessor(
       # @returns [Array<Numeric>] Chip distribution at the end of the match
@@ -145,22 +146,22 @@ module AcpcPokerTypes::AcpcDealerData
     def player(seat=@seat) @players[seat] end
 
     def next_hand!
-      provide_players_with_new_hand!
       init_or_increment_hand_num!
+      provide_players_with_new_hand!
       current_hand.start_hand! @seat
     end
 
     def end_match!
       if @chip_distribution && @chip_distribution != @players.map { |p| p.chip_balance }
-        raise AcpcPokerTypes::DataInconsistent, "chip distribution: #{@chip_distribution}, player balances: #{@players.map { |p| p.chip_balance }}"
+        raise DataInconsistent, "chip distribution: #{@chip_distribution}, player balances: #{@players.map { |p| p.chip_balance }}"
       end
 
       @hand_number = nil
       self
     end
-# @todo Not working yet
+
     def for_every_hand!
-      while @hand_number < @data.length do
+      while @hand_number.nil? || (@hand_number < @data.length - 1) do
         next_hand!
         yield @hand_number
         current_hand.end_hand!
@@ -199,10 +200,9 @@ module AcpcPokerTypes::AcpcDealerData
     end
 
     def for_every_turn!
-      current_hand.for_every_turn!(@seat) do |turn_number|
+      while current_hand.turn_number.nil? || (current_hand.turn_number < current_hand.data.length - 1) do
         next_turn!
-
-        yield turn_number
+        yield current_hand.turn_number
       end
 
       self
@@ -358,8 +358,11 @@ module AcpcPokerTypes::AcpcDealerData
       final_score.each do |player_name, amount|
         begin
           @chip_distribution[@match_def.player_names.index(player_name.to_s)] = amount
-        rescue TypeError
-          raise AcpcPokerTypes::NamesDoNotMatch
+        rescue TypeError => e
+          raise NamesDoNotMatch.with_context(
+            "Player name \"#{player_name.to_s}\" in match definition is not listed in final chip distribution",
+            e
+          )
         end
       end
       self

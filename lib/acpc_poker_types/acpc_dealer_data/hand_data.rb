@@ -1,18 +1,23 @@
-
-require 'dmorrill10-utils/class'
-
 require 'acpc_poker_types/acpc_dealer_data/match_definition'
 
-# Monkey patch for easy boundary checking
-class Array
-  def in_bounds?(i)
-    i < length
+require 'contextual_exceptions'
+using ContextualExceptions::ClassRefinement
+
+# Refinement for easy boundary checking
+module AcpcPokerTypes::AcpcDealerData
+  module BoundaryCheckingRefinement
+    refine Array do
+      def in_bounds?(i)
+        i < length
+      end
+    end
   end
 end
+using AcpcPokerTypes::AcpcDealerData::BoundaryCheckingRefinement
 
 module AcpcPokerTypes::AcpcDealerData
   class HandData
-    exceptions :match_definitions_do_not_match, :invalid_data
+    exceptions :invalid_data, :names_do_not_match
 
     attr_accessor(
       # @returns [Array<Numeric>] Chip distribution at the end of the hand
@@ -126,8 +131,11 @@ module AcpcPokerTypes::AcpcDealerData
       result.each do |player_name, amount|
         begin
           @chip_distribution[@match_def.player_names.index(player_name.to_s)] = amount
-        rescue TypeError
-          raise PlayerNamesDoNotMatch
+        rescue TypeError => e
+          raise NamesDoNotMatch.with_context(
+            "Player name \"#{player_name.to_s}\" in match definition is not listed in final chip distribution",
+            e
+          )
         end
       end
     end
