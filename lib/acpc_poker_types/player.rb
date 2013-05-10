@@ -1,8 +1,8 @@
-
-require 'dmorrill10-utils'
-
 require 'acpc_poker_types/chip_stack'
 require 'acpc_poker_types/hand'
+
+require 'contextual_exceptions'
+using ContextualExceptions::ClassRefinement
 
 # Class to model a player.
 module AcpcPokerTypes
@@ -54,7 +54,7 @@ module AcpcPokerTypes
     #  the current hand, separated by round.
     attr_reader :actions_taken_this_hand
 
-    alias_new :join_match
+    class << self; alias_method(:join_match, :new) end
 
     # @todo These comments don't work as expected
     # @param [String] name This players name.

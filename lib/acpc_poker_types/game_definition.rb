@@ -1,11 +1,14 @@
-require 'dmorrill10-utils/class'
-require 'dmorrill10-utils/enumerable'
-require 'dmorrill10-utils/integer'
 require 'set'
 
 require 'acpc_poker_types/chip_stack'
 require 'acpc_poker_types/suit'
 require 'acpc_poker_types/rank'
+
+require 'acpc_poker_types/integer_as_seat'
+using AcpcPokerTypes::IntegerAsSeat
+
+require 'contextual_exceptions'
+using ContextualExceptions::ClassRefinement
 
 # Class that parses and manages game definition information from a game definition file.
 module AcpcPokerTypes
@@ -165,7 +168,7 @@ module AcpcPokerTypes
       File.open(game_definition_file_name, 'r') { |file|  parse file }
     end
 
-    alias_new :parse
+    class << self; alias_method(:parse, :new); end
 
     def initialize(definitions)
       initialize_members!
@@ -317,7 +320,7 @@ module AcpcPokerTypes
         end
       end
 
-      number_of_cards_required = (@number_of_hole_cards * @number_of_players) + @number_of_board_cards.sum
+      number_of_cards_required = (@number_of_hole_cards * @number_of_players) + @number_of_board_cards.inject(:+)
 
       if number_of_cards_required > (@number_of_suits * @number_of_ranks)
         raise(

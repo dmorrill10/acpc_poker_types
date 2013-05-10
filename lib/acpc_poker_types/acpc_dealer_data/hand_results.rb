@@ -1,5 +1,3 @@
-require 'dmorrill10-utils/class' # For alias_new
-
 require 'acpc_poker_types/acpc_dealer_data/match_definition'
 require 'acpc_poker_types/acpc_dealer_data/log_file'
 
@@ -52,7 +50,7 @@ module AcpcPokerTypes::AcpcDealerData
       end
     end
 
-    alias_new :parse
+    class << self; alias_method(:parse, :new); end
 
     def initialize(acpc_log_statements, player_names, game_def_directory, num_hands=nil)
       @final_score = nil
@@ -64,8 +62,11 @@ module AcpcPokerTypes::AcpcDealerData
         else
           parsed_message =  AcpcPokerTypes::AcpcDealerData::HandResults.parse_state(log_line)
           if parsed_message
-            accumulating_data << parsed_message
+            # Yes, this causes one more result to be parsed than is saved as long as
+            # the number of hands is less than the total number in the log, but this
+            # keeps behavior consistent between this class and ActionMessages.
             break accumulating_data if accumulating_data.length == num_hands
+            accumulating_data << parsed_message
           else
             @final_score =  AcpcPokerTypes::AcpcDealerData::HandResults.parse_score(log_line) unless @final_score
           end

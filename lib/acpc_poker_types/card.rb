@@ -1,6 +1,3 @@
-
-require 'dmorrill10-utils' # For alias_new
-
 require 'acpc_poker_types/rank'
 require 'acpc_poker_types/suit'
 
@@ -33,7 +30,7 @@ module AcpcPokerTypes
       AcpcPokerTypes::Card.from_components rank, suit
     end
 
-    alias_new :from_components
+    class << self; alias_method(:from_components, :new) end
 
     def initialize(rank, suit)
       @rank = AcpcPokerTypes::Rank.new rank

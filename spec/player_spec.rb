@@ -4,7 +4,6 @@ require_relative 'support/spec_helper'
 
 require 'acpc_dealer'
 require 'acpc_poker_types/acpc_dealer_data/poker_match_data'
-require 'dmorrill10-utils'
 
 require 'acpc_poker_types/player'
 require 'acpc_poker_types/poker_action'
@@ -186,7 +185,7 @@ describe AcpcPokerTypes::Player do
         "#{dealer_log_directory}/#{log_description.results_file_name}",
         log_description.player_names,
         AcpcDealer::DEALER_DIRECTORY,
-        120
+        10
       )
       match.for_every_seat! do |seat|
         @patient = AcpcPokerTypes::Player.join_match(

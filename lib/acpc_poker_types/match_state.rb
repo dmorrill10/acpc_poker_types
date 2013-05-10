@@ -1,11 +1,11 @@
-
-require 'dmorrill10-utils'
-
 require 'acpc_poker_types/board_cards'
 require 'acpc_poker_types/hand'
 require 'acpc_poker_types/rank'
 require 'acpc_poker_types/suit'
 require 'acpc_poker_types/poker_action'
+
+require 'contextual_exceptions'
+using ContextualExceptions::ClassRefinement
 
 # Model to parse and manage information from a given match state string.
 module AcpcPokerTypes
@@ -39,7 +39,7 @@ module AcpcPokerTypes
     # @return [String] Label for match state strings.
     LABEL = 'MATCHSTATE'
 
-    alias_new :parse
+    class << self; alias_method(:parse, :new) end
 
     # Builds a match state string from its given component parts.
     #

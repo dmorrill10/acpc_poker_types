@@ -1,4 +1,3 @@
-
 require 'acpc_poker_types/match_state'
 require 'acpc_poker_types/poker_action'
 
@@ -93,7 +92,7 @@ module AcpcPokerTypes::AcpcDealerData
       end
     end
 
-    alias_new :parse
+    class << self; alias_method(:parse, :new) end
 
     def initialize(
       acpc_log_statements,
@@ -111,13 +110,14 @@ module AcpcPokerTypes::AcpcDealerData
           if parsed_message
             if (
               accumulating_data.empty? ||
-              accumulating_data.last.first[:state].hand_number != parsed_message[:state].hand_number
+              (
+                accumulating_data.last.first[:state].hand_number !=
+                parsed_message[:state].hand_number
+              )
             )
               break accumulating_data if accumulating_data.length == num_hands
-
               accumulating_data << []
             end
-
             accumulating_data.last << parsed_message
           else
             @final_score =  AcpcPokerTypes::AcpcDealerData::ActionMessages.parse_score(log_line) unless @final_score

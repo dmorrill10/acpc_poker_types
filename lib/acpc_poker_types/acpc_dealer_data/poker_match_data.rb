@@ -111,9 +111,7 @@ module AcpcPokerTypes::AcpcDealerData
         raise MatchDefinitionsDoNotMatch
       end
 
-      if (
-        parsed_action_messages.final_score != parsed_hand_results.final_score
-      )
+      if parsed_action_messages.final_score != parsed_hand_results.final_score
         raise FinalScoresDoNotMatch
       end
 
