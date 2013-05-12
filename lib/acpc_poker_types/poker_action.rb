@@ -81,20 +81,20 @@ module AcpcPokerTypes
     end
 
     def validate_action!(action, given_modifier)
-      if action.to_s.match(/^([#{CONCATONATED_ACTIONS}])\s*(\d*)$/)
-      else
-        raise IllegalAction, action.to_s
-      end
-      @action, @modifier = $1, $2
+      action_string = action.to_s
+      raise IllegalAction if action_string.empty?
+      @action = action_string[0]
+      raise IllegalAction unless ACTIONS.include?(@action)
+      @modifier = action_string[1..-1] unless action_string.length < 2
 
-      if given_modifier && !@modifier.empty?
+      if given_modifier && @modifier && !@modifier.empty?
         raise(
           IllegalModification,
           "in-place modifier: #{@modifier}, explicit modifier: #{given_modifier}"
         )
       end
 
-      @modifier = if !@modifier.empty?
+      @modifier = if @modifier && !@modifier.empty?
         @modifier
       elsif given_modifier
         given_modifier
