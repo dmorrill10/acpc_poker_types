@@ -10,7 +10,7 @@ module AcpcPokerTypes
     # @param [#to_i] number_of_chips The number of chips to be made into a stack.
     # @raise (see #assert_valid_value)
     def initialize(number_of_chips=0)
-      @value = number_of_chips.to_i
+      @value = number_of_chips.to_r
 
       assert_valid_value
 
