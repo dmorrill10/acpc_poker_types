@@ -50,5 +50,9 @@ module AcpcPokerTypes
     def to_acpc
       "#{@rank.to_acpc}#{@suit.to_acpc}"
     end
+
+    def ==(other)
+      to_s == other.to_s
+    end
   end
 end

@@ -26,6 +26,11 @@ describe AcpcPokerTypes::Card do
       end
     end
   end
+  it '== works' do
+    for_every_card! do
+      AcpcPokerTypes::Card.from_acpc(@acpc).must_equal AcpcPokerTypes::Card.from_acpc(@acpc)
+    end
+  end
 
   def for_every_card!
     AcpcPokerTypes::Rank::DOMAIN.map do |rank, rank_properties|
