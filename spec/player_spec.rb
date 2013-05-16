@@ -179,7 +179,7 @@ describe AcpcPokerTypes::Player do
   end
   it 'works properly over samples of data from the ACPC Dealer' do
     dealer_log_directory = File.expand_path('../support/dealer_logs', __FILE__)
-    match_logs.each do |log_description|
+    MatchLog.all.each do |log_description|
       match =  AcpcPokerTypes::AcpcDealerData::PokerMatchData.parse_files(
         "#{dealer_log_directory}/#{log_description.actions_file_name}",
         "#{dealer_log_directory}/#{log_description.results_file_name}",
@@ -260,43 +260,12 @@ describe AcpcPokerTypes::Player do
     end
   end
 
-class Array
-  def reject_empty_elements
-    reject do |elem|
-      elem.empty?
+  class Array
+    def reject_empty_elements
+      reject do |elem|
+        elem.empty?
+      end
     end
-  end
-end
-
-  MatchLog = Struct.new(
-    :results_file_name,
-    :actions_file_name,
-    :player_names
-  )
-
-  def match_logs
-    [
-      MatchLog.new(
-        '2p.limit.h1000.r0.log',
-        '2p.limit.h1000.r0.actions.log',
-        ['p1', 'p2']
-      ),
-      MatchLog.new(
-        '2p.nolimit.h1000.r0.log',
-        '2p.nolimit.h1000.r0.actions.log',
-        ['p1', 'p2']
-      ),
-      MatchLog.new(
-        '3p.limit.h1000.r0.log',
-        '3p.limit.h1000.r0.actions.log',
-        ['p1', 'p2', 'p3']
-      ),
-      MatchLog.new(
-        '3p.nolimit.h1000.r0.log',
-        '3p.nolimit.h1000.r0.actions.log',
-        ['p1', 'p2', 'p3']
-      )
-    ]
   end
 
   def various_actions

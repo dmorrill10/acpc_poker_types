@@ -2,7 +2,6 @@ require 'simplecov'
 SimpleCov.start
 
 require 'minitest/spec'
-require 'minitest/pride'
 
 begin
   require 'turn'
@@ -38,6 +37,31 @@ class MatchLog
 
   attr_reader :results_file_name, :actions_file_name, :player_names, :dealer_log_directory
 
+  def self.all
+    [
+      MatchLog.new(
+        '2p.limit.h1000.r0.log',
+        '2p.limit.h1000.r0.actions.log',
+        ['p1', 'p2']
+      ),
+      MatchLog.new(
+        '2p.nolimit.h1000.r0.log',
+        '2p.nolimit.h1000.r0.actions.log',
+        ['p1', 'p2']
+      ),
+      MatchLog.new(
+        '3p.limit.h1000.r0.log',
+        '3p.limit.h1000.r0.actions.log',
+        ['p1', 'p2', 'p3']
+      ),
+      MatchLog.new(
+        '3p.nolimit.h1000.r0.log',
+        '3p.nolimit.h1000.r0.actions.log',
+        ['p1', 'p2', 'p3']
+      )
+    ]
+  end
+
   def initialize(results_file_name, actions_file_name, player_names)
     @results_file_name = results_file_name
     @actions_file_name = actions_file_name
@@ -51,29 +75,4 @@ class MatchLog
   def results_file_path
     "#{DEALER_LOG_DIRECTORY}/#{@results_file_name}"
   end
-end
-
-def match_logs
-  [
-    MatchLog.new(
-      '2p.limit.h1000.r0.log',
-      '2p.limit.h1000.r0.actions.log',
-      ['p1', 'p2']
-    ),
-    MatchLog.new(
-      '2p.nolimit.h1000.r0.log',
-      '2p.nolimit.h1000.r0.actions.log',
-      ['p1', 'p2']
-    ),
-    MatchLog.new(
-      '3p.limit.h1000.r0.log',
-      '3p.limit.h1000.r0.actions.log',
-      ['p1', 'p2', 'p3']
-    ),
-    MatchLog.new(
-      '3p.nolimit.h1000.r0.log',
-      '3p.nolimit.h1000.r0.actions.log',
-      ['p1', 'p2', 'p3']
-    )
-  ]
 end

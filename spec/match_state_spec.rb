@@ -2,7 +2,6 @@
 # Spec helper (must include first to track code coverage with SimpleCov)
 require File.expand_path('../support/spec_helper', __FILE__)
 
-require 'minitest/mock'
 require 'acpc_dealer'
 
 require "acpc_poker_types/match_state"
@@ -219,8 +218,8 @@ describe AcpcPokerTypes::MatchState do
 end
 describe "#receive_matchstate_string" do
   it 'receives matchstate strings properly' do
-    @connection = MiniTest::Mock.new
-    match_logs.each do |log_description|
+    @connection = mock 'Socket'
+    MatchLog.all.each do |log_description|
       match = AcpcPokerTypes::AcpcDealerData::PokerMatchData.parse_files(
         log_description.actions_file_path,
         log_description.results_file_path,
@@ -231,7 +230,7 @@ describe "#receive_matchstate_string" do
       match.for_every_seat! do |seat|
         match.for_every_hand! do
           match.for_every_turn! do
-            @connection.expect(:gets, match.current_hand.current_match_state.to_s)
+            @connection.expects(:gets).returns(match.current_hand.current_match_state.to_s)
 
             AcpcPokerTypes::MatchState.receive(@connection).must_equal match.current_hand.current_match_state
           end
