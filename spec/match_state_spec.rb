@@ -2,12 +2,16 @@
 # Spec helper (must include first to track code coverage with SimpleCov)
 require File.expand_path('../support/spec_helper', __FILE__)
 
+require 'minitest/mock'
+require 'acpc_dealer'
+
 require "acpc_poker_types/match_state"
 require "acpc_poker_types/poker_action"
 require "acpc_poker_types/rank"
 require "acpc_poker_types/suit"
 require "acpc_poker_types/hand"
 require "acpc_poker_types/card"
+require 'acpc_poker_types/acpc_dealer_data/poker_match_data'
 
 describe AcpcPokerTypes::MatchState do
   describe '#parse' do
@@ -207,6 +211,29 @@ describe AcpcPokerTypes::MatchState do
             patient.last_action.must_equal AcpcPokerTypes::PokerAction.new(third_action)
             patient.round_in_which_last_action_taken.must_equal 1
             patient.first_state_of_first_round?.must_equal false
+          end
+        end
+      end
+    end
+  end
+end
+describe "#receive_matchstate_string" do
+  it 'receives matchstate strings properly' do
+    @connection = MiniTest::Mock.new
+    match_logs.each do |log_description|
+      match = AcpcPokerTypes::AcpcDealerData::PokerMatchData.parse_files(
+        log_description.actions_file_path,
+        log_description.results_file_path,
+        log_description.player_names,
+        AcpcDealer::DEALER_DIRECTORY,
+        20
+      )
+      match.for_every_seat! do |seat|
+        match.for_every_hand! do
+          match.for_every_turn! do
+            @connection.expect(:gets, match.current_hand.current_match_state.to_s)
+
+            AcpcPokerTypes::MatchState.receive(@connection).must_equal match.current_hand.current_match_state
           end
         end
       end

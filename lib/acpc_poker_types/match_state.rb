@@ -41,6 +41,13 @@ module AcpcPokerTypes
 
     class << self; alias_method(:parse, :new) end
 
+    # Receives a match state string from the given +connection+.
+    # @param [#gets] connection The connection from which a match state string should be received.
+    # @return [MatchState] The match state string that was received from the +connection+ or +nil+ if none could be received.
+    def self.receive(connection)
+      AcpcPokerTypes::MatchState.parse connection.gets
+    end
+
     # Builds a match state string from its given component parts.
     #
     # @param [#to_s] position_relative_to_dealer The position relative to the dealer.
