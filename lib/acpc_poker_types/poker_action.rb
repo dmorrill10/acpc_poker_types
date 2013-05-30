@@ -5,6 +5,31 @@ require 'acpc_poker_types/chip_stack'
 require 'contextual_exceptions'
 using ContextualExceptions::ClassRefinement
 
+module BlankRefinement
+  refine Object do
+    def blank?
+      respond_to?(:empty?) ? empty? : !self
+    end
+  end
+  refine NilClass do
+    def blank?
+      true
+    end
+    def strip
+      self
+    end
+  end
+  refine Array do
+    alias_method :blank?, :empty?
+  end
+  refine String do
+    def blank?
+      self !~ /\S/
+    end
+  end
+end
+using BlankRefinement
+
 module AcpcPokerTypes
   class PokerAction
     exceptions :illegal_action, :illegal_modification
@@ -43,7 +68,7 @@ module AcpcPokerTypes
     #  +:pot_gained_chips+, and +:cost+.
     # @raise IllegalAction
     def initialize(action, modifier: nil, cost: AcpcPokerTypes::ChipStack.new(0))
-      validate_action!(action, modifier)
+      validate_action!(action, modifier.strip)
       @cost = cost
     end
 
@@ -71,7 +96,7 @@ module AcpcPokerTypes
 
     # @return [Boolean] +true+ if this action has a modifier, +false+ otherwise.
     def has_modifier?
-      !@modifier.nil?
+      !@modifier.blank?
     end
 
     private
@@ -85,18 +110,18 @@ module AcpcPokerTypes
       raise IllegalAction if action_string.empty?
       @action = action_string[0]
       raise IllegalAction unless ACTIONS.include?(@action)
-      @modifier = action_string[1..-1] unless action_string.length < 2
+      @modifier = action_string[1..-1].strip unless action_string.length < 2
 
-      if given_modifier && @modifier && !@modifier.empty?
+      if !given_modifier.blank? && !@modifier.blank?
         raise(
           IllegalModification,
           "in-place modifier: #{@modifier}, explicit modifier: #{given_modifier}"
         )
       end
 
-      @modifier = if @modifier && !@modifier.empty?
+      @modifier = if !@modifier.blank?
         @modifier
-      elsif given_modifier
+      elsif !given_modifier.blank?
         given_modifier
       end
 
@@ -106,7 +131,7 @@ module AcpcPokerTypes
     end
 
     def validate_modifier
-      raise(IllegalModification, "Illegal modifier: #{@modifier}") unless @modifier.nil? || AcpcPokerTypes::PokerAction::MODIFIABLE_ACTIONS.include?(@action)
+      raise(IllegalModification, "Illegal modifier: #{@modifier}") unless @modifier.blank? || AcpcPokerTypes::PokerAction::MODIFIABLE_ACTIONS.include?(@action)
     end
   end
 end
