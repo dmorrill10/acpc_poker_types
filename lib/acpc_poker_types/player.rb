@@ -1,5 +1,6 @@
 require 'acpc_poker_types/chip_stack'
 require 'acpc_poker_types/hand'
+require 'acpc_poker_types/seat'
 
 require 'contextual_exceptions'
 using ContextualExceptions::ClassRefinement
@@ -20,7 +21,7 @@ module AcpcPokerTypes
       game_def.number_of_players.times.inject([]) do |players, seat|
         players << AcpcPokerTypes::Player.join_match(
           player_names[seat],
-          seat,
+          AcpcPokerTypes::Seat.new(seat, game_def.number_of_players),
           AcpcPokerTypes::ChipStack.new(game_def.chip_stacks[seat])
         )
       end
@@ -29,8 +30,8 @@ module AcpcPokerTypes
     # @return [String] The name of this player.
     attr_reader :name
 
-    # @return [Integer] This player's seat.  This is a 0 indexed
-    #  number that represents the order that this player joined the dealer.
+    # @return [AcpcPokerTypes::Seat] This player's seat 0 indexed.
+    #   Represents the order that this player joined the dealer.
     attr_reader :seat
 
     # @return [AcpcPokerTypes::ChipStack] This player's chip stack.
@@ -58,7 +59,7 @@ module AcpcPokerTypes
 
     # @todo These comments don't work as expected
     # @param [String] name This players name.
-    # @param [Integer] seat (see #seat)
+    # @param [AcpcPokerTypes::Seat] seat (see #seat)
     # @param [#to_i] chip_stack (see #chip_stack)
     def initialize(name, seat, chip_stack)
       @name = name
