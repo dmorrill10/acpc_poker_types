@@ -344,7 +344,7 @@ module AcpcPokerTypes::AcpcDealerData
       @players = @match_def.player_names.length.times.map do |seat|
         AcpcPokerTypes::Player.join_match(
           @match_def.player_names[seat],
-          seat,
+          AcpcPokerTypes::Seat.new(seat, @match_def.player_names.length),
           @match_def.game_def.chip_stacks[seat]
         )
       end
