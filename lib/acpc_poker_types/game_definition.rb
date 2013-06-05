@@ -4,8 +4,7 @@ require 'acpc_poker_types/chip_stack'
 require 'acpc_poker_types/suit'
 require 'acpc_poker_types/rank'
 
-require 'acpc_poker_types/integer_as_seat'
-using AcpcPokerTypes::IntegerAsSeat
+require 'acpc_poker_types/seat'
 
 require 'contextual_exceptions'
 using ContextualExceptions::ClassRefinement
@@ -303,7 +302,7 @@ module AcpcPokerTypes
       end
 
       @number_of_rounds.times do |i|
-        unless @first_player_positions[i].seat_in_bounds? @number_of_players
+        unless Seat.in_bounds?(@first_player_positions[i], @number_of_players)
           raise(
             ParseError,
             "Invalid first player #{@first_player_positions[i]} on round #{i+1}"

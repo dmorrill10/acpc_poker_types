@@ -12,7 +12,6 @@ require "acpc_poker_types/rank"
 require "acpc_poker_types/suit"
 require "acpc_poker_types/acpc_dealer_data"
 require 'acpc_poker_types/seat'
-require 'acpc_poker_types/integer_as_seat'
 
 module AcpcPokerTypes
 end
