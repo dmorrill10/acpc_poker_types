@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.description = %q{Poker classes and constants that conform to the standards of the Annual Computer Poker Competition.}
 
   s.add_dependency 'process_runner', '~> 0.0'
-  s.add_dependency 'acpc_dealer', '~> 1.0'
+  s.add_dependency 'acpc_dealer', '~> 2.0'
   s.add_dependency 'celluloid', '~> 0.14'
   s.add_dependency 'contextual_exceptions', '~> 0.0'
 
