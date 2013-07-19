@@ -74,7 +74,7 @@ module AcpcPokerTypes
     # @raise IncompleteMatchState
     def initialize(raw_match_state)
       if raw_match_state.match(
-        /^#{LABEL}:(\d+):(\d+):([^:]*):([^\/]+)\/*(.*)$/)
+        /#{LABEL}:(\d+):(\d+):([^:]*):([^\/]+)\/*([^\s:]*)/)
         @position_relative_to_dealer = $1.to_i
         @hand_number = $2.to_i
         @betting_sequence_string = $3
