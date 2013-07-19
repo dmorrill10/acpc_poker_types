@@ -1,42 +1,17 @@
-
-# Spec helper (must include first to track code coverage with SimpleCov)
-require File.expand_path('../support/spec_helper', __FILE__)
+require_relative 'support/spec_helper'
 
 require 'acpc_dealer'
 
-require "acpc_poker_types/match_state"
-require "acpc_poker_types/poker_action"
-require "acpc_poker_types/rank"
-require "acpc_poker_types/suit"
-require "acpc_poker_types/hand"
-require "acpc_poker_types/card"
-require 'acpc_poker_types/acpc_dealer_data/poker_match_data'
+require_relative "../lib/acpc_poker_types/match_state"
+require_relative "../lib/acpc_poker_types/poker_action"
+require_relative "../lib/acpc_poker_types/rank"
+require_relative "../lib/acpc_poker_types/suit"
+require_relative "../lib/acpc_poker_types/hand"
+require_relative "../lib/acpc_poker_types/card"
+require_relative "../lib/acpc_poker_types/acpc_dealer_data/poker_match_data"
 
 describe AcpcPokerTypes::MatchState do
   describe '#parse' do
-    describe 'raises an exception if ' do
-      describe 'the raw matchstate string' do
-        it 'is empty' do
-          test_match_state_initialization_error ""
-        end
-
-        it 'is not in the proper format' do
-          test_match_state_initialization_error "hello world"
-        end
-
-        it 'does not contain a position' do
-          test_match_state_initialization_error AcpcPokerTypes::MatchState::LABEL + "::0::AhKd"
-        end
-
-        it 'does not contain a hand number' do
-          test_match_state_initialization_error AcpcPokerTypes::MatchState::LABEL + ":0:::AsKc"
-        end
-
-        it 'does not contain cards' do
-          test_match_state_initialization_error AcpcPokerTypes::MatchState::LABEL + ":0:0::"
-        end
-      end
-    end
     it "parses every possible limit action" do
       partial_match_state = AcpcPokerTypes::MatchState::LABEL + ":1:1:"
       hole_cards = arbitrary_hole_card_hand
