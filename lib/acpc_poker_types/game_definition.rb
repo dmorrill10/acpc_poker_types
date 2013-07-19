@@ -99,6 +99,14 @@ module AcpcPokerTypes
       :@number_of_board_cards => 'numBoardCards'
     }
 
+    ALL_PLAYER_ALL_ROUND_DEFS = [
+      DEFINITIONS[:@number_of_players],
+      DEFINITIONS[:@number_of_rounds],
+      DEFINITIONS[:@number_of_suits],
+      DEFINITIONS[:@number_of_ranks],
+      DEFINITIONS[:@number_of_hole_cards]
+    ]
+
     def self.default_first_player_positions(number_of_rounds)
       number_of_rounds.to_i.times.inject([]) do |list, i|
         list << 0
@@ -120,12 +128,6 @@ module AcpcPokerTypes
       end
     end
 
-    # @param [Array] array The array to flatten into a single element.
-    # @return +array+ if +array+ has more than one element, the single element in +array+ otherwise.
-    def self.flatten_if_single_element_array(array)
-      if 1 == array.length then array[0] else array end
-    end
-
     # Checks if the given line is a comment beginning with '#' or ';', or empty.
     #
     # @param [String] line
@@ -134,7 +136,7 @@ module AcpcPokerTypes
       line.nil? || line.match(/^\s*[#;]/) || line.empty?
     end
 
-    # Checks a given line from a game definition file for a game
+    # Checks a given line frcom a game definition file for a game
     # definition name and returns the given default value unless there is a match.
     #
     # @param [String, #match] line A line from a game definition file.
@@ -144,11 +146,12 @@ module AcpcPokerTypes
     #     referred to by +definition_name+, +nil+ otherwise.
     def self.check_game_def_line_for_definition(line, definition_name)
       if line.match(/^\s*#{definition_name}\s*=\s*([\d\s]+)/i)
-        values = $1.chomp.split(/\s+/)
-        (0..values.length-1).each do |i|
-          values[i] = values[i].to_i
+        value = $1.chomp.split(/\s+/).map{ |elem| elem.to_i }
+        if ALL_PLAYER_ALL_ROUND_DEFS.include? definition_name
+          value.shift
+        else
+          value
         end
-        flatten_if_single_element_array values
       end
     end
 
