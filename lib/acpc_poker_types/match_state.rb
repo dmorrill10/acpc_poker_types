@@ -151,7 +151,6 @@ module AcpcPokerTypes
 
     # @param [Array<Array<AcpcPokerTypes::PokerAction>>] betting_sequence The betting sequence from which the last action should be retrieved.
     # @return [AcpcPokerTypes::PokerAction] The last action taken.
-    # @raise NoActionsHaveBeenTaken if no actions have been taken.
     def last_action(lcl_betting_sequence=betting_sequence)
       if lcl_betting_sequence.nil? || lcl_betting_sequence.empty?
         nil
@@ -212,6 +211,26 @@ module AcpcPokerTypes
           round
         end
       end
+    end
+
+    # @param [Array<Integer>] first_player_positions List of first player positions
+    #   relative to the dealer for each round.
+    # @return [Array<Array<Integer>>]
+    def player_acting_sequence(first_player_positions)
+      # sequence = []
+      # player_activity = number_of_players.times.map { true }
+      # betting_sequence.each_with_index do |actions_by_round, round|
+      #   actions_by_round.each_with_index do |action, action_num|
+      #     first_pos = first_player_positions[round]
+
+      #     # @todo thing-to-do
+      #     # acting_player = first_pos +
+
+      #     if action == PokerAction::FOLD
+      #       player_activity[acting_player] = false
+      #     end
+      #   end
+      # end
     end
 
     private
