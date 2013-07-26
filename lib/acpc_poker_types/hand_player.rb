@@ -38,15 +38,14 @@ class HandPlayer
   end
 
   def stack
-    @stack ||= @initial_stack - (@ante + contributions)
+    @initial_stack - (@ante + contributions)
   end
 
   def contributions
-    # @todo
-    0
+    @actions.flatten.inject(0) { |sum, action| sum += action.cost }
   end
 
-  def append_action!(action, round)
+  def append_action!(action, round = @actions.length - 1)
     raise Inactive if inactive?
 
     @actions[round] ||= []

@@ -49,7 +49,23 @@ describe HandPlayer do
         -> { patient.append_action!(PokerAction.new(PokerAction::CALL), x_actions.length - 1) }.must_raise HandPlayer::Inactive
       end
       it 'if it has gone all in' do
-        skip
+        x_actions = [
+          [
+            PokerAction.new('c'),
+            PokerAction.new('r200')
+          ],
+          [
+            PokerAction.new('r400'),
+            PokerAction.new('c', cost: INITIAL_CHIP_STACK - ANTE)
+          ]
+        ]
+        x_actions.each_with_index do |actions, round|
+          actions.each do |action|
+            patient.append_action!(action, round)
+          end
+        end
+
+        -> { patient.append_action!(PokerAction.new(PokerAction::CALL), x_actions.length - 1) }.must_raise HandPlayer::Inactive
       end
     end
     it 'works' do
@@ -73,6 +89,85 @@ describe HandPlayer do
       end
 
       patient.append_action!(PokerAction.new(PokerAction::FOLD), x_actions.length - 1).folded?.must_equal true
+    end
+  end
+  describe '#all_in?' do
+    it 'works' do
+      x_actions = [
+        [
+          PokerAction.new('c'),
+          PokerAction.new('r200')
+        ],
+        [
+          PokerAction.new('r400')
+        ]
+      ]
+      x_actions.each_with_index do |actions, round|
+        actions.each do |action|
+          patient.append_action!(action, round).all_in?.must_equal false
+        end
+      end
+
+      patient.append_action!(PokerAction.new('c', cost: INITIAL_CHIP_STACK)).all_in?.must_equal true
+    end
+  end
+  describe '#inactive?' do
+    it 'is true if it has gone all in' do
+      x_actions = [
+        [
+          PokerAction.new('c'),
+          PokerAction.new('r200')
+        ],
+        [
+          PokerAction.new('r400')
+        ]
+      ]
+      x_actions.each_with_index do |actions, round|
+        actions.each do |action|
+          patient.append_action!(action, round).inactive?.must_equal false
+        end
+      end
+
+      patient.append_action!(PokerAction.new('c', cost: INITIAL_CHIP_STACK - ANTE)).inactive?.must_equal true
+    end
+    it 'is true if it has folded' do
+      x_actions = [
+        [
+          PokerAction.new('c'),
+          PokerAction.new('r200')
+        ],
+        [
+          PokerAction.new('r400')
+        ]
+      ]
+      x_actions.each_with_index do |actions, round|
+        actions.each do |action|
+          patient.append_action!(action, round).inactive?.must_equal false
+        end
+      end
+
+      patient.append_action!(PokerAction.new(PokerAction::FOLD)).inactive?.must_equal true
+    end
+  end
+  describe '#contributions' do
+    it 'works' do
+      x_actions = [
+        [
+          PokerAction.new('c', cost: 100),
+          PokerAction.new('r200', cost: 100)
+        ],
+        [
+          PokerAction.new('r400', cost: 200),
+          PokerAction.new('c', cost: 0)
+        ]
+      ]
+      x_actions.each_with_index do |actions, round|
+        actions.each do |action|
+          patient.append_action!(action, round)
+        end
+      end
+
+      patient.contributions.must_equal x_actions.flatten.inject(0) { |sum, action| sum += action.cost }
     end
   end
 end
