@@ -38,10 +38,16 @@ class HandPlayer
   end
 
   def stack
-    @initial_stack - (@ante + contributions)
+    @initial_stack - (@ante + total_contribution)
   end
 
   def contributions
+    @actions.map do |actions_per_round|
+      actions_per_round.inject(0) { |sum, action| sum += action.cost }
+    end
+  end
+
+  def total_contribution
     @actions.flatten.inject(0) { |sum, action| sum += action.cost }
   end
 
@@ -50,6 +56,7 @@ class HandPlayer
   # @return [Array<PokerAction>] The list of legal actions for this player. If a wager is legal,
   # the largest possible wager will be returned in the list.
   def legal_actions(
+    round,
     amount_to_call: ChipStack.new(0),
     wager_illegal: false
   )
@@ -62,7 +69,7 @@ class HandPlayer
       l_actions << PokerAction.new(PokerAction::CHECK)
     end
     if !wager_illegal && stack > amount_to_call.to_r
-      l_actions << if contributions > 0 || amount_to_call.to_r > 0
+      l_actions << if contributions[round] > 0 || amount_to_call.to_r > 0
         PokerAction.new(PokerAction::RAISE, cost: stack - amount_to_call.to_r)
       else
         PokerAction.new(PokerAction::BET, cost: stack - amount_to_call.to_r)

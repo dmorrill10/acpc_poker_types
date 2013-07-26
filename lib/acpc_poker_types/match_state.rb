@@ -82,7 +82,7 @@ module AcpcPokerTypes
 
     # @return [String] The AcpcPokerTypes::MatchState in raw text form.
     def to_str
-      AcpcPokerTypes::MatchState.build_match_state_string(
+      @str ||= AcpcPokerTypes::MatchState.build_match_state_string(
         @position_relative_to_dealer,
         @hand_number,
         @betting_sequence_string,
@@ -113,11 +113,11 @@ module AcpcPokerTypes
     end
 
     # @return [Array<Array<AcpcPokerTypes::PokerAction>>] The sequence of betting actions.
-    def betting_sequence(string_betting_sequence=@betting_sequence_string)
-      @betting_sequence ||= if string_betting_sequence.empty?
+    def betting_sequence
+      @betting_sequence ||= if @betting_sequence_string.empty?
         [[]]
       else
-        lcl_betting_sequence = string_betting_sequence.split(/\//).map do |betting_string_per_round|
+        lcl_betting_sequence = @betting_sequence_string.split(/\//).map do |betting_string_per_round|
           list_of_actions_in_a_particular_round = list_of_actions_from_acpc_characters(
             betting_string_per_round
           ).map do |action|
@@ -126,7 +126,7 @@ module AcpcPokerTypes
         end
 
         # Adjust the number of rounds if the last action was the last action in the round
-        lcl_betting_sequence << [] if string_betting_sequence.match(/\/$/)
+        lcl_betting_sequence << [] if first_state_of_round?
         lcl_betting_sequence
       end
     end
@@ -147,36 +147,44 @@ module AcpcPokerTypes
 
     # @return [Integer] The zero indexed current round number.
     def round
-      @betting_sequence_string.count BETTING_SEQUENCE_SEPARATOR
+      @round ||= @betting_sequence_string.count BETTING_SEQUENCE_SEPARATOR
     end
 
     # @return [AcpcPokerTypes::Hand] The user's hand.
     # @example An ace of diamonds and a 4 of clubs is represented as
     #     'Ad4c'
     def hand
-      all_hands[@position_relative_to_dealer]
+      @hand ||= all_hands[@position_relative_to_dealer]
     end
 
     # @return [Array] The list of opponent hole card hands.
     # @example If there are two opponents, one with AhKs and the other with QdJc, then
     #     list_of_opponents_hole_cards == [AhKs:AcpcPokerTypes::Hand, QdJc:AcpcPokerTypes::Hand]
     def opponent_hands
-      hands = all_hands.dup
-      hands.delete_at @position_relative_to_dealer
-      hands
+      @opponent_hands ||= -> do
+        hands = all_hands.dup
+        hands.delete_at @position_relative_to_dealer
+        hands
+      end.call
     end
 
     # @return [Boolean] Reports whether or not it is the first state of the first round.
     def first_state_of_first_round?
-      @betting_sequence_string.empty?
+      @first_state_of_first_round ||= @betting_sequence_string.empty?
+    end
+
+    def first_state_of_round?
+      @first_state_of_round ||= @betting_sequence_string[-1] == BETTING_SEQUENCE_SEPARATOR
     end
 
     # @return [Integer] The number of players in this match.
-    def number_of_players() @hands_string.count(HAND_SEPARATOR) + 1 end
+    def number_of_players
+      @number_of_players ||= @hands_string.count(HAND_SEPARATOR) + 1
+    end
 
     # @return [AcpcPokerTypes::PokerAction] The last action taken.
     def last_action
-      if @betting_sequence_string.match(
+      @last_action ||= if @betting_sequence_string.match(
         /([^#{BETTING_SEQUENCE_SEPARATOR}])#{BETTING_SEQUENCE_SEPARATOR}*$/
       )
         PokerAction.new($1)
@@ -186,17 +194,19 @@ module AcpcPokerTypes
     end
 
     # @return [Integer] The number of actions in the current round.
-    def number_of_actions_this_round() betting_sequence[round].length end
+    def number_of_actions_this_round
+      @number_of_actions_this_round ||= betting_sequence[round].length
+    end
 
     # @return [Integer] The number of actions in the current hand.
     def number_of_actions_this_hand
-      betting_sequence.inject(0) do |sum, sequence_per_round|
+      @number_of_actions_this_hand ||= betting_sequence.inject(0) do |sum, sequence_per_round|
         sum += sequence_per_round.length
       end
     end
 
     def round_in_which_last_action_taken
-      if first_state_of_first_round?
+      @round_in_which_last_action_taken ||= if first_state_of_first_round?
         nil
       else
         if @betting_sequence_string[-1] == BETTING_SEQUENCE_SEPARATOR
@@ -207,9 +217,31 @@ module AcpcPokerTypes
       end
     end
 
+    # @param stacks [Array<#to_f>]
+    # @param antes [Array<#to_f>]
+    # @param first_player_positions [Array<Integer>] The positions relative
+    # to the dealer that are first to act in each round, indexed from zero.
     # @return [Array<HandPlayer>] The current state of the players in this hand.
-    def players
+    def players(stacks, antes, first_player_positions)
+      player_list = num_players.times.map do |i|
+        HandPlayer.new all_hands[i], stacks[i], antes[i]
+      end
 
+      @betting_sequence.each_with_index do |actions_per_round, round|
+        acting_player_position = first_player_positions[round]
+        actions_per_round.each do |action|
+          raise NoPlayerCouldHaveActed if player_list.all? { |player| player.inactive? }
+
+          # This must eventually exit because of the above assertion
+          while player_list[acting_player_position].inactive?
+            acting_player_position += 1
+            acting_player_position %= number_of_players
+          end
+
+          # @todo Ask the player what the action would cost it
+          # player_list[acting_player_position].append_action action
+        end
+      end
     end
 
     # def player_position_relative_to_self

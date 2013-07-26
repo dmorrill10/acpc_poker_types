@@ -167,46 +167,71 @@ describe HandPlayer do
         end
       end
 
-      patient.contributions.must_equal x_actions.flatten.inject(0) { |sum, action| sum += action.cost }
+      patient.contributions.must_equal(
+        x_actions.map do |actions|
+          actions.inject(0) { |sum, action| sum += action.cost }
+        end
+      )
+    end
+  end
+  describe '#total_contribution' do
+    it 'works' do
+      x_actions = [
+        [
+          PokerAction.new('c', cost: 100),
+          PokerAction.new('r200', cost: 100)
+        ],
+        [
+          PokerAction.new('r400', cost: 200),
+          PokerAction.new('c', cost: 0)
+        ]
+      ]
+      x_actions.each_with_index do |actions, round|
+        actions.each do |action|
+          patient.append_action!(action, round)
+        end
+      end
+
+      patient.total_contribution.must_equal x_actions.flatten.inject(0) { |sum, action| sum += action.cost }
     end
   end
 
   describe '#legal_actions' do
     it 'works with fold' do
-      patient.legal_actions(amount_to_call: 100).sort.must_equal [
+      patient.legal_actions(0, amount_to_call: 100).sort.must_equal [
         PokerAction.new(PokerAction::CALL),
         PokerAction.new(PokerAction::RAISE, cost: INITIAL_CHIP_STACK - (ANTE + 100)),
         PokerAction.new(PokerAction::FOLD)
       ].sort
       patient.append_action!(PokerAction.new('c', cost: 100))
-        .legal_actions(amount_to_call: 200).sort.must_equal [
+        .legal_actions(0, amount_to_call: 200).sort.must_equal [
           PokerAction.new(PokerAction::CALL),
           PokerAction.new(PokerAction::RAISE, cost: INITIAL_CHIP_STACK - (ANTE + 200)),
           PokerAction.new(PokerAction::FOLD)
         ].sort
       patient.append_action!(PokerAction.new('f'))
-        .legal_actions.empty?.must_equal true
+        .legal_actions(0).empty?.must_equal true
     end
     it 'works with all in' do
-      patient.legal_actions.sort.must_equal [
+      patient.legal_actions(0).sort.must_equal [
         PokerAction.new(PokerAction::CHECK),
         PokerAction.new(PokerAction::BET, cost: INITIAL_CHIP_STACK - ANTE),
       ].sort
       patient.append_action!(PokerAction.new('c', cost: 100))
-        .legal_actions.sort.must_equal [
+        .legal_actions(0).sort.must_equal [
           PokerAction.new(PokerAction::CHECK),
           PokerAction.new(PokerAction::BET, cost: INITIAL_CHIP_STACK - (ANTE + 100)),
         ].sort
       patient.append_action!(PokerAction.new('c', cost: INITIAL_CHIP_STACK - (ANTE + 100)))
-        .legal_actions.empty?.must_equal true
+        .legal_actions(0).empty?.must_equal true
     end
     it 'works when an opponent is all in' do
       patient.append_action!(PokerAction.new('c', cost: 100))
-        .legal_actions.sort.must_equal [
+        .legal_actions(0).sort.must_equal [
           PokerAction.new(PokerAction::CHECK),
           PokerAction.new(PokerAction::RAISE, cost: INITIAL_CHIP_STACK - (ANTE + 100))
         ].sort
-      patient.legal_actions(amount_to_call: INITIAL_CHIP_STACK - (ANTE + 100))
+      patient.legal_actions(0, amount_to_call: INITIAL_CHIP_STACK - (ANTE + 100))
         .sort.must_equal [
           PokerAction.new(PokerAction::CALL),
           PokerAction.new(PokerAction::FOLD)
@@ -214,10 +239,10 @@ describe HandPlayer do
     end
     it 'works when no more raises are allowed' do
       patient.append_action!(PokerAction.new('c', cost: 100))
-        .legal_actions(wager_illegal: true).sort.must_equal [
+        .legal_actions(0, wager_illegal: true).sort.must_equal [
           PokerAction.new(PokerAction::CHECK)
         ].sort
-      patient.legal_actions(amount_to_call: INITIAL_CHIP_STACK - (ANTE + 100))
+      patient.legal_actions(0, amount_to_call: INITIAL_CHIP_STACK - (ANTE + 100))
         .sort.must_equal [
           PokerAction.new(PokerAction::CALL),
           PokerAction.new(PokerAction::FOLD)
