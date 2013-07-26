@@ -129,92 +129,98 @@ describe AcpcPokerTypes::MatchState do
     end
   end
 
-  # it 'reports the correct number of players' do
-  #   expected_number_of_players = 0
-  #   10.times do |i|
-  #     expected_number_of_players += 1
-  #     hands = []
-  #     expected_number_of_players.times do |j|
-  #       if i.odd? and j.odd?
-  #         hands.push ''
-  #         next
-  #       end
-  #       hands.push arbitrary_hole_card_hand.to_acpc
-  #     end
-  #     match_state = AcpcPokerTypes::MatchState::LABEL + ':1:1::' + hands.join('|')
+  it 'reports the correct number of players' do
+    expected_number_of_players = 0
+    10.times do |i|
+      expected_number_of_players += 1
+      hands = []
+      expected_number_of_players.times do |j|
+        if i.odd? and j.odd?
+          hands.push ''
+          next
+        end
+        hands.push arbitrary_hole_card_hand.to_acpc
+      end
+      match_state = AcpcPokerTypes::MatchState::LABEL + ':1:1::' + hands.join('|')
 
-  #     patient = test_match_state_success match_state
-  #     patient.number_of_players.must_equal expected_number_of_players
-  #   end
-  # end
+      patient = test_match_state_success match_state
+      patient.number_of_players.must_equal expected_number_of_players
+    end
+  end
+
+  describe '#last_action, #round_in_which_last_action_taken, and #first_state_of_first_round' do
+    it 'returns +nil+ if no previous action exists, or true in the case of #first_state_of_first_round' do
+      initial_match_state = "#{AcpcPokerTypes::MatchState::LABEL}:1:1::#{arbitrary_hole_card_hand}"
+      patient = AcpcPokerTypes::MatchState.parse initial_match_state
+      patient.last_action.must_be_nil
+      patient.round_in_which_last_action_taken.must_be_nil
+      patient.first_state_of_first_round?.must_equal true
+    end
+    it 'works properly if a previous action exists' do
+      AcpcPokerTypes::PokerAction::CANONICAL_ACTIONS.each do |first_action|
+        AcpcPokerTypes::PokerAction::CANONICAL_ACTIONS.each do |second_action|
+          AcpcPokerTypes::PokerAction::CANONICAL_ACTIONS.each do |third_action|
+            partial_match_state = "#{AcpcPokerTypes::MatchState::LABEL}:1:1:"
+
+            partial_match_state += first_action
+            match_state = "#{partial_match_state}:#{arbitrary_hole_card_hand}"
+
+            patient = AcpcPokerTypes::MatchState.parse match_state
+            patient.last_action.must_equal AcpcPokerTypes::PokerAction.new(first_action)
+            patient.round_in_which_last_action_taken.must_equal 0
+            patient.first_state_of_first_round?.must_equal false
+
+            partial_match_state += "#{second_action}/"
+            match_state = "#{partial_match_state}:#{arbitrary_hole_card_hand}"
+
+            patient = AcpcPokerTypes::MatchState.parse match_state
+            patient.last_action.must_equal AcpcPokerTypes::PokerAction.new(second_action)
+            patient.round_in_which_last_action_taken.must_equal 0
+            patient.first_state_of_first_round?.must_equal false
+
+            partial_match_state += third_action
+            match_state = "#{partial_match_state}:#{arbitrary_hole_card_hand}"
+
+            patient = AcpcPokerTypes::MatchState.parse match_state
+            patient.last_action.must_equal AcpcPokerTypes::PokerAction.new(third_action)
+            patient.round_in_which_last_action_taken.must_equal 1
+            patient.first_state_of_first_round?.must_equal false
+          end
+        end
+      end
+    end
+  end
+  describe "#receive_matchstate_string" do
+    it 'receives matchstate strings properly' do
+      skip 'Fix PokerMatchData suite first'
+
+      @connection = mock 'Socket'
+      MatchLog.all.each do |log_description|
+        match = AcpcPokerTypes::AcpcDealerData::PokerMatchData.parse_files(
+          log_description.actions_file_path,
+          log_description.results_file_path,
+          log_description.player_names,
+          AcpcDealer::DEALER_DIRECTORY,
+          20
+        )
+        match.for_every_seat! do |seat|
+          match.for_every_hand! do
+            match.for_every_turn! do
+              @connection.expects(:gets).returns(match.current_hand.current_match_state.to_s)
+
+              AcpcPokerTypes::MatchState.receive(@connection).must_equal match.current_hand.current_match_state
+            end
+          end
+        end
+      end
+    end
+  end
+  describe '#players' do
+    it 'return proper player states' do
+      skip
+    end
+  end
 end
-
-#   describe '#last_action, #round_in_which_last_action_taken, and #first_state_of_first_round' do
-#     it 'returns +nil+ if no previous action exists, or true in the case of #first_state_of_first_round' do
-#       initial_match_state = "#{AcpcPokerTypes::MatchState::LABEL}:1:1::#{arbitrary_hole_card_hand}"
-#       patient = AcpcPokerTypes::MatchState.parse initial_match_state
-#       patient.last_action.must_be_nil
-#       patient.round_in_which_last_action_taken.must_be_nil
-#       patient.first_state_of_first_round?.must_equal true
-#     end
-#     it 'works properly if a previous action exists' do
-#       AcpcPokerTypes::PokerAction::CANONICAL_ACTIONS.each do |first_action|
-#         AcpcPokerTypes::PokerAction::CANONICAL_ACTIONS.each do |second_action|
-#           AcpcPokerTypes::PokerAction::CANONICAL_ACTIONS.each do |third_action|
-#             partial_match_state = "#{AcpcPokerTypes::MatchState::LABEL}:1:1:"
-
-#             partial_match_state += first_action
-#             match_state = "#{partial_match_state}:#{arbitrary_hole_card_hand}"
-
-#             patient = AcpcPokerTypes::MatchState.parse match_state
-#             patient.last_action.must_equal AcpcPokerTypes::PokerAction.new(first_action)
-#             patient.round_in_which_last_action_taken.must_equal 0
-#             patient.first_state_of_first_round?.must_equal false
-
-#             partial_match_state += "#{second_action}/"
-#             match_state = "#{partial_match_state}:#{arbitrary_hole_card_hand}"
-
-#             patient = AcpcPokerTypes::MatchState.parse match_state
-#             patient.last_action.must_equal AcpcPokerTypes::PokerAction.new(second_action)
-#             patient.round_in_which_last_action_taken.must_equal 0
-#             patient.first_state_of_first_round?.must_equal false
-
-#             partial_match_state += third_action
-#             match_state = "#{partial_match_state}:#{arbitrary_hole_card_hand}"
-
-#             patient = AcpcPokerTypes::MatchState.parse match_state
-#             patient.last_action.must_equal AcpcPokerTypes::PokerAction.new(third_action)
-#             patient.round_in_which_last_action_taken.must_equal 1
-#             patient.first_state_of_first_round?.must_equal false
-#           end
-#         end
-#       end
-#     end
-#   end
-# end
-# describe "#receive_matchstate_string" do
-#   it 'receives matchstate strings properly' do
-#     @connection = mock 'Socket'
-#     MatchLog.all.each do |log_description|
-#       match = AcpcPokerTypes::AcpcDealerData::PokerMatchData.parse_files(
-#         log_description.actions_file_path,
-#         log_description.results_file_path,
-#         log_description.player_names,
-#         AcpcDealer::DEALER_DIRECTORY,
-#         20
-#       )
-#       match.for_every_seat! do |seat|
-#         match.for_every_hand! do
-#           match.for_every_turn! do
-#             @connection.expects(:gets).returns(match.current_hand.current_match_state.to_s)
-
-#             AcpcPokerTypes::MatchState.receive(@connection).must_equal match.current_hand.current_match_state
-#           end
-#         end
-#       end
-#     end
-#   end
-# end
 
 def for_every_card
   AcpcPokerTypes::Rank::DOMAIN.map do |rank, rank_properties|

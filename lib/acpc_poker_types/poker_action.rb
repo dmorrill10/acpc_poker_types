@@ -93,6 +93,7 @@ module AcpcPokerTypes
     end
 
     alias_method :to_acpc, :to_s
+    alias_method :to_str, :to_s
 
     # @return [Boolean] +true+ if this action has a modifier, +false+ otherwise.
     def has_modifier?

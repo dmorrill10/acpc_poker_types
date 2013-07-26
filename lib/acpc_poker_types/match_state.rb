@@ -24,14 +24,18 @@ module AcpcPokerTypes
 
     # @todo Move this @return [Array<AcpcPokerTypes::Hand>] The list of visible hole card sets for each player.
 
-    attr_reader :hole_cards_string
+    attr_reader :hands_string
 
     # @todo Move this @return [AcpcPokerTypes::BoardCards] All visible community cards on the board.
 
-    attr_reader :board_cards_string
+    attr_reader :community_cards_string
 
     # @return [String] Label for match state strings.
     LABEL = 'MATCHSTATE'
+
+    COMMUNITY_CARD_SEPARATOR = '/'
+    BETTING_SEQUENCE_SEPARATOR = COMMUNITY_CARD_SEPARATOR
+    HAND_SEPARATOR = '|'
 
     class << self; alias_method(:parse, :new) end
 
@@ -66,12 +70,13 @@ module AcpcPokerTypes
     # @raise IncompleteMatchState
     def initialize(raw_match_state)
       if raw_match_state.match(
-        /#{LABEL}:(\d+):(\d+):([^:]*):([^\/]+)\/*([^\s:]*)/)
+/#{LABEL}:(\d+):(\d+):([^:]*):([^#{COMMUNITY_CARD_SEPARATOR}]+)#{COMMUNITY_CARD_SEPARATOR}*([^\s:]*)/
+      )
         @position_relative_to_dealer = $1.to_i
         @hand_number = $2.to_i
         @betting_sequence_string = $3
-        @hole_cards_string = $4
-        @board_cards_string = $5
+        @hands_string = $4
+        @community_cards_string = $5
       end
     end
 
@@ -81,8 +86,8 @@ module AcpcPokerTypes
         @position_relative_to_dealer,
         @hand_number,
         @betting_sequence_string,
-        @hole_cards_string,
-        @board_cards_string
+        @hands_string,
+        @community_cards_string
       )
     end
 
@@ -95,12 +100,12 @@ module AcpcPokerTypes
       another_match_state.to_s == to_s
     end
 
-    def all_hands(string_of_hole_cards=@hole_cards_string)
+    def all_hands
       @all_hands ||= -> do
-        lcl_hole_card_hands = all_string_hands(string_of_hole_cards).map do |string_hand|
+        lcl_hole_card_hands = all_string_hands(@hands_string).map do |string_hand|
           AcpcPokerTypes::Hand.from_acpc string_hand
         end
-        while lcl_hole_card_hands.length < (string_of_hole_cards.count('|') + 1)
+        while lcl_hole_card_hands.length < number_of_players
           lcl_hole_card_hands.push AcpcPokerTypes::Hand.new
         end
         lcl_hole_card_hands
@@ -126,21 +131,23 @@ module AcpcPokerTypes
       end
     end
 
-    def community_cards(string_board_cards=@board_cards_string)
+    def community_cards
       @community_cards ||= -> do
-        lcl_board_cards = AcpcPokerTypes::BoardCards.new(
-          all_sets_of_community_cards(string_board_cards).map do |cards_in_round|
+        lcl_community_cards = AcpcPokerTypes::BoardCards.new(
+          all_sets_of_community_cards(@community_cards_string).map do |cards_in_round|
             AcpcPokerTypes::Card.cards(cards_in_round)
           end
         )
-        lcl_board_cards.next_round! if lcl_board_cards.round < string_board_cards.count('/')
-        lcl_board_cards
+        if lcl_community_cards.round < @community_cards_string.count(COMMUNITY_CARD_SEPARATOR)
+          lcl_community_cards.next_round!
+        end
+        lcl_community_cards
       end.call
     end
 
     # @return [Integer] The zero indexed current round number.
     def round
-      @betting_sequence_string.count '/'
+      @betting_sequence_string.count BETTING_SEQUENCE_SEPARATOR
     end
 
     # @return [AcpcPokerTypes::Hand] The user's hand.
@@ -150,7 +157,7 @@ module AcpcPokerTypes
       all_hands[@position_relative_to_dealer]
     end
 
-    # @return [Array] The list of opponent hole cards that are visible.
+    # @return [Array] The list of opponent hole card hands.
     # @example If there are two opponents, one with AhKs and the other with QdJc, then
     #     list_of_opponents_hole_cards == [AhKs:AcpcPokerTypes::Hand, QdJc:AcpcPokerTypes::Hand]
     def opponent_hands
@@ -165,44 +172,48 @@ module AcpcPokerTypes
     end
 
     # @return [Integer] The number of players in this match.
-    # def number_of_players() all_hands.length end
+    def number_of_players() @hands_string.count(HAND_SEPARATOR) + 1 end
 
-    # # @param [Array<Array<AcpcPokerTypes::PokerAction>>] betting_sequence The betting sequence from which the last action should be retrieved.
-    # # @return [AcpcPokerTypes::PokerAction] The last action taken.
-    # def last_action(lcl_betting_sequence=betting_sequence)
-    #   if lcl_betting_sequence.nil? || lcl_betting_sequence.empty?
-    #     nil
-    #   elsif lcl_betting_sequence.last.last
-    #     lcl_betting_sequence.last.last
-    #   else
-    #     last_action(lcl_betting_sequence.reject{ |elem| elem.equal?(lcl_betting_sequence.last) })
-    #   end
-    # end
+    # @return [AcpcPokerTypes::PokerAction] The last action taken.
+    def last_action
+      if @betting_sequence_string.match(
+        /([^#{BETTING_SEQUENCE_SEPARATOR}])#{BETTING_SEQUENCE_SEPARATOR}*$/
+      )
+        PokerAction.new($1)
+      else
+        nil
+      end
+    end
 
     # @return [Integer] The number of actions in the current round.
-    # def number_of_actions_this_round() betting_sequence[round].length end
+    def number_of_actions_this_round() betting_sequence[round].length end
 
     # @return [Integer] The number of actions in the current hand.
-    # def number_of_actions_this_hand
-    #   betting_sequence.inject(0) do |sum, sequence_per_round|
-    #     sum += sequence_per_round.length
-    #   end
-    # end
+    def number_of_actions_this_hand
+      betting_sequence.inject(0) do |sum, sequence_per_round|
+        sum += sequence_per_round.length
+      end
+    end
+
+    def round_in_which_last_action_taken
+      if first_state_of_first_round?
+        nil
+      else
+        if @betting_sequence_string[-1] == BETTING_SEQUENCE_SEPARATOR
+          round - 1
+        else
+          round
+        end
+      end
+    end
+
+    # @return [Array<HandPlayer>] The current state of the players in this hand.
+    def players
+
+    end
 
     # def player_position_relative_to_self
     #   number_of_players - 1
-    # end
-
-    # def round_in_which_last_action_taken
-    #   unless number_of_actions_this_hand > 0
-    #     nil
-    #   else
-    #     if number_of_actions_this_round < 1
-    #       round - 1
-    #     else
-    #       round
-    #     end
-    #   end
     # end
 
     # def player_folded?(
@@ -234,19 +245,19 @@ module AcpcPokerTypes
     private
 
     def all_string_hands(string_of_card_sets)
-      all_sets_of_cards(string_of_card_sets, '\|')
+      all_sets_of_cards(string_of_card_sets, HAND_SEPARATOR)
     end
 
     def all_sets_of_community_cards(string_of_card_sets)
-      all_sets_of_cards(string_of_card_sets, '\/')
+      all_sets_of_cards(string_of_card_sets, COMMUNITY_CARD_SEPARATOR)
     end
 
     def all_sets_of_cards(string_of_card_sets, divider)
-      string_of_card_sets.split(/#{divider}/)
+      string_of_card_sets.split(divider)
     end
 
-    # def list_of_actions_from_acpc_characters(lcl_betting_sequence=betting_sequence)
-    #   lcl_betting_sequence.scan(/[#{AcpcPokerTypes::PokerAction::CONCATONATED_ACTIONS}]\d*/)
-    # end
+    def list_of_actions_from_acpc_characters(lcl_betting_sequence=betting_sequence)
+      lcl_betting_sequence.scan(/[^#{BETTING_SEQUENCE_SEPARATOR}]\d*/)
+    end
   end
 end
