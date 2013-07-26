@@ -13,7 +13,7 @@ require 'acpc_poker_types/match_state'
 include AcpcPokerTypes
 
 describe HandPlayer do
-  INITIAL_CHIP_STACK = 100000
+  INITIAL_CHIP_STACK = ChipStack.new 100000
   ANTE = 100
   HAND = Hand.from_acpc('AhKs')
 
@@ -168,6 +168,60 @@ describe HandPlayer do
       end
 
       patient.contributions.must_equal x_actions.flatten.inject(0) { |sum, action| sum += action.cost }
+    end
+  end
+
+  describe '#legal_actions' do
+    it 'works with fold' do
+      patient.legal_actions(100).all? do |action|
+        [
+          PokerAction.new(PokerAction::CALL),
+          PokerAction.new(PokerAction::RAISE, cost: INITIAL_CHIP_STACK - (ANTE + 100)),
+          PokerAction.new(PokerAction::FOLD)
+        ].include? action
+      end.must_equal true
+      patient.append_action!(PokerAction.new('c', cost: 100))
+        .legal_actions(200).all? do |action|
+          [
+            PokerAction.new(PokerAction::CALL),
+            PokerAction.new(PokerAction::RAISE, cost: INITIAL_CHIP_STACK - (ANTE + 200)),
+            PokerAction.new(PokerAction::FOLD)
+          ].include? action
+        end.must_equal true
+      patient.append_action!(PokerAction.new('f'))
+        .legal_actions.empty?.must_equal true
+    end
+    it 'works with all in' do
+      patient.legal_actions.all? do |action|
+        [
+          PokerAction.new(PokerAction::CHECK),
+          PokerAction.new(PokerAction::BET, cost: INITIAL_CHIP_STACK - ANTE),
+        ].include? action
+      end.must_equal true
+      patient.append_action!(PokerAction.new('c', cost: 100))
+        .legal_actions.all? do |action|
+          [
+            PokerAction.new(PokerAction::CHECK),
+            PokerAction.new(PokerAction::BET, cost: INITIAL_CHIP_STACK - (ANTE + 100)),
+          ].include? action
+        end.must_equal true
+      patient.append_action!(PokerAction.new('c', cost: INITIAL_CHIP_STACK - (ANTE + 100)))
+        .legal_actions.empty?.must_equal true
+    end
+    it 'works when an opponent is all in' do
+      patient.append_action!(PokerAction.new('c', cost: 100))
+        .legal_actions.all? do |action|
+          [
+            PokerAction.new(PokerAction::CHECK),
+            PokerAction.new(PokerAction::RAISE, cost: INITIAL_CHIP_STACK - (ANTE + 100))
+          ].include? action
+        end.must_equal true
+      patient.legal_actions(INITIAL_CHIP_STACK - (ANTE + 100)).all? do |action|
+        [
+          PokerAction.new(PokerAction::CALL),
+          PokerAction.new(PokerAction::FOLD)
+        ].include? action
+      end.must_equal true
     end
   end
 end

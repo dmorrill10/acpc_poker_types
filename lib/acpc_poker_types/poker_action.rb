@@ -64,12 +64,12 @@ module AcpcPokerTypes
     attr_reader :pot_gained_chips
 
     # @param [Symbol, String] action A representation of this action.
-    # @param [Hash] context The context in which this action is being made. Recognized keys include +:modifier+,
-    #  +:pot_gained_chips+, and +:cost+.
+    # @param modifier [String] A modifier to attach to this action such as a wager size.
+    # @param cost [#to_f] The amount this action costs to the acting player.
     # @raise IllegalAction
-    def initialize(action, modifier: nil, cost: AcpcPokerTypes::ChipStack.new(0))
+    def initialize(action, modifier: nil, cost: 0)
       validate_action!(action, modifier.strip)
-      @cost = cost
+      @cost = cost.to_f
     end
 
     def ==(other_action)

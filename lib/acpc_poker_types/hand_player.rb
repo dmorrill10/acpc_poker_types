@@ -34,7 +34,7 @@ class HandPlayer
     @hand = hand
     @initial_stack = ChipStack.new initial_stack
     @ante = ChipStack.new ante
-    @actions = []
+    @actions = [[]]
   end
 
   def stack
@@ -43,6 +43,29 @@ class HandPlayer
 
   def contributions
     @actions.flatten.inject(0) { |sum, action| sum += action.cost }
+  end
+
+  # @param amount_to_call [#to_r] The amount to call for this player
+  # @return [Array<PokerAction>] The list of legal actions for this player. If a wager is legal,
+  # the largest possible wager will be returned in the list.
+  def legal_actions(amount_to_call = ChipStack.new(0))
+    l_actions = []
+    return l_actions if inactive?
+
+    if amount_to_call.to_r > 0
+      l_actions << PokerAction.new(PokerAction::CALL) << PokerAction.new(PokerAction::FOLD)
+    else
+      l_actions << PokerAction.new(PokerAction::CHECK)
+    end
+    if stack > amount_to_call.to_r
+      l_actions << if contributions > 0 || amount_to_call.to_r > 0
+        PokerAction.new(PokerAction::RAISE, cost: stack - amount_to_call.to_r)
+      else
+        PokerAction.new(PokerAction::BET, cost: stack - amount_to_call.to_r)
+      end
+    end
+
+    l_actions
   end
 
   def append_action!(action, round = @actions.length - 1)
