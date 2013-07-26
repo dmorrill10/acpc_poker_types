@@ -62,14 +62,6 @@ module AcpcPokerTypes
       string
     end
 
-    # Checks if the given line is a comment beginning with '#' or ';', or empty.
-    #
-    # @param [String] line
-    # @return [Boolean] True if +line+ is a comment or empty, false otherwise.
-    def self.line_is_comment_or_empty?(line)
-      line.nil? || line.match(/^\s*[#;]/) || line.empty?
-    end
-
     # @param [String] raw_match_state A raw match state string to be parsed.
     # @raise IncompleteMatchState
     def initialize(raw_match_state)
@@ -103,9 +95,9 @@ module AcpcPokerTypes
       another_match_state.to_s == to_s
     end
 
-    def hole_card_hands(string_of_hole_cards=@hole_cards_string)
-      @hole_card_hands ||= -> do
-        lcl_hole_card_hands = every_set_of_cards(string_of_hole_cards, '\|').map do |string_hand|
+    def all_hands(string_of_hole_cards=@hole_cards_string)
+      @all_hands ||= -> do
+        lcl_hole_card_hands = all_string_hands(string_of_hole_cards).map do |string_hand|
           AcpcPokerTypes::Hand.from_acpc string_hand
         end
         while lcl_hole_card_hands.length < (string_of_hole_cards.count('|') + 1)
@@ -134,10 +126,10 @@ module AcpcPokerTypes
       end
     end
 
-    def board_cards(string_board_cards=@board_cards_string)
-      @board_cards ||= -> do
+    def community_cards(string_board_cards=@board_cards_string)
+      @community_cards ||= -> do
         lcl_board_cards = AcpcPokerTypes::BoardCards.new(
-          every_set_of_cards(string_board_cards, '\/').map do |cards_in_round|
+          all_sets_of_community_cards(string_board_cards).map do |cards_in_round|
             AcpcPokerTypes::Card.cards(cards_in_round)
           end
         )
@@ -146,77 +138,83 @@ module AcpcPokerTypes
       end.call
     end
 
-    # @return [Integer] The number of players in this match.
-    def number_of_players() hole_card_hands.length end
-
-    # @param [Array<Array<AcpcPokerTypes::PokerAction>>] betting_sequence The betting sequence from which the last action should be retrieved.
-    # @return [AcpcPokerTypes::PokerAction] The last action taken.
-    def last_action(lcl_betting_sequence=betting_sequence)
-      if lcl_betting_sequence.nil? || lcl_betting_sequence.empty?
-        nil
-      elsif lcl_betting_sequence.last.last
-        lcl_betting_sequence.last.last
-      else
-        last_action(lcl_betting_sequence.reject{ |elem| elem.equal?(lcl_betting_sequence.last) })
-      end
+    # @return [Integer] The zero indexed current round number.
+    def round
+      @betting_sequence_string.count '/'
     end
 
-    # @return [AcpcPokerTypes::Hand] The user's hole cards.
+    # @return [AcpcPokerTypes::Hand] The user's hand.
     # @example An ace of diamonds and a 4 of clubs is represented as
     #     'Ad4c'
-    def users_hole_cards
-      hole_card_hands[@position_relative_to_dealer]
+    def hand
+      all_hands[@position_relative_to_dealer]
     end
 
     # @return [Array] The list of opponent hole cards that are visible.
     # @example If there are two opponents, one with AhKs and the other with QdJc, then
     #     list_of_opponents_hole_cards == [AhKs:AcpcPokerTypes::Hand, QdJc:AcpcPokerTypes::Hand]
-    def list_of_opponents_hole_cards
-      local_hole_card_hands = hole_card_hands.dup
-      local_hole_card_hands.delete_at @position_relative_to_dealer
-      local_hole_card_hands
-    end
-
-    # @return [Integer] The zero indexed current round number.
-    def round
-      betting_sequence.length - 1
-    end
-
-    # @return [Integer] The number of actions in the current round.
-    def number_of_actions_this_round() betting_sequence[round].length end
-
-    # @return [Integer] The number of actions in the current hand.
-    def number_of_actions_this_hand
-      betting_sequence.inject(0) do |sum, sequence_per_round|
-        sum += sequence_per_round.length
-      end
+    def opponent_hands
+      hands = all_hands.dup
+      hands.delete_at @position_relative_to_dealer
+      hands
     end
 
     # @return [Boolean] Reports whether or not it is the first state of the first round.
     def first_state_of_first_round?
-      (0 == number_of_actions_this_hand)
+      @betting_sequence_string.empty?
     end
 
-    def player_position_relative_to_self
-      number_of_players - 1
-    end
+    # @return [Integer] The number of players in this match.
+    # def number_of_players() all_hands.length end
 
-    def round_in_which_last_action_taken
-      unless number_of_actions_this_hand > 0
-        nil
-      else
-        if number_of_actions_this_round < 1
-          round - 1
-        else
-          round
-        end
-      end
-    end
+    # # @param [Array<Array<AcpcPokerTypes::PokerAction>>] betting_sequence The betting sequence from which the last action should be retrieved.
+    # # @return [AcpcPokerTypes::PokerAction] The last action taken.
+    # def last_action(lcl_betting_sequence=betting_sequence)
+    #   if lcl_betting_sequence.nil? || lcl_betting_sequence.empty?
+    #     nil
+    #   elsif lcl_betting_sequence.last.last
+    #     lcl_betting_sequence.last.last
+    #   else
+    #     last_action(lcl_betting_sequence.reject{ |elem| elem.equal?(lcl_betting_sequence.last) })
+    #   end
+    # end
+
+    # @return [Integer] The number of actions in the current round.
+    # def number_of_actions_this_round() betting_sequence[round].length end
+
+    # @return [Integer] The number of actions in the current hand.
+    # def number_of_actions_this_hand
+    #   betting_sequence.inject(0) do |sum, sequence_per_round|
+    #     sum += sequence_per_round.length
+    #   end
+    # end
+
+    # def player_position_relative_to_self
+    #   number_of_players - 1
+    # end
+
+    # def round_in_which_last_action_taken
+    #   unless number_of_actions_this_hand > 0
+    #     nil
+    #   else
+    #     if number_of_actions_this_round < 1
+    #       round - 1
+    #     else
+    #       round
+    #     end
+    #   end
+    # end
+
+    # def player_folded?(
+    #   position_relative_to_dealer,
+    #   first_player_positions
+    # )
+    # end
 
     # @param [Array<Integer>] first_player_positions List of first player positions
     #   relative to the dealer for each round.
     # @return [Array<Array<Integer>>]
-    def player_acting_sequence(first_player_positions)
+    # def player_acting_sequence(first_player_positions)
       # sequence = []
       # player_activity = number_of_players.times.map { true }
       # betting_sequence.each_with_index do |actions_by_round, round|
@@ -231,16 +229,24 @@ module AcpcPokerTypes
       #     end
       #   end
       # end
-    end
+    # end
 
     private
 
-    def list_of_actions_from_acpc_characters(lcl_betting_sequence=betting_sequence)
-      lcl_betting_sequence.scan(/[#{AcpcPokerTypes::PokerAction::CONCATONATED_ACTIONS}]\d*/)
+    def all_string_hands(string_of_card_sets)
+      all_sets_of_cards(string_of_card_sets, '\|')
     end
 
-    def every_set_of_cards(string_of_card_sets, divider)
+    def all_sets_of_community_cards(string_of_card_sets)
+      all_sets_of_cards(string_of_card_sets, '\/')
+    end
+
+    def all_sets_of_cards(string_of_card_sets, divider)
       string_of_card_sets.split(/#{divider}/)
     end
+
+    # def list_of_actions_from_acpc_characters(lcl_betting_sequence=betting_sequence)
+    #   lcl_betting_sequence.scan(/[#{AcpcPokerTypes::PokerAction::CONCATONATED_ACTIONS}]\d*/)
+    # end
   end
 end
