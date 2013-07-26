@@ -46,9 +46,13 @@ class HandPlayer
   end
 
   # @param amount_to_call [#to_r] The amount to call for this player
+  # @param wager_illegal [Boolean]
   # @return [Array<PokerAction>] The list of legal actions for this player. If a wager is legal,
   # the largest possible wager will be returned in the list.
-  def legal_actions(amount_to_call = ChipStack.new(0))
+  def legal_actions(
+    amount_to_call: ChipStack.new(0),
+    wager_illegal: false
+  )
     l_actions = []
     return l_actions if inactive?
 
@@ -57,7 +61,7 @@ class HandPlayer
     else
       l_actions << PokerAction.new(PokerAction::CHECK)
     end
-    if stack > amount_to_call.to_r
+    if !wager_illegal && stack > amount_to_call.to_r
       l_actions << if contributions > 0 || amount_to_call.to_r > 0
         PokerAction.new(PokerAction::RAISE, cost: stack - amount_to_call.to_r)
       else

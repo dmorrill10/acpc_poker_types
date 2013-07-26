@@ -73,7 +73,11 @@ module AcpcPokerTypes
     end
 
     def ==(other_action)
-      to_s == other_action.to_s
+      0 == (self <=> other_action)
+    end
+
+    def <=>(other_action)
+      to_s <=> other_action.to_s
     end
 
     # @return [String] String representation of this action.
