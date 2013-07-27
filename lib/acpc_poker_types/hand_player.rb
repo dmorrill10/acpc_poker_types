@@ -38,17 +38,17 @@ class HandPlayer
   end
 
   def stack
-    @initial_stack - (@ante + total_contribution)
+    @initial_stack - total_contribution
   end
 
   def contributions
     @actions.map do |actions_per_round|
       actions_per_round.inject(0) { |sum, action| sum += action.cost }
-    end
+    end.unshift @ante
   end
 
   def total_contribution
-    @actions.flatten.inject(0) { |sum, action| sum += action.cost }
+    @ante + @actions.flatten.inject(0) { |sum, action| sum += action.cost }
   end
 
   # @param amount_to_call [#to_r] The amount to call for this player

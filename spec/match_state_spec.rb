@@ -10,6 +10,20 @@ require_relative "../lib/acpc_poker_types/hand"
 require_relative "../lib/acpc_poker_types/card"
 # require_relative "../lib/acpc_poker_types/acpc_dealer_data/poker_match_data"
 
+module MapWithIndex
+  refine Array do
+    def map_with_index
+      i = 0
+      map do |elem|
+        result = yield elem, i
+        i += 1
+        result
+      end
+    end
+  end
+end
+using MapWithIndex
+
 include AcpcPokerTypes
 
 describe MatchState do
@@ -20,7 +34,7 @@ describe MatchState do
       PokerAction::CANONICAL_ACTIONS.each do |action|
         match_state = partial_match_state + action + ":" + hole_cards.to_acpc
         patient = test_match_state_success match_state
-        # patient.last_action.to_s.must_equal action
+        patient.last_action.to_s.must_equal action
       end
     end
     it "parses every possible hole card hand" do
@@ -217,6 +231,32 @@ describe MatchState do
       end
     end
   end
+  describe '#betting_sequence' do
+    it 'works' do
+      MatchState.parse(
+        "#{MatchState::LABEL}:0:0:crcc/ccc/rrfc:AhKs|"
+      ).betting_sequence.must_equal [
+        [
+          PokerAction.new(PokerAction::CALL),
+          PokerAction.new(PokerAction::RAISE),
+          PokerAction.new(PokerAction::CALL),
+          PokerAction.new(PokerAction::CALL)
+        ],
+        [
+          PokerAction.new(PokerAction::CALL),
+          PokerAction.new(PokerAction::CALL),
+          PokerAction.new(PokerAction::CALL)
+        ],
+        [
+          PokerAction.new(PokerAction::RAISE),
+          PokerAction.new(PokerAction::RAISE),
+          PokerAction.new(PokerAction::FOLD),
+          PokerAction.new(PokerAction::CALL)
+        ]
+      ]
+    end
+  end
+
   describe '#players' do
     it 'return proper player states' do
       first_player_positions = [2, 1, 1]
@@ -260,20 +300,26 @@ describe MatchState do
           ]
         ]
       ]
-      x_contributions = x_actions.map do |actions_per_player|
+      x_contributions = x_actions.map_with_index do |actions_per_player, i|
         actions_per_player.map do |actions_per_round|
           actions_per_round.inject(0) { |sum, action| sum += action.cost }
-        end
+        end.unshift(antes[i])
       end
       num_players = 3
       (0..num_players-1).each do |position|
         hands = num_players.times.map { Hand.new }
+
         hands[position] = arbitrary_hole_card_hand
+
+        hand_string = hands.inject('') do |hand_string, hand|
+          hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
+        end[0..-2]
+
         match_state =
-"#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc:#{hands.join(MatchState::HAND_SEPARATOR)}"
+"#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc:#{hand_string}"
 
         patient = MatchState.new(match_state)
-          .players(stacks, antes, first_player_positions)
+          .players(stacks, antes, first_player_positions, [wager_size]*3)
 
         patient.each_with_index do |player, pos|
           player.initial_stack.must_equal stacks[pos]

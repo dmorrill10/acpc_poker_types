@@ -136,7 +136,9 @@ module AcpcPokerTypes
     end
 
     def validate_modifier
-      raise(IllegalModification, "Illegal modifier: #{@modifier}") unless @modifier.blank? || AcpcPokerTypes::PokerAction::MODIFIABLE_ACTIONS.include?(@action)
+      unless @modifier.blank? || MODIFIABLE_ACTIONS.include?(@action)
+        raise(IllegalModification, "Illegal modifier: #{@modifier}")
+      end
     end
   end
 end

@@ -170,7 +170,7 @@ describe HandPlayer do
       patient.contributions.must_equal(
         x_actions.map do |actions|
           actions.inject(0) { |sum, action| sum += action.cost }
-        end
+        end.unshift(ANTE)
       )
     end
   end
@@ -192,7 +192,9 @@ describe HandPlayer do
         end
       end
 
-      patient.total_contribution.must_equal x_actions.flatten.inject(0) { |sum, action| sum += action.cost }
+      patient.total_contribution.must_equal(
+        ANTE + x_actions.flatten.inject(0) { |sum, action| sum += action.cost }
+      )
     end
   end
 
