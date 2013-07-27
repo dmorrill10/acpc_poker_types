@@ -79,6 +79,14 @@ class HandPlayer
     l_actions
   end
 
+  # @param round [Integer] The round in which the largest wager by size is desired.
+  # defaults to +nil+.
+  # @return [ChipStack] The largest wager by size this player has made.
+  # Checks only in the specified +round+ or over the entire hand if round is +nil+.
+  def largest_wager_by(round=nil)
+    # @todo
+  end
+
   def append_action!(action, round = @actions.length - 1)
     raise Inactive if inactive?
 

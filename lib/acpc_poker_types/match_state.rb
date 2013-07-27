@@ -221,8 +221,9 @@ module AcpcPokerTypes
     # @param antes [Array<#to_f>]
     # @param first_player_positions [Array<Integer>] The positions relative
     # to the dealer that are first to act in each round, indexed from zero.
+    # @param min_wagers [Array<#to_f>] The smallest wagers allowed in each round.
     # @return [Array<HandPlayer>] The current state of the players in this hand.
-    def players(stacks, antes, first_player_positions)
+    def players(stacks, antes, first_player_positions, min_wagers)
       player_list = num_players.times.map do |i|
         HandPlayer.new all_hands[i], stacks[i], antes[i]
       end
@@ -238,7 +239,12 @@ module AcpcPokerTypes
             acting_player_position %= number_of_players
           end
 
-          # @todo Ask the player what the action would cost it
+          cost = action_cost(player_list, action, min_wagers)
+          if cost > 0
+            # @todo thing to do
+          else
+            player_list[acting_player_position].append_action action
+          end
           # player_list[acting_player_position].append_action action
         end
       end
