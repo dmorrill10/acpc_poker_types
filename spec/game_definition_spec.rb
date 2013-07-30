@@ -1,15 +1,34 @@
-
 # Spec helper (must include first to track code coverage with SimpleCov)
 require_relative 'support/spec_helper'
 
 require 'acpc_dealer'
-
 require 'acpc_poker_types/game_definition'
-
 require 'acpc_poker_types/chip_stack'
 
-describe AcpcPokerTypes::GameDefinition do
+include AcpcPokerTypes
+
+describe GameDefinition do
   include AcpcDealer
+
+  describe '::new' do
+    it 'creates a new game definition from a hash' do
+      x_hash = {
+        betting_type: 'limit', 
+        chip_stacks: [10] * 3,
+        number_of_players: 3,
+        blinds: [2] * 3,
+        raise_sizes: [2] * 3,
+        number_of_rounds: 4,
+        first_player_positions: [1] * 4,
+        max_number_of_wagers: [3] * 4,
+        number_of_suits: 4,
+        number_of_ranks: 13,
+        number_of_hole_cards: 2,
+        number_of_board_cards: [2] * 4
+      }
+      GameDefinition.new(x_hash).to_h.must_equal(x_hash)
+    end
+  end
 
   describe '::default_first_player_positions' do
     it 'works' do
