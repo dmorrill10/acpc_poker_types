@@ -4,117 +4,12 @@ require 'acpc_poker_types/rank'
 require 'acpc_poker_types/suit'
 require 'acpc_poker_types/poker_action'
 require 'acpc_poker_types/hand_player'
+require 'acpc_poker_types/player_group'
 
 # Model to parse and manage information from a given match state string.
 module AcpcPokerTypes
 
-module PlayerGroupGenerator
-  def player_group(
-    stacks,
-    antes,
-    first_player_positions,
-    min_wagers,
-    betting_sequence
-  )
-    player_list = stacks.length.times.map do |i|
-      HandPlayer.new all_hands[i], stacks[i], antes[i]
-    end
-
-    every_action(
-      betting_sequence,
-      player_list,
-      first_player_positions
-    ) do |action, round, acting_player_position|
-
-      cost = action_cost(
-        player_list,
-        acting_player_position,
-        action,
-        min_wagers[round]
-      )
-
-      player_list[acting_player_position].append_action!(
-        if cost > 0
-          PokerAction.new(action.to_s, cost: cost)
-        else
-          action
-        end,
-        round
-      )
-    end
-
-    player_list
-  end
-
-  def every_action(betting_sequence, player_list, first_player_positions)
-    betting_sequence.each_with_index do |actions_per_round, round|
-      acting_player_position = first_player_positions[round]
-
-      actions_per_round.each do |action|
-        acting_player_position = position_of_first_active_player(
-          player_list,
-          acting_player_position
-        )
-
-        yield action, round, acting_player_position
-
-        acting_player_position = next_player_position(
-          player_list.length,
-          acting_player_position
-        )
-      end
-    end
-  end
-
-  def next_player_position(num_players, acting_player_position=-1)
-    (acting_player_position + 1) % num_players
-  end
-
-  def position_of_first_active_player(player_list, acting_player_position=0)
-    raise NoPlayerCouldHaveActed if player_list.all? { |player| player.inactive? }
-
-    # This must eventually exit because of the above assertion
-    while player_list[acting_player_position].inactive?
-      acting_player_position = next_player_position(
-        player_list.length,
-        acting_player_position
-      )
-    end
-    acting_player_position
-  end
-
-  def action_cost(player_list, acting_player_position, action, min_wager)
-    case action.to_s[0]
-    when PokerAction::CALL
-      amount_to_call player_list, acting_player_position
-    when PokerAction::RAISE
-      if action.modifier
-        action.modifier.to_i - player_list[acting_player_position].total_contribution
-      else
-        min_wager + amount_to_call(player_list, acting_player_position)
-      end
-    else
-      0
-    end
-  end
-
-  def amount_to_call(player_list, acting_player_position)
-    ChipStack.new(
-      [
-        (
-          player_list.map do |player|
-            player.total_contribution
-          end
-        ).max - player_list[acting_player_position].total_contribution,
-        player_list[acting_player_position].stack
-      ].min
-    )
-  end
-end
-
 class MatchState
-  include PlayerGroupGenerator
-
   # @return [Integer] The position relative to the dealer of the player that
   #     received the match state string, indexed from 0, modulo the
   #     number of players.
@@ -326,19 +221,66 @@ class MatchState
   end
 
   # @param stacks [Array<#to_f>]
-  # @param antes [Array<#to_f>]
-  # @param first_player_positions [Array<Integer>] The positions relative
-  # to the dealer that are first to act in each round, indexed from zero.
-  # @param min_wagers [Array<#to_f>] The smallest wagers allowed in each round.
-  # @return [Array<HandPlayer>] The current state of the players in this hand.
-  def players(stacks, antes, first_player_positions, min_wagers)
-    player_group(
-      stacks,
-      antes,
-      first_player_positions,
-      min_wagers,
-      betting_sequence
-    )
+  # @param blinds [Array<#to_f>]
+  # @return [PlayerGroup] The state of the players in this hand at the
+  # when the hand began.
+  def players_at_hand_start(stacks, blinds)
+    PlayerGroup.new all_hands, stacks, blinds
+  end
+
+  # @param game_def [GameDefinition]
+  # @return [PlayerGroup] The current state of the players.
+  def every_action(game_def)
+    player_list = players_at_hand_start game_def.chip_stacks, game_def.blinds
+
+    # @todo Refactor and fix this
+    last_round = -1
+    acting_player_position = nil
+    every_action_token do |action, round|
+      if round != last_round
+        acting_player_position = game_def.first_player_positions[round]
+        last_round = round
+      end
+
+      acting_player_position = player_list.position_of_first_active_player(
+        acting_player_position
+      )
+
+      cost = player_list.action_cost(
+        acting_player_position,
+        action,
+        game_def.min_wagers[round]
+      )
+
+      player_list[acting_player_position].append_action!(
+        if cost > 0
+          action = PokerAction.new(action.to_s, cost: cost)
+        else
+          action
+        end,
+        round
+      )
+
+      yield action, round, acting_player_position, player_list if block_given?
+
+      acting_player_position = player_list.next_player_position(
+        acting_player_position
+      )
+    end
+
+    @players ||= player_list
+  end
+
+  def players(game_def=nil)
+    @players ||= every_action(game_def)
+  end
+
+  def every_action_token
+    betting_sequence.each_with_index do |actions_per_round, round|
+      actions_per_round.each do |action|
+        yield action, round if block_given?
+      end
+    end
   end
 
   # def player_position_relative_to_self

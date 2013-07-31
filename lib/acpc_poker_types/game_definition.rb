@@ -258,7 +258,7 @@ module AcpcPokerTypes
     end
 
     def assign_definitions!(definitions)
-      definitions.each do |key, value| 
+      definitions.each do |key, value|
         instance_variable_set("@#{key}", value)
       end
     end
@@ -320,7 +320,7 @@ module AcpcPokerTypes
         unless Seat.in_bounds?(@first_player_positions[i], @number_of_players)
           raise(
             ParseError,
-            "Invalid first player #{@first_player_positions[i]} on round #{i+1}"
+            "Invalid first player #{@first_player_positions[i]} on round #{i+1} for #{@number_of_players} players"
           )
         end
       end
@@ -345,6 +345,11 @@ module AcpcPokerTypes
     end
 
     def adjust_definitions_if_necessary!
+      if @number_of_players < @chip_stacks.length
+        @number_of_players = @chip_stacks.length
+      elsif @number_of_players < @blinds.length
+        @number_of_players = @blinds.length
+      end
       @number_of_players.times do |i|
         @blinds << 0 unless @blinds.length > i
         @chip_stacks << DEFAULT_CHIP_STACK unless @chip_stacks.length > i
