@@ -7,7 +7,7 @@ require 'acpc_poker_types/hand_player'
 module AcpcPokerTypes
 
 class PlayerGroup < DelegateClass(Array)
-  attr_reader :game_def, :match_state, :players
+  attr_reader :players
 
   def initialize(all_hands, stacks, blinds)
     @players = all_hands.length.times.map do |i|
