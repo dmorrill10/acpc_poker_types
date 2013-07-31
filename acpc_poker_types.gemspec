@@ -9,6 +9,7 @@ Gem::Specification.new do |s|
   s.homepage    = "https://github.com/dmorrill10/acpc_poker_types"
   s.summary     = %q{ACPC Poker Types}
   s.description = %q{Poker classes and constants that conform to the standards of the Annual Computer Poker Competition.}
+  s.license     = 'MIT'
 
   s.add_dependency 'process_runner', '~> 0.0'
   s.add_dependency 'acpc_dealer', '~> 2.0'
