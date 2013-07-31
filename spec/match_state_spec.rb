@@ -443,17 +443,21 @@ describe MatchState do
           actions_per_round.inject(0) { |sum, action| sum += action.cost }
         end.unshift(x_game_def.blinds[i])
       end
+      x_winnings = [0, 0, x_contributions.flatten.inject(:+)]
+      x_stacks = x_game_def.chip_stacks.map_with_index do |chip_stack, i|
+        chip_stack - x_contributions[i].inject(:+) + x_winnings[i]
+      end
       (0..x_game_def.number_of_players-1).each do |position|
-        hands = x_game_def.number_of_players.times.map { Hand.new }
-
-        hands[position] = arbitrary_hole_card_hand
+        hands = x_game_def.number_of_players.times.map do |i|
+          Hand.from_acpc "Ac#{i+2}h"
+        end
 
         hand_string = hands.inject('') do |hand_string, hand|
           hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
         end[0..-2]
 
         match_state =
-"#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc:#{hand_string}"
+          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc:#{hand_string}"
 
         MatchState.new(
           match_state
@@ -463,11 +467,12 @@ describe MatchState do
           player.hand.must_equal hands[pos]
           player.actions.must_equal x_actions[pos]
           player.contributions.must_equal x_contributions[pos]
+          player.winnings.must_equal x_winnings[pos]
+          player.stack.must_equal x_stacks[pos]
         end
       end
     end
   end
-
   describe '#every_action' do
     it 'yields every action, plus the round number, and the acting player position relative to the dealer' do
       wager_size = 10
@@ -561,7 +566,7 @@ describe MatchState do
         end[0..-2]
 
         match_state =
-"#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/crc:#{hand_string}"
+      "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/crc:#{hand_string}"
 
         MatchState.new(match_state).player_acting_sequence(x_game_def).must_equal(
           [[2, 0, 1, 2], [1, 2, 0], [1, 2, 0, 1], [1, 2, 1]]
@@ -569,6 +574,84 @@ describe MatchState do
       end
     end
   end
+  describe 'hand_ended?' do
+    it 'works when there is a showdown' do
+      wager_size = 10
+      x_game_def = GameDefinition.new(
+        first_player_positions: [3, 2, 2, 2],
+        chip_stacks: [100, 200, 150],
+        blinds: [0, 10, 5],
+        raise_sizes: [wager_size]*4,
+        number_of_ranks: 3
+      )
+
+      (0..x_game_def.number_of_players-1).each do |position|
+        hands = x_game_def.number_of_players.times.map do |i|
+          Hand.from_acpc "Ac#{i+2}h"
+        end
+
+        hand_string = hands.inject('') do |hand_string, hand|
+          hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
+        end[0..-2]
+
+        match_state =
+          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/crc:#{hand_string}"
+
+        MatchState.new(match_state).hand_ended?(x_game_def).must_equal true
+      end
+    end
+    it 'works when there is not a showdown' do
+      wager_size = 10
+      x_game_def = GameDefinition.new(
+        first_player_positions: [3, 2, 2, 2],
+        chip_stacks: [100, 200, 150],
+        blinds: [0, 10, 5],
+        raise_sizes: [wager_size]*4,
+        number_of_ranks: 3
+      )
+
+      (0..x_game_def.number_of_players-1).each do |position|
+        hands = x_game_def.number_of_players.times.map { Hand.new }
+
+        hands[position] = arbitrary_hole_card_hand
+
+        hand_string = hands.inject('') do |hand_string, hand|
+          hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
+        end[0..-2]
+
+        match_state =
+          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/cr:#{hand_string}"
+
+        MatchState.new(match_state).hand_ended?(x_game_def).must_equal false
+      end
+    end
+    it 'works when all other players have folded' do
+      wager_size = 10
+      x_game_def = GameDefinition.new(
+        first_player_positions: [3, 2, 2, 2],
+        chip_stacks: [100, 200, 150],
+        blinds: [0, 10, 5],
+        raise_sizes: [wager_size]*4,
+        number_of_ranks: 3
+      )
+
+      (0..x_game_def.number_of_players-1).each do |position|
+        hands = x_game_def.number_of_players.times.map { Hand.new }
+
+        hands[position] = arbitrary_hole_card_hand
+
+        hand_string = hands.inject('') do |hand_string, hand|
+          hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
+        end[0..-2]
+
+        match_state =
+          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrff:#{hand_string}"
+
+        MatchState.new(match_state).hand_ended?(x_game_def).must_equal true
+      end
+    end
+  end
+  # @todo Test more chip distribution scenarios
 end
 
 def for_every_card

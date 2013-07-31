@@ -271,7 +271,11 @@ class MatchState
       )
     end
 
-    @players ||= player_list
+    @players = player_list
+
+    distribute_chips!(game_def) if hand_ended?(game_def)
+
+    @players
   end
 
   def players(game_def)
@@ -284,7 +288,51 @@ class MatchState
     @player_acting_sequence
   end
 
+  # @return [Boolean] +true+ if the hand has ended, +false+ otherwise.
+  def hand_ended?(game_def)
+    @hand_ended ||= players(game_def).count { |player| player.inactive? } >= number_of_players - 1 || reached_showdown?(game_def)
+  end
+
+  def reached_showdown?(game_def)
+    @reached_showdown ||= opponents_cards_visible?(game_def)
+  end
+
+  def opponents_cards_visible?(game_def)
+    @opponents_cards_visible ||= players(game_def).count { |player| !player.hand.empty? } > 1 # At least one opponent hand visible
+  end
+
+  def pot(game_def)
+    @pot ||= players(game_def).map { |player| player.contributions }.flatten.inject(:+)
+  end
+
   private
+
+  # Distribute chips to all winning players
+  def distribute_chips!(game_def)
+    return if pot(game_def) <= 0
+
+    # @todo This only works for Doyle's game where there are no side-pots.
+    if 1 == players(game_def).count { |player| !player.folded? }
+      players(game_def).select { |player| !player.folded? }.first.winnings = pot(game_def)
+    else
+      hand_strengths = []
+      players(game_def).each do |player|
+        hand_strengths << PileOfCards.new(community_cards.flatten + player.hand).to_poker_hand_strength
+      end
+      strength_of_strongest_hand = hand_strengths.max
+
+      # @todo Finish this
+      # winning_players = hand_strengths.find_all do |player, hand_strength|
+      #   hand_strength == strength_of_strongest_hand
+      # end.map { |player_with_hand_strength| player_with_hand_strength.first }
+
+      # amount_each_player_wins = pot/winning_players.length.to_r
+
+      # winning_players.each do |player|
+      #   player.take_winnings! amount_each_player_wins
+      # end
+    end
+  end
 
   def every_action_token
     betting_sequence.each_with_index do |actions_per_round, round|
@@ -310,5 +358,4 @@ class MatchState
     action_sequence.scan(/[^#{BETTING_SEQUENCE_SEPARATOR}\d]\d*/)
   end
 end
-
 end

@@ -25,6 +25,8 @@ class HandPlayer
   # @return [Array<PokerAction>] The actions this player has taken
   attr_reader :actions
 
+  attr_accessor :winnings
+
   # @param hand [Hand]
   # @param initial_chip_stack [#to_i]
   # @param ante [#to_i]
@@ -35,10 +37,11 @@ class HandPlayer
     @initial_stack = ChipStack.new initial_stack
     @ante = ChipStack.new ante
     @actions = [[]]
+    @winnings = 0
   end
 
   def stack
-    @initial_stack - total_contribution
+    @initial_stack - total_contribution + @winnings
   end
 
   def contributions
