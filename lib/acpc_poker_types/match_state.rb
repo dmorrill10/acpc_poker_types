@@ -233,18 +233,21 @@ class MatchState
   def every_action(game_def)
     player_list = players_at_hand_start game_def.chip_stacks, game_def.blinds
 
-    # @todo Refactor and fix this
     last_round = -1
     acting_player_position = nil
+    @player_acting_sequence = []
     every_action_token do |action, round|
       if round != last_round
         acting_player_position = game_def.first_player_positions[round]
+        @player_acting_sequence << []
         last_round = round
       end
 
       acting_player_position = player_list.position_of_first_active_player(
         acting_player_position
       )
+
+      @player_acting_sequence.last << acting_player_position
 
       cost = player_list.action_cost(
         acting_player_position,
@@ -271,9 +274,17 @@ class MatchState
     @players ||= player_list
   end
 
-  def players(game_def=nil)
+  def players(game_def)
     @players ||= every_action(game_def)
   end
+
+  def player_acting_sequence(game_def)
+    every_action(game_def) unless @player_acting_sequence
+
+    @player_acting_sequence
+  end
+
+  private
 
   def every_action_token
     betting_sequence.each_with_index do |actions_per_round, round|
@@ -282,38 +293,6 @@ class MatchState
       end
     end
   end
-
-  # def player_position_relative_to_self
-  #   number_of_players - 1
-  # end
-
-  # def player_folded?(
-  #   position_relative_to_dealer,
-  #   first_player_positions
-  # )
-  # end
-
-  # @param [Array<Integer>] first_player_positions List of first player positions
-  #   relative to the dealer for each round.
-  # @return [Array<Array<Integer>>]
-  # def player_acting_sequence(first_player_positions)
-    # sequence = []
-    # player_activity = number_of_players.times.map { true }
-    # betting_sequence.each_with_index do |actions_by_round, round|
-    #   actions_by_round.each_with_index do |action, action_num|
-    #     first_pos = first_player_positions[round]
-
-    #     # @todo thing-to-do
-    #     # acting_player = first_pos +
-
-    #     if action == PokerAction::FOLD
-    #       player_activity[acting_player] = false
-    #     end
-    #   end
-    # end
-  # end
-
-  private
 
   def all_string_hands(string_of_card_sets)
     all_sets_of_cards(string_of_card_sets, HAND_SEPARATOR)

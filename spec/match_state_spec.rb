@@ -391,7 +391,6 @@ describe MatchState do
       end
     end
   end
-
   describe '#players' do
     it 'return proper player states' do
       wager_size = 10
@@ -465,6 +464,108 @@ describe MatchState do
           player.actions.must_equal x_actions[pos]
           player.contributions.must_equal x_contributions[pos]
         end
+      end
+    end
+  end
+
+  describe '#every_action' do
+    it 'yields every action, plus the round number, and the acting player position relative to the dealer' do
+      wager_size = 10
+      x_game_def = GameDefinition.new(
+        first_player_positions: [3, 2, 2, 2],
+        chip_stacks: [100, 200, 150],
+        blinds: [0, 10, 5],
+        raise_sizes: [wager_size]*4,
+        number_of_ranks: 3
+      )
+
+      (0..x_game_def.number_of_players-1).each do |position|
+        x_actions = [
+          {
+            action: PokerAction.new(PokerAction::CALL, cost: 5),
+            round: 0,
+            acting_player_position: 2
+          },
+          {
+            action: PokerAction.new(PokerAction::RAISE, cost: wager_size + 10),
+            round: 0,
+            acting_player_position: 0
+          },
+          {
+            action: PokerAction.new(PokerAction::CALL, cost: wager_size),
+            round: 0,
+            acting_player_position: 1
+          },
+          {
+            action: PokerAction.new(PokerAction::CALL, cost: wager_size),
+            round: 0,
+            acting_player_position: 2
+          },
+          {
+            action: PokerAction.new(PokerAction::CHECK),
+            round: 1,
+            acting_player_position: 1
+          },
+          {
+            action: PokerAction.new(PokerAction::CHECK),
+            round: 1,
+            acting_player_position: 2
+          },
+          {
+            action: PokerAction.new(PokerAction::CHECK),
+            round: 1,
+            acting_player_position: 0
+          },
+          {
+            action: PokerAction.new(PokerAction::BET, cost: wager_size),
+            round: 2,
+            acting_player_position: 1
+          },
+          {
+            action: PokerAction.new(PokerAction::RAISE, cost: 2 * wager_size),
+            round: 2,
+            acting_player_position: 2
+          },
+          {
+            action: PokerAction.new(PokerAction::FOLD),
+            round: 2,
+            acting_player_position: 0
+          },
+          {
+            action: PokerAction.new(PokerAction::CALL, cost: wager_size),
+            round: 2,
+            acting_player_position: 1
+          },
+          {
+            action: PokerAction.new(PokerAction::CHECK),
+            round: 3,
+            acting_player_position: 1
+          },
+          {
+            action: PokerAction.new(PokerAction::BET, cost: wager_size),
+            round: 3,
+            acting_player_position: 2
+          },
+          {
+            action: PokerAction.new(PokerAction::CALL, cost: wager_size),
+            round: 3,
+            acting_player_position: 1
+          }
+        ]
+        hands = x_game_def.number_of_players.times.map { Hand.new }
+
+        hands[position] = arbitrary_hole_card_hand
+
+        hand_string = hands.inject('') do |hand_string, hand|
+          hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
+        end[0..-2]
+
+        match_state =
+"#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/crc:#{hand_string}"
+
+        MatchState.new(match_state).player_acting_sequence(x_game_def).must_equal(
+          [[2, 0, 1, 2], [1, 2, 0], [1, 2, 0, 1], [1, 2, 1]]
+        )
       end
     end
   end
