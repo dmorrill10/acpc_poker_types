@@ -17,20 +17,6 @@ class PlayerGroup < DelegateClass(Array)
     super @players
   end
 
-  # def initialize(game_def, match_state)
-  #   @game_def = game_def
-  #   @match_state = match_state
-
-  #   @players = match_state.players_at_hand_start
-
-  #   match_state.every_action do |action, round, acting_player_position|
-
-
-  #   end
-
-  #   super @players
-  # end
-
   def next_player_position(acting_player_position=-1)
     (acting_player_position + 1) % length
   end
