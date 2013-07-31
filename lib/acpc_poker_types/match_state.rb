@@ -6,9 +6,35 @@ require 'acpc_poker_types/poker_action'
 require 'acpc_poker_types/hand_player'
 require 'acpc_poker_types/player_group'
 
-# Model to parse and manage information from a given match state string.
+module AcpcPokerTypes
+module Indices
+  refine Array do
+    def inject_with_index(init)
+      i = 0
+      inject(init) do |accum, elem|
+        yield accum, elem, i if block_given?
+        i += 1
+        accum
+      end
+    end
+    def indices(elem_to_find=nil)
+      if elem_to_find
+        indices { |elem| elem == elem_to_find }
+      else
+        inject_with_index([]) do |array, elem, i|
+          array << i if yield elem
+          array
+        end
+      end
+    end
+  end
+end
+end
+using AcpcPokerTypes::Indices
+
 module AcpcPokerTypes
 
+# Model to parse and manage information from a given match state string.
 class MatchState
   # @return [Integer] The position relative to the dealer of the player that
   #     received the match state string, indexed from 0, modulo the
@@ -309,29 +335,27 @@ class MatchState
 
   # Distribute chips to all winning players
   def distribute_chips!(game_def)
-    return if pot(game_def) <= 0
+    return self if pot(game_def) <= 0
 
     # @todo This only works for Doyle's game where there are no side-pots.
     if 1 == players(game_def).count { |player| !player.folded? }
       players(game_def).select { |player| !player.folded? }.first.winnings = pot(game_def)
     else
-      hand_strengths = []
-      players(game_def).each do |player|
-        hand_strengths << PileOfCards.new(community_cards.flatten + player.hand).to_poker_hand_strength
+      hand_strengths = players(game_def).map do |player|
+        if player.folded?
+          -1
+        else
+          PileOfCards.new(community_cards.flatten + player.hand).to_poker_hand_strength
+        end
       end
-      strength_of_strongest_hand = hand_strengths.max
+      winning_players = hand_strengths.indices(hand_strengths.max)
+      amount_each_player_wins = pot(game_def)/winning_players.length.to_r
 
-      # @todo Finish this
-      # winning_players = hand_strengths.find_all do |player, hand_strength|
-      #   hand_strength == strength_of_strongest_hand
-      # end.map { |player_with_hand_strength| player_with_hand_strength.first }
-
-      # amount_each_player_wins = pot/winning_players.length.to_r
-
-      # winning_players.each do |player|
-      #   player.take_winnings! amount_each_player_wins
-      # end
+      winning_players.each do |player_index|
+        @players[player_index].winnings = amount_each_player_wins
+      end
     end
+    self
   end
 
   def every_action_token

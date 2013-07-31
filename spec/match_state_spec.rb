@@ -472,6 +472,138 @@ describe MatchState do
         end
       end
     end
+    describe 'distributes chips properly' do
+      it 'when there is a showdown and one winner' do
+        wager_size = 10
+        x_game_def = GameDefinition.new(
+          first_player_positions: [3, 2, 2, 2],
+          chip_stacks: [100, 200, 150],
+          blinds: [0, 10, 5],
+          raise_sizes: [wager_size]*4,
+          number_of_ranks: 3
+        )
+        x_total_contributions = [5 * 10, 5 * 10, 5 * 10]
+        x_winnings = [0, 0, x_total_contributions.inject(:+)]
+        x_stacks = x_game_def.chip_stacks.map_with_index do |chip_stack, i|
+          chip_stack - x_total_contributions[i] + x_winnings[i]
+        end
+
+        (0..x_game_def.number_of_players-1).each do |position|
+          hands = x_game_def.number_of_players.times.map do |i|
+            Hand.from_acpc "Ac#{i+2}h"
+          end
+
+          hand_string = hands.inject('') do |hand_string, hand|
+            hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
+          end[0..-2]
+
+          match_state =
+            "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrcc/crcc:#{hand_string}"
+
+          MatchState.new(match_state).players(x_game_def).each_with_index do |player, i|
+            player.winnings.must_equal x_winnings[i]
+            player.stack.must_equal x_stacks[i]
+            player.total_contribution.must_equal x_total_contributions[i]
+          end
+        end
+      end
+      it 'when there is a tie' do
+        wager_size = 10
+        x_game_def = GameDefinition.new(
+          first_player_positions: [3, 2, 2, 2],
+          chip_stacks: [100, 200, 150],
+          blinds: [0, 10, 5],
+          raise_sizes: [wager_size]*4,
+          number_of_ranks: 3
+        )
+        x_total_contributions = [2 * 10, 5 * 10, 5 * 10]
+        x_winnings = [0, x_total_contributions.inject(:+)/2.0, x_total_contributions.inject(:+)/2.0]
+        x_stacks = x_game_def.chip_stacks.map_with_index do |chip_stack, i|
+          chip_stack - x_total_contributions[i] + x_winnings[i]
+        end
+
+        (0..x_game_def.number_of_players-1).each do |position|
+          hands = x_game_def.number_of_players.times.map do |i|
+            Hand.from_acpc "Ac2#{['s', 'h', 'd', 'c'][i%4]}"
+          end
+
+          hand_string = hands.inject('') do |hand_string, hand|
+            hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
+          end[0..-2]
+
+          match_state =
+            "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/crc:#{hand_string}"
+
+          MatchState.new(match_state).players(x_game_def).each_with_index do |player, i|
+            player.winnings.must_equal x_winnings[i]
+            player.stack.must_equal x_stacks[i]
+            player.total_contribution.must_equal x_total_contributions[i]
+          end
+        end
+      end
+      it 'when all other players have folded' do
+        wager_size = 10
+        x_game_def = GameDefinition.new(
+          first_player_positions: [3, 2, 2, 2],
+          chip_stacks: [100, 200, 150],
+          blinds: [0, 10, 5],
+          raise_sizes: [wager_size]*4,
+          number_of_ranks: 3
+        )
+        x_total_contributions = [2 * 10, 3 * 10, 4 * 10]
+        x_winnings = [0, 0, x_total_contributions.inject(:+)]
+        x_stacks = x_game_def.chip_stacks.map_with_index do |chip_stack, i|
+          chip_stack - x_total_contributions[i] + x_winnings[i]
+        end
+
+        (0..x_game_def.number_of_players-1).each do |position|
+          hands = x_game_def.number_of_players.times.map { Hand.new }
+
+          hands[position] = arbitrary_hole_card_hand
+
+          hand_string = hands.inject('') do |hand_string, hand|
+            hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
+          end[0..-2]
+
+          match_state =
+            "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrff:#{hand_string}"
+
+          MatchState.new(match_state).players(x_game_def).each_with_index do |player, i|
+            player.winnings.must_equal x_winnings[i]
+            player.stack.must_equal x_stacks[i]
+            player.total_contribution.must_equal x_total_contributions[i]
+          end
+        end
+      end
+    end
+    describe '#pot' do
+      it 'works without side pots' do
+        wager_size = 10
+        x_game_def = GameDefinition.new(
+          first_player_positions: [3, 2, 2, 2],
+          chip_stacks: [100, 200, 150],
+          blinds: [0, 10, 5],
+          raise_sizes: [wager_size]*4,
+          number_of_ranks: 3
+        )
+        x_total_contributions = [2 * 10, 5 * 10, 5 * 10]
+
+        (0..x_game_def.number_of_players-1).each do |position|
+          hands = x_game_def.number_of_players.times.map do |i|
+            Hand.from_acpc "Ac2#{['s', 'h', 'd', 'c'][i%4]}"
+          end
+
+          hand_string = hands.inject('') do |hand_string, hand|
+            hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
+          end[0..-2]
+
+          match_state =
+            "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/crc:#{hand_string}"
+
+          MatchState.new(match_state).pot(x_game_def).must_equal x_total_contributions.inject(:+)
+        end
+      end
+    end
   end
   describe '#every_action' do
     it 'yields every action, plus the round number, and the acting player position relative to the dealer' do
@@ -651,7 +783,6 @@ describe MatchState do
       end
     end
   end
-  # @todo Test more chip distribution scenarios
 end
 
 def for_every_card
