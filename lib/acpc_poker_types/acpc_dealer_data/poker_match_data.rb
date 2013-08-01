@@ -248,35 +248,11 @@ class PokerMatchData
     if @hand_number then @hand_number >= @data.length - 1 else nil end
   end
 
-  # # @return [Array<ChipStack>]  stacks.
-  # def chip_stacks
-  #   # @todo thing to do
-  #   @players.map { |player| player.chip_stack }
-  # end
-
   # return [Array<Integer>] Each player's current chip balance.
   def balances
     @players.map { |player| player.balance }
   end
 
-  # # return [Array<Array<Integer>>] Each player's current chip contribution organized by round.
-  # def chip_contributions
-  #   # @todo thing to do
-  #   @players.map { |player| player.chip_contributions }
-  # end
-
-  # def opponents
-  #   # @todo thing to do
-  #   @players.reject { |other_player| player == other_player }
-  # end
-  # def active_players
-  #   # @todo thing to do
-  #   @players.select { |player_to_collect| player_to_collect.active? }
-  # end
-  # def non_folded_players
-  #   # @todo thing to do
-  #   @players.reject { |player_to_reject| player_to_reject.folded? }
-  # end
   def opponents_cards_visible?
     return false unless current_hand
 
@@ -289,15 +265,6 @@ class PokerMatchData
       position_relative_to_dealer(plr) == @players.length - 1
     end
   end
-  # @return [Array<#to_i>] Relation from player seat to the blind that player paid.
-  # def player_blinds
-  #   return nil unless current_hand
-
-  #   @players.inject([]) do |relation, plr|
-  #     relation << @match_def.game_def.blinds[position_relative_to_dealer(plr)]
-  #     relation
-  #   end
-  # end
 
   def position_relative_to_dealer(plyr = player)
     return nil unless current_hand && current_hand.current_match_state(plyr.seat)
@@ -346,13 +313,6 @@ class PokerMatchData
        (per_round.map{|action| action.to_acpc}).join('')
     end).join('/')
   end
-  # @todo Test and implement this
-  # def min_wager
-  #   return nil unless current_hand
-
-  #   @match_def.game_def.min_wagers[current_hand.next_state.round]
-  #   ChipStack.new [@min_wager.to_i, action_with_context.cost.to_i].max
-  # end
 
   protected
 
@@ -385,7 +345,7 @@ class PokerMatchData
   def set_data!(parsed_action_messages, parsed_hand_results)
     @data = []
     parsed_action_messages.data.zip(parsed_hand_results.data).each do |action_messages_by_hand, hand_result|
-      @data <<  AcpcDealerData::HandData.new(
+      @data << AcpcDealerData::HandData.new(
         @match_def,
         action_messages_by_hand,
         hand_result

@@ -257,7 +257,7 @@ class MatchState
   # @param game_def [GameDefinition]
   # @return [PlayerGroup] The current state of the players.
   def every_action(game_def)
-    player_list = players_at_hand_start game_def.chip_stacks, game_def.blinds
+    @players = players_at_hand_start game_def.chip_stacks, game_def.blinds
 
     last_round = -1
     acting_player_position = nil
@@ -269,19 +269,19 @@ class MatchState
         last_round = round
       end
 
-      acting_player_position = player_list.position_of_first_active_player(
+      acting_player_position = @players.position_of_first_active_player(
         acting_player_position
       )
 
       @player_acting_sequence.last << acting_player_position
 
-      cost = player_list.action_cost(
+      cost = @players.action_cost(
         acting_player_position,
         action,
         game_def.min_wagers[round]
       )
 
-      player_list[acting_player_position].append_action!(
+      @players[acting_player_position].append_action!(
         if cost > 0
           action = PokerAction.new(action.to_s, cost: cost)
         else
@@ -290,14 +290,12 @@ class MatchState
         round
       )
 
-      yield action, round, acting_player_position, player_list if block_given?
+      yield action, round, acting_player_position, @players if block_given?
 
-      acting_player_position = player_list.next_player_position(
+      acting_player_position = @players.next_player_position(
         acting_player_position
       )
     end
-
-    @players = player_list
 
     distribute_chips!(game_def) if hand_ended?(game_def)
 
@@ -316,15 +314,15 @@ class MatchState
 
   # @return [Boolean] +true+ if the hand has ended, +false+ otherwise.
   def hand_ended?(game_def)
-    @hand_ended ||= players(game_def).count { |player| player.inactive? } >= number_of_players - 1 || reached_showdown?(game_def)
+    @hand_ended ||= reached_showdown? || players(game_def).count { |player| player.inactive? } >= number_of_players - 1
   end
 
-  def reached_showdown?(game_def)
-    @reached_showdown ||= opponents_cards_visible?(game_def)
+  def reached_showdown?
+    opponents_cards_visible?
   end
 
-  def opponents_cards_visible?(game_def)
-    @opponents_cards_visible ||= players(game_def).count { |player| !player.hand.empty? } > 1 # At least one opponent hand visible
+  def opponents_cards_visible?
+    @opponents_cards_visible ||= all_hands.count { |h| !h.empty? } > 1 # At least one opponent hand visible
   end
 
   def pot(game_def)
@@ -355,6 +353,7 @@ class MatchState
         @players[player_index].winnings = amount_each_player_wins
       end
     end
+
     self
   end
 
