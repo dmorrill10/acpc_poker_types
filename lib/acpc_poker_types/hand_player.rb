@@ -63,7 +63,7 @@ class HandPlayer
   # @return [Array<PokerAction>] The list of legal actions for this player. If a wager is legal,
   # the largest possible wager will be returned in the list.
   def legal_actions(
-    round,
+    round: round,
     amount_to_call: ChipStack.new(0),
     wager_illegal: false
   )
@@ -94,11 +94,11 @@ class HandPlayer
     # @todo
   # end
 
-  def append_action!(action, round = @actions.length - 1)
+  def append_action!(action, round_num = round)
     raise Inactive if inactive?
 
-    @actions[round] ||= []
-    @actions[round] << action
+    @actions[round_num] ||= []
+    @actions[round_num] << action
 
     self
   end
@@ -114,6 +114,9 @@ class HandPlayer
   def folded?
     @actions.flatten.last == PokerAction::FOLD
   end
-end
 
+  def round
+    @actions.length - 1
+  end
+end
 end
