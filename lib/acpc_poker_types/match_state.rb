@@ -199,11 +199,15 @@ class MatchState
 
   # @return [Boolean] Reports whether or not it is the first state of the first round.
   def first_state_of_first_round?
-    @first_state_of_first_round ||= @betting_sequence_string.empty?
+    return @first_state_of_first_round unless @first_state_of_first_round.nil?
+
+    @first_state_of_first_round = @betting_sequence_string.empty?
   end
 
   def first_state_of_round?
-    @first_state_of_round ||= @betting_sequence_string[-1] == BETTING_SEQUENCE_SEPARATOR
+    return @first_state_of_round unless @first_state_of_round.nil?
+
+    @first_state_of_round = @betting_sequence_string[-1] == BETTING_SEQUENCE_SEPARATOR
   end
 
   # @return [Integer] The number of players in this match.
@@ -314,7 +318,9 @@ class MatchState
 
   # @return [Boolean] +true+ if the hand has ended, +false+ otherwise.
   def hand_ended?(game_def)
-    @hand_ended ||= reached_showdown? || players(game_def).count { |player| player.inactive? } >= number_of_players - 1
+    return @hand_ended unless @hand_ended.nil?
+
+    @hand_ended = reached_showdown? || players(game_def).count { |player| player.inactive? } >= number_of_players - 1
   end
 
   def reached_showdown?
@@ -322,7 +328,9 @@ class MatchState
   end
 
   def opponents_cards_visible?
-    @opponents_cards_visible ||= all_hands.count { |h| !h.empty? } > 1 # At least one opponent hand visible
+    return @opponents_cards_visible unless @opponents_cards_visible.nil?
+
+    @opponents_cards_visible = all_hands.count { |h| !h.empty? } > 1 # At least one opponent hand visible
   end
 
   def pot(game_def)
