@@ -1,5 +1,6 @@
 require 'acpc_poker_types/chip_stack'
 require 'acpc_poker_types/hand'
+require 'acpc_poker_types/poker_action'
 
 require 'contextual_exceptions'
 using ContextualExceptions::ClassRefinement
