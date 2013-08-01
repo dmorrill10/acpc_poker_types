@@ -37,11 +37,15 @@ class HandPlayer
     @initial_stack = ChipStack.new initial_stack
     @ante = ChipStack.new ante
     @actions = [[]]
-    @winnings = 0
+    @winnings = ChipStack.new 0
   end
 
   def stack
-    @initial_stack - total_contribution + @winnings
+    @initial_stack + balance
+  end
+
+  def balance
+    @winnings - total_contribution
   end
 
   def contributions

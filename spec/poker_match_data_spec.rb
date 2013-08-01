@@ -12,7 +12,10 @@ require 'acpc_poker_types/acpc_dealer_data/hand_data'
 require 'acpc_poker_types/acpc_dealer_data/match_definition'
 require 'acpc_poker_types/acpc_dealer_data/poker_match_data'
 
-describe AcpcPokerTypes::AcpcDealerData::PokerMatchData do
+include AcpcPokerTypes
+include AcpcPokerTypes::AcpcDealerData
+
+describe PokerMatchData do
   before do
     @patient = nil
     @chip_distribution = nil
@@ -33,25 +36,25 @@ describe AcpcPokerTypes::AcpcDealerData::PokerMatchData do
           new_action_messages[@match_def_line_index] = '# name/game/hands/seed different_name holdem.limit.2p.reverse_blinds.game 2 0\n'
 
           ->() do
-            AcpcPokerTypes::AcpcDealerData::PokerMatchData.parse(
+            PokerMatchData.parse(
               new_action_messages,
               result_messages,
               @player_names,
               AcpcDealer::DEALER_DIRECTORY
             )
-          end.must_raise AcpcPokerTypes::AcpcDealerData::PokerMatchData::MatchDefinitionsDoNotMatch
+          end.must_raise PokerMatchData::MatchDefinitionsDoNotMatch
 
           new_result_messages = result_messages.dup
           new_result_messages[@match_def_line_index] = '# name/game/hands/seed different_name holdem.limit.2p.reverse_blinds.game 2 0\n'
 
           ->() do
-            AcpcPokerTypes::AcpcDealerData::PokerMatchData.parse(
+            PokerMatchData.parse(
               action_messages,
               new_result_messages,
               @player_names,
               AcpcDealer::DEALER_DIRECTORY
             )
-          end.must_raise AcpcPokerTypes::AcpcDealerData::PokerMatchData::MatchDefinitionsDoNotMatch
+          end.must_raise PokerMatchData::MatchDefinitionsDoNotMatch
         end
       end
       it 'the final scores from each set of messages do not match' do
@@ -62,13 +65,13 @@ describe AcpcPokerTypes::AcpcDealerData::PokerMatchData do
           new_action_messages << 'SCORE:9001|-9001:p1|p2'
 
           ->() do
-            AcpcPokerTypes::AcpcDealerData::PokerMatchData.parse(
+            PokerMatchData.parse(
               new_action_messages,
               result_messages,
               @player_names,
               AcpcDealer::DEALER_DIRECTORY
             )
-          end.must_raise AcpcPokerTypes::AcpcDealerData::PokerMatchData::FinalScoresDoNotMatch
+          end.must_raise PokerMatchData::FinalScoresDoNotMatch
 
           new_result_messages = result_messages.dup
           new_result_messages.pop
@@ -76,13 +79,13 @@ describe AcpcPokerTypes::AcpcDealerData::PokerMatchData do
           new_result_messages << 'SCORE:9001|-9001:p1|p2'
 
           ->() do
-            AcpcPokerTypes::AcpcDealerData::PokerMatchData.parse(
+            PokerMatchData.parse(
               action_messages,
               new_result_messages,
               @player_names,
               AcpcDealer::DEALER_DIRECTORY
             )
-          end.must_raise AcpcPokerTypes::AcpcDealerData::PokerMatchData::FinalScoresDoNotMatch
+          end.must_raise PokerMatchData::FinalScoresDoNotMatch
         end
       end
     end
@@ -90,7 +93,7 @@ describe AcpcPokerTypes::AcpcDealerData::PokerMatchData do
       it 'for every hand' do
         init_data! do |action_messages, result_messages|
 
-          @patient = AcpcPokerTypes::AcpcDealerData::PokerMatchData.parse(
+          @patient = PokerMatchData.parse(
             action_messages,
             result_messages,
             @player_names,
@@ -119,7 +122,7 @@ describe AcpcPokerTypes::AcpcDealerData::PokerMatchData do
         init_data!(num_hands) do |action_messages, result_messages|
           @chip_distribution = nil
 
-          @patient = AcpcPokerTypes::AcpcDealerData::PokerMatchData.parse(
+          @patient = PokerMatchData.parse(
             action_messages,
             result_messages,
             @player_names,
@@ -176,7 +179,7 @@ describe AcpcPokerTypes::AcpcDealerData::PokerMatchData do
           'SCORE:-20|20:p1|p2'
         ]
         player_acting_sequence = [[1, 0, 1]]
-        @patient = AcpcPokerTypes::AcpcDealerData::PokerMatchData.parse(
+        @patient = PokerMatchData.parse(
           action_messages,
           result_messages,
           ['p1', 'p2'],
@@ -220,7 +223,7 @@ describe AcpcPokerTypes::AcpcDealerData::PokerMatchData do
           'SCORE:20|-20|-20:p1|p2|p3'
         ]
         player_acting_sequence = [[0, 1, 2]]
-        @patient = AcpcPokerTypes::AcpcDealerData::PokerMatchData.parse(
+        @patient = PokerMatchData.parse(
           action_messages,
           result_messages,
           ['p1', 'p2', 'p3'],
@@ -248,7 +251,7 @@ describe AcpcPokerTypes::AcpcDealerData::PokerMatchData do
       @chip_distribution = data_hash[:chip_distribution]
       @match_def_line_index = data_hash[:match_def_line_index]
       @player_names = data_hash[:player_names]
-      @match_def = AcpcPokerTypes::AcpcDealerData::MatchDefinition.parse(
+      @match_def = MatchDefinition.parse(
         data_hash[:result_messages][@match_def_line_index],
         @player_names,
         AcpcDealer::DEALER_DIRECTORY
@@ -263,13 +266,13 @@ describe AcpcPokerTypes::AcpcDealerData::PokerMatchData do
   end
 
   def init_expected!(data_hash, num_hands=nil, match_def=@match_def)
-    action_messages = AcpcPokerTypes::AcpcDealerData::ActionMessages.parse(
+    action_messages = ActionMessages.parse(
       data_hash[:action_messages],
       @player_names,
       AcpcDealer::DEALER_DIRECTORY,
       num_hands
     )
-    result_messages = AcpcPokerTypes::AcpcDealerData::HandResults.parse(
+    result_messages = HandResults.parse(
       data_hash[:result_messages],
       @player_names,
       AcpcDealer::DEALER_DIRECTORY,
@@ -279,7 +282,7 @@ describe AcpcPokerTypes::AcpcDealerData::PokerMatchData do
     @hand_data_list = []
     action_messages.data.zip(result_messages.data)
       .each do |action_messages_by_hand, hand_result|
-      @hand_data_list << AcpcPokerTypes::AcpcDealerData::HandData.new(
+      @hand_data_list << HandData.new(
         match_def,
         action_messages_by_hand,
         hand_result
@@ -359,7 +362,7 @@ describe AcpcPokerTypes::AcpcDealerData::PokerMatchData do
           TO 1 at 1341695999.224292 MATCHSTATE:1:1:crc/rc/rrc/rc:6sKs|5dJd/2sTh2h/Qh/8h
           TO 2 at 1341695999.224329 MATCHSTATE:0:1:crc/rc/rrc/rc:6sKs|5dJd/2sTh2h/Qh/8h
           FINISHED at 1341696000.058664
-          SCORE:110|-110:p1|p2
+          SCORE:-70|70:p1|p2
           ".split("\n").map { |line| line += "\n" }, # Make each line an element in an array while preserving newlines
         result_messages: [
           "# name/game/hands/seed 2p.limit.h1000.r0 holdem.limit.2p.reverse_blinds.game 2 0\n",
@@ -367,13 +370,13 @@ describe AcpcPokerTypes::AcpcDealerData::PokerMatchData do
           "#--t_hand 600000\n",
           "#--t_per_hand 7000\n",
           "STATE:0:cc/crc/cc/cc:5d5c|9hQd/8dAs8s/4h/6d:20|-20:p1|p2\n",
-          "STATE:1:crc/rc/rrc/rc:6sKs|5dJd/2sTh2h/Qh/8h:-90|90:p2|p1\n",
-          'SCORE:110|-110:p1|p2'
+          "STATE:1:crc/rc/rrc/rc:6sKs|5dJd/2sTh2h/Qh/8h:90|-90:p2|p1\n",
+          'SCORE:-70|70:p1|p2'
         ],
         hand_start_line_indices: [6, 35],
         match_def_line_index: 0,
         player_names: ['p1', 'p2'],
-        chip_distribution: [110, -110],
+        chip_distribution: [-70, 70],
         player_acting_sequences: [
           [
             [1, 0], [0, 1, 0], [0, 1], [0, 1]
