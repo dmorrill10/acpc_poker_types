@@ -9,6 +9,7 @@ require_relative "../lib/acpc_poker_types/suit"
 require_relative "../lib/acpc_poker_types/hand"
 require_relative "../lib/acpc_poker_types/card"
 require_relative "../lib/acpc_poker_types/game_definition"
+require_relative "../lib/acpc_poker_types/acpc_dealer_data/poker_match_data"
 
 module MapWithIndex
   refine Array do
@@ -269,7 +270,7 @@ describe MatchState do
         end[0..-2]
 
         match_state =
-"#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc:#{hand_string}"
+          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc:#{hand_string}"
 
         MatchState.new(
           match_state
@@ -377,7 +378,7 @@ describe MatchState do
         end[0..-2]
 
         match_state =
-"#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/crc:#{hand_string}"
+          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/crc:#{hand_string}"
 
         MatchState.new(match_state).every_action(x_game_def) do |action, round, acting_player_position|
           x_yields = x_actions.shift
@@ -390,7 +391,7 @@ describe MatchState do
     end
   end
   describe '#players' do
-    it 'return proper player states' do
+    it 'returns proper player states' do
       wager_size = 10
       x_game_def = GameDefinition.new(
         first_player_positions: [3, 2, 2],
@@ -574,37 +575,37 @@ describe MatchState do
         end
       end
     end
-    describe '#pot' do
-      it 'works without side pots' do
-        wager_size = 10
-        x_game_def = GameDefinition.new(
-          first_player_positions: [3, 2, 2, 2],
-          chip_stacks: [100, 200, 150],
-          blinds: [0, 10, 5],
-          raise_sizes: [wager_size]*4,
-          number_of_ranks: 3
-        )
-        x_total_contributions = [2 * 10, 5 * 10, 5 * 10]
+  end
+  describe '#pot' do
+    it 'works without side pots' do
+      wager_size = 10
+      x_game_def = GameDefinition.new(
+        first_player_positions: [3, 2, 2, 2],
+        chip_stacks: [100, 200, 150],
+        blinds: [0, 10, 5],
+        raise_sizes: [wager_size]*4,
+        number_of_ranks: 3
+      )
+      x_total_contributions = [2 * 10, 5 * 10, 5 * 10]
 
-        (0..x_game_def.number_of_players-1).each do |position|
-          hands = x_game_def.number_of_players.times.map do |i|
-            Hand.from_acpc "Ac2#{['s', 'h', 'd', 'c'][i%4]}"
-          end
-
-          hand_string = hands.inject('') do |hand_string, hand|
-            hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
-          end[0..-2]
-
-          match_state =
-            "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/crc:#{hand_string}"
-
-          MatchState.new(match_state).pot(x_game_def).must_equal x_total_contributions.inject(:+)
+      (0..x_game_def.number_of_players-1).each do |position|
+        hands = x_game_def.number_of_players.times.map do |i|
+          Hand.from_acpc "Ac2#{['s', 'h', 'd', 'c'][i%4]}"
         end
+
+        hand_string = hands.inject('') do |hand_string, hand|
+          hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
+        end[0..-2]
+
+        match_state =
+          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/crc:#{hand_string}"
+
+        MatchState.new(match_state).pot(x_game_def).must_equal x_total_contributions.inject(:+)
       end
     end
   end
-  describe '#every_action' do
-    it 'yields every action, plus the round number, and the acting player position relative to the dealer' do
+  describe '#player_acting_sequence' do
+    it 'works' do
       wager_size = 10
       x_game_def = GameDefinition.new(
         first_player_positions: [3, 2, 2, 2],
@@ -704,7 +705,7 @@ describe MatchState do
       end
     end
   end
-  describe 'hand_ended?' do
+  describe '#hand_ended?' do
     it 'works when there is a showdown' do
       wager_size = 10
       x_game_def = GameDefinition.new(
@@ -781,6 +782,40 @@ describe MatchState do
       end
     end
   end
+  describe '#min_wager_by' do
+    it 'return proper player states' do
+      wager_size = 10
+      x_game_def = GameDefinition.new(
+        first_player_positions: [0, 0, 0],
+        chip_stacks: [100, 200, 150],
+        blinds: [0, 10, 5],
+        raise_sizes: [wager_size]*3,
+        number_of_ranks: 3
+      )
+
+      x_min_wagers = [[wager_size], [wager_size, 20, 70, 70, 70], [wager_size, wager_size, wager_size], [wager_size, wager_size, 20, 30, 30]]
+
+      (0..x_game_def.number_of_players-1).each do |position|
+        actions = ''
+        [[''], ['c', 'r30', 'r100', 'c', 'c'], ['c', 'c', 'c'], ['c', 'r110', 'r130', 'r160', 'c']].each_with_index do |actions_per_round, i|
+          actions_per_round.each_with_index do |action, j|
+            actions << action
+
+            hands = x_game_def.number_of_players.times.map { |i| "Ac#{i+2}h" }
+
+            hand_string = hands.inject('') do |string, hand|
+              string << "#{hand}#{MatchState::HAND_SEPARATOR}"
+            end[0..-2]
+
+            match_state = "#{MatchState::LABEL}:#{position}:0:#{actions}:#{hand_string}"
+
+            MatchState.new(match_state).min_wager_by(x_game_def).must_equal x_min_wagers[i][j]
+          end
+          actions << '/' unless actions_per_round.first.empty?
+        end
+      end
+    end
+  end
 end
 
 def for_every_card
@@ -796,9 +831,6 @@ def for_every_hand
       yield Hand.draw_cards(first_card, second_card)
     end
   end
-end
-def test_match_state_initialization_error(incomplete_match_state)
-  ->{MatchState.parse incomplete_match_state}.must_raise(MatchState::IncompleteMatchState)
 end
 def test_match_state_success(match_state)
   patient = MatchState.parse match_state
@@ -828,14 +860,6 @@ def arbitrary_roll_out(rounds)
   community_cards
 end
 
-# Construct an arbitrary hole card hand.
-#
-# @return [Hand] An arbitrary hole card hand.
 def arbitrary_hole_card_hand
-  Hand.from_acpc(
-    Rank::DOMAIN[:two][:acpc_character] +
-    Suit::DOMAIN[:spades][:acpc_character] +
-    Rank::DOMAIN[:three][:acpc_character] +
-    Suit::DOMAIN[:hearts][:acpc_character]
-  )
+  Hand.from_acpc('2s3h')
 end

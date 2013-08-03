@@ -58,5 +58,11 @@ class PlayerGroup < DelegateClass(Array)
       ].min
     )
   end
+
+  def next_to_act(acting_player_position=-1)
+    position_of_first_active_player(
+      next_player_position(acting_player_position)
+    )
+  end
 end
 end
