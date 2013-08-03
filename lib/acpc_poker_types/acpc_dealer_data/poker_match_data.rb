@@ -233,9 +233,6 @@ class PokerMatchData
 
       sequence[turn.action_message.state.round] ||= []
       sequence[turn.action_message.state.round] << turn.action_message.seat
-      if match_has_another_round?(sequence.length - 1, turn_index, turns_taken)
-        sequence << []
-      end
     end
 
     sequence

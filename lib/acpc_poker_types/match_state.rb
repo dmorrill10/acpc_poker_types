@@ -263,7 +263,7 @@ class MatchState
     @players = players_at_hand_start game_def.chip_stacks, game_def.blinds
 
     last_round = -1
-    @next_to_act = nil
+    @next_to_act = game_def.first_player_positions.first
     @player_acting_sequence = []
     @min_wager_by = game_def.min_wagers.first
     every_action_token do |action, round|
