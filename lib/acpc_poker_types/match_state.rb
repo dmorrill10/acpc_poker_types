@@ -162,8 +162,8 @@ class MatchState
   def community_cards
     @community_cards ||= -> do
       lcl_community_cards = BoardCards.new(
-        all_sets_of_community_cards(@community_cards_string).map do |cards_in_round|
-          Card.cards(cards_in_round)
+        all_sets_of_community_cards(@community_cards_string).map do |cards_per_round|
+          Card.cards(cards_per_round)
         end
       )
       if lcl_community_cards.round < @community_cards_string.count(COMMUNITY_CARD_SEPARATOR)
@@ -262,39 +262,11 @@ class MatchState
   def every_action(game_def)
     @players = players_at_hand_start game_def.chip_stacks, game_def.blinds
 
-    last_round = -1
     @next_to_act = game_def.first_player_positions.first
     @player_acting_sequence = []
     @min_wager_by = game_def.min_wagers.first
-    every_action_token do |action, round|
-      if round != last_round
-        @min_wager_by = game_def.min_wagers[round]
-        @next_to_act = @players.position_of_first_active_player(
-          game_def.first_player_positions[round]
-        )
-        @player_acting_sequence << []
-        last_round = round
-      end
 
-      @player_acting_sequence.last << @next_to_act
-      acting_player_position = @player_acting_sequence.last.last
-
-      @next_to_act = @players.next_to_act(@next_to_act)
-
-      cost = @players.action_cost(
-        acting_player_position,
-        action,
-        game_def.min_wagers[round]
-      )
-
-      action = PokerAction.new(action.to_s, cost: cost) if cost > 0
-
-      adjust_min_wager!(action, acting_player_position)
-
-      @players[acting_player_position].append_action!(action, round)
-
-      yield action, round, acting_player_position, @players if block_given?
-    end
+    walk_over_betting_sequence!(game_def)
 
     distribute_chips!(game_def) if hand_ended?(game_def)
 
@@ -347,6 +319,47 @@ class MatchState
 
   private
 
+  def walk_over_betting_sequence!(game_def)
+    last_round = -1
+    betting_sequence.each_with_index do |actions_per_round, current_round|
+      @min_wager_by = game_def.min_wagers[current_round]
+      @next_to_act = @players.position_of_first_active_player(
+        game_def.first_player_positions[current_round]
+      )
+      @player_acting_sequence << []
+      last_round = current_round
+
+      walk_over_actions!(actions_per_round, game_def, last_round, current_round)
+    end
+
+    self
+  end
+
+  def walk_over_actions!(actions_per_round, game_def, last_round, current_round)
+    actions_per_round.each do |action|
+      @player_acting_sequence.last << @next_to_act
+      acting_player_position = @player_acting_sequence.last.last
+
+      @next_to_act = @players.next_to_act(@next_to_act)
+
+      cost = @players.action_cost(
+        acting_player_position,
+        action,
+        game_def.min_wagers[current_round]
+      )
+
+      action = PokerAction.new(action.to_s, cost: cost) if cost > 0
+
+      adjust_min_wager!(action, acting_player_position)
+
+      @players[acting_player_position].append_action!(action, current_round)
+
+      yield action, current_round, acting_player_position if block_given?
+    end
+
+    self
+  end
+
   # Distribute chips to all winning players
   def distribute_chips!(game_def)
     return self if pot(game_def) <= 0
@@ -371,14 +384,6 @@ class MatchState
     end
 
     self
-  end
-
-  def every_action_token
-    betting_sequence.each_with_index do |actions_per_round, round|
-      actions_per_round.each do |action|
-        yield action, round if block_given?
-      end
-    end
   end
 
   def all_string_hands(string_of_card_sets)

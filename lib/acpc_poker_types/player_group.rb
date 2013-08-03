@@ -22,7 +22,7 @@ class PlayerGroup < DelegateClass(Array)
   end
 
   def position_of_first_active_player(acting_player_position=0)
-    raise NoPlayerCouldHaveActed if all? { |player| player.inactive? }
+    return nil if all? { |player| player.inactive? }
 
     # This must eventually exit because of the above assertion
     while @players[acting_player_position].inactive?

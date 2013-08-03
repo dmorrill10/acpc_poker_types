@@ -816,6 +816,26 @@ describe MatchState do
       end
     end
   end
+  describe '#next_to_act' do
+    it 'works at the start of new rounds' do
+      wager_size = 10
+      x_game_def = GameDefinition.new(
+        first_player_positions: [1, 0, 0],
+        chip_stacks: [100, 200],
+        blinds: [0, 10],
+        raise_sizes: [wager_size]*3,
+        number_of_ranks: 3
+      )
+
+      (0..x_game_def.number_of_players-1).each do |position|
+        x_next_to_act = [0, 0]
+        patient = MatchState.new("#{MatchState::LABEL}:#{position}:0:cc/:5d5c|/8dAs8s")
+        patient.every_action(x_game_def) do
+          patient.next_to_act(x_game_def).must_equal x_next_to_act.shift
+        end
+      end
+    end
+  end
 end
 
 def for_every_card
