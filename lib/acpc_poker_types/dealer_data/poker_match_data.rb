@@ -218,7 +218,7 @@ class PokerMatchData
   end
 
   def player_acting_sequence
-    sequence = [[]]
+    sequence = []
 
     return sequence unless hand_started?
 
@@ -226,6 +226,7 @@ class PokerMatchData
     turns_taken.each_with_index do |turn, turn_index|
       next unless turn.action_message
 
+      sequence[turn.action_message.state.round] ||= []
       sequence[turn.action_message.state.round] << turn.action_message.seat
       if new_round?(sequence.length - 1, turn_index)
         sequence << []
