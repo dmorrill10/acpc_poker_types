@@ -1,6 +1,5 @@
-
 # Spec helper (must include first to track code coverage with SimpleCov)
-require_relative 'support/spec_helper'
+require_relative '../support/spec_helper'
 
 require 'acpc_poker_types/game_definition'
 require 'acpc_dealer'
