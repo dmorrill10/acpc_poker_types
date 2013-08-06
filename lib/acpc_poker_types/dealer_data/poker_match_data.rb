@@ -253,7 +253,6 @@ class PokerMatchData
     current_hand.current_match_state(plyr.seat).position_relative_to_dealer
   end
 
-  # @todo Untested
   # @return [String] player acting sequence as a string.
   def player_acting_sequence_string
     (player_acting_sequence.map { |per_round| per_round.join('') }).join('/')
@@ -274,7 +273,7 @@ class PokerMatchData
   protected
 
   def sequence_from_action_messages(attribute)
-    sequence = []
+    sequence = [[]]
 
     return sequence unless hand_started?
 
@@ -284,7 +283,9 @@ class PokerMatchData
 
       sequence[turn.action_message.state.round] ||= []
       sequence[turn.action_message.state.round] << turn.action_message[attribute]
-
+      if new_round?(sequence.length - 1, turn_index)
+        sequence << []
+      end
       if players_all_in?(sequence.length - 1, turn_index, turns_taken)
         while sequence.length < @match_def.game_def.number_of_rounds
           sequence << []
