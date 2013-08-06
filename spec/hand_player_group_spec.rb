@@ -1,14 +1,7 @@
 require_relative 'support/spec_helper'
 
-# require 'acpc_dealer'
-
-require_relative "../lib/acpc_poker_types/player_group"
-# require_relative "../lib/acpc_poker_types/game_definition"
-# require_relative "../lib/acpc_poker_types/match_state"
-# require_relative "../lib/acpc_poker_types/poker_action"
+require_relative "../lib/acpc_poker_types/hand_player_group"
 require_relative "../lib/acpc_poker_types/hand"
-# require_relative "../lib/acpc_poker_types/card"
-# require_relative "../lib/acpc_poker_types/dealer_data/poker_match_data"
 
 module MapWithIndex
   refine Array do
@@ -26,7 +19,7 @@ using MapWithIndex
 
 include AcpcPokerTypes
 
-describe PlayerGroup do
+describe HandPlayerGroup do
   describe '::new' do
     it 'creates HandPlayers at the start of a hand' do
       stacks = [100, 200, 150]
@@ -37,7 +30,7 @@ describe PlayerGroup do
 
         hands[position] = arbitrary_hole_card_hand
 
-        PlayerGroup.new(
+        HandPlayerGroup.new(
           hands,
           stacks,
           blinds

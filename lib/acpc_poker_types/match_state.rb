@@ -4,7 +4,7 @@ require 'acpc_poker_types/rank'
 require 'acpc_poker_types/suit'
 require 'acpc_poker_types/poker_action'
 require 'acpc_poker_types/hand_player'
-require 'acpc_poker_types/player_group'
+require 'acpc_poker_types/hand_player_group'
 
 module AcpcPokerTypes
 module Indices
@@ -253,14 +253,14 @@ class MatchState
 
   # @param stacks [Array<#to_f>]
   # @param blinds [Array<#to_f>]
-  # @return [PlayerGroup] The state of the players in this hand at the
+  # @return [HandPlayerGroup] The state of the players in this hand at the
   # when the hand began.
   def players_at_hand_start(stacks, blinds)
-    PlayerGroup.new all_hands, stacks, blinds
+    HandPlayerGroup.new all_hands, stacks, blinds
   end
 
   # @param game_def [GameDefinition]
-  # @return [PlayerGroup] The current state of the players.
+  # @return [HandPlayerGroup] The current state of the players.
   def every_action(game_def)
     @players = players_at_hand_start game_def.chip_stacks, game_def.blinds
 

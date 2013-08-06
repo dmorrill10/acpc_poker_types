@@ -6,7 +6,7 @@ require 'acpc_poker_types/hand_player'
 # Model to parse and manage information from a given match state string.
 module AcpcPokerTypes
 
-class PlayerGroup < DelegateClass(Array)
+class HandPlayerGroup < DelegateClass(Array)
   attr_reader :players
 
   def initialize(all_hands, stacks, blinds)
