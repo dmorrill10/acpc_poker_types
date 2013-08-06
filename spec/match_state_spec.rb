@@ -210,7 +210,7 @@ describe MatchState do
     it 'receives matchstate strings properly' do
       @connection = mock 'Socket'
       MatchLog.all.each do |log_description|
-        match = AcpcDealerData::PokerMatchData.parse_files(
+        match = DealerData::PokerMatchData.parse_files(
           log_description.actions_file_path,
           log_description.results_file_path,
           log_description.player_names,

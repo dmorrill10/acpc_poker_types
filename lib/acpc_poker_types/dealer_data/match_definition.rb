@@ -5,7 +5,7 @@ require 'acpc_poker_types/game_definition'
 require 'contextual_exceptions'
 using ContextualExceptions::ClassRefinement
 
-module AcpcPokerTypes::AcpcDealerData
+module AcpcPokerTypes::DealerData
   class MatchDefinition
 
     exceptions :incorrect_number_of_player_names

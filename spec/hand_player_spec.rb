@@ -3,7 +3,7 @@
 require_relative 'support/spec_helper'
 
 require 'acpc_dealer'
-require 'acpc_poker_types/acpc_dealer_data/poker_match_data'
+require 'acpc_poker_types/dealer_data/poker_match_data'
 
 require 'acpc_poker_types/hand_player'
 require 'acpc_poker_types/poker_action'

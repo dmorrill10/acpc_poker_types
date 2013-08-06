@@ -7,12 +7,12 @@ require 'acpc_dealer'
 require 'acpc_poker_types/match_state'
 require 'acpc_poker_types/poker_action'
 
-require 'acpc_poker_types/acpc_dealer_data/action_messages'
-require 'acpc_poker_types/acpc_dealer_data/hand_data'
-require 'acpc_poker_types/acpc_dealer_data/hand_results'
-require 'acpc_poker_types/acpc_dealer_data/match_definition'
+require 'acpc_poker_types/dealer_data/action_messages'
+require 'acpc_poker_types/dealer_data/hand_data'
+require 'acpc_poker_types/dealer_data/hand_results'
+require 'acpc_poker_types/dealer_data/match_definition'
 
-describe AcpcPokerTypes::AcpcDealerData::HandData do
+describe AcpcPokerTypes::DealerData::HandData do
   before do
     @patient = nil
     @chip_distribution = nil
@@ -31,19 +31,19 @@ describe AcpcPokerTypes::AcpcDealerData::HandData do
     it 'if the given action data does not have the proper format' do
       init_data do |action_data, result|
         ->() do
-          @patient = AcpcPokerTypes::AcpcDealerData::HandData.new(
+          @patient = AcpcPokerTypes::DealerData::HandData.new(
             @match_def,
             (action_data.data.first + [action_data.data.first.last]).flatten,
             result.data.first
           )
-        end.must_raise AcpcPokerTypes::AcpcDealerData::HandData::InvalidData
+        end.must_raise AcpcPokerTypes::DealerData::HandData::InvalidData
       end
     end
   end
 
   it 'reports the chip distribution for every seat' do
     init_data do |action_data, result|
-      @patient = AcpcPokerTypes::AcpcDealerData::HandData.new @match_def, action_data.data.first, result.data.first
+      @patient = AcpcPokerTypes::DealerData::HandData.new @match_def, action_data.data.first, result.data.first
 
       check_patient
     end
@@ -60,7 +60,7 @@ describe AcpcPokerTypes::AcpcDealerData::HandData do
         @last_action = nil
         @next_action = nil
 
-        @patient = AcpcPokerTypes::AcpcDealerData::HandData.new @match_def, action_data.data.first, result.data.first
+        @patient = AcpcPokerTypes::DealerData::HandData.new @match_def, action_data.data.first, result.data.first
 
         @turn_number = 0
         @patient.for_every_turn!(@seat) do
@@ -97,12 +97,12 @@ describe AcpcPokerTypes::AcpcDealerData::HandData do
     data.each do |game, data_hash|
       @chip_distribution = data_hash[:chip_distribution]
       @turn_data = data_hash[:turn_data]
-      @action_data = AcpcPokerTypes::AcpcDealerData::ActionMessages.parse(
+      @action_data = AcpcPokerTypes::DealerData::ActionMessages.parse(
         data_hash[:action_messages],
         data_hash[:player_names],
         AcpcDealer::DEALER_DIRECTORY
       )
-      @hand_result = AcpcPokerTypes::AcpcDealerData::HandResults.parse(
+      @hand_result = AcpcPokerTypes::DealerData::HandResults.parse(
         data_hash[:result_message],
         data_hash[:player_names],
         AcpcDealer::DEALER_DIRECTORY
@@ -136,29 +136,29 @@ describe AcpcPokerTypes::AcpcDealerData::HandData do
         chip_distribution: [60, -60],
         player_names:  ['p1', 'p2'],
         turn_data: [
-          AcpcPokerTypes::AcpcDealerData::HandData::Turn.new(
+          AcpcPokerTypes::DealerData::HandData::Turn.new(
             [
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:999:crc/cc/cc/:|TdQd/As6d6h/7h/4s'),
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:999:crc/cc/cc/:Jc8d|/As6d6h/7h/4s')
             ],
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::FromMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::FromMessage.new(
               1,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:999:crc/cc/cc/:Jc8d|/As6d6h/7h/4s'),
               AcpcPokerTypes::PokerAction.new('r')
             )
           ),
-          AcpcPokerTypes::AcpcDealerData::HandData::Turn.new(
+          AcpcPokerTypes::DealerData::HandData::Turn.new(
             [
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:999:crc/cc/cc/r:|TdQd/As6d6h/7h/4s'),
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:999:crc/cc/cc/r:Jc8d|/As6d6h/7h/4s')
             ],
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::FromMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::FromMessage.new(
               0,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:999:crc/cc/cc/r:|TdQd/As6d6h/7h/4s'),
               AcpcPokerTypes::PokerAction.new('c')
             )
           ),
-          AcpcPokerTypes::AcpcDealerData::HandData::Turn.new(
+          AcpcPokerTypes::DealerData::HandData::Turn.new(
             [
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:999:crc/cc/cc/rc:Jc8d|TdQd/As6d6h/7h/4s'),
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:999:crc/cc/cc/rc:Jc8d|TdQd/As6d6h/7h/4s')
@@ -185,18 +185,18 @@ describe AcpcPokerTypes::AcpcDealerData::HandData do
         chip_distribution: [19718, -19718],
         player_names:  ['p1', 'p2'],
         turn_data: [
-          AcpcPokerTypes::AcpcDealerData::HandData::Turn.new(
+          AcpcPokerTypes::DealerData::HandData::Turn.new(
             [
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:999::|TdQd'),
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:999::Jc8d|')
             ],
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::FromMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::FromMessage.new(
               0,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:999::|TdQd'),
               AcpcPokerTypes::PokerAction.new('f')
             )
           ),
-          AcpcPokerTypes::AcpcDealerData::HandData::Turn.new(
+          AcpcPokerTypes::DealerData::HandData::Turn.new(
             [
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:999:f:|TdQd'),
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:999:f:Jc8d|')
@@ -225,19 +225,19 @@ describe AcpcPokerTypes::AcpcDealerData::HandData do
         chip_distribution: [360, -190, -170],
         player_names:  ['p1', 'p2', 'p3'],
         turn_data: [
-          AcpcPokerTypes::AcpcDealerData::HandData::Turn.new(
+          AcpcPokerTypes::DealerData::HandData::Turn.new(
             [
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:999:ccc/ccc/rrcc/rrrfr:QsAs||/4d6d2d/5d/2c'),
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:999:ccc/ccc/rrcc/rrrfr:|3s8h|/4d6d2d/5d/2c'),
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:2:999:ccc/ccc/rrcc/rrrfr:||Qd3c/4d6d2d/5d/2c')
             ],
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::FromMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::FromMessage.new(
               2,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:2:999:ccc/ccc/rrcc/rrrfr:||Qd3c/4d6d2d/5d/2c'),
               AcpcPokerTypes::PokerAction.new('c')
             )
           ),
-          AcpcPokerTypes::AcpcDealerData::HandData::Turn.new(
+          AcpcPokerTypes::DealerData::HandData::Turn.new(
             [
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:999:ccc/ccc/rrcc/rrrfrc:QsAs|3s8h|Qd3c/4d6d2d/5d/2c'),
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:999:ccc/ccc/rrcc/rrrfrc:|3s8h|Qd3c/4d6d2d/5d/2c'),
@@ -267,19 +267,19 @@ describe AcpcPokerTypes::AcpcDealerData::HandData do
         chip_distribution: [40000, -20000, -20000],
         player_names:  ['p1', 'p2', 'p3'],
         turn_data: [
-          AcpcPokerTypes::AcpcDealerData::HandData::Turn.new(
+          AcpcPokerTypes::DealerData::HandData::Turn.new(
             [
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:999:ccr12926r20000c:QsAs||'),
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:999:ccr12926r20000c:|3s8h|'),
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:2:999:ccr12926r20000c:||Qd3c')
             ],
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::FromMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::FromMessage.new(
               1,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:999:ccr12926r20000c:|3s8h|'),
               AcpcPokerTypes::PokerAction.new('c')
             )
           ),
-          AcpcPokerTypes::AcpcDealerData::HandData::Turn.new(
+          AcpcPokerTypes::DealerData::HandData::Turn.new(
             [
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:999:ccr12926r20000cc///:QsAs|3s8h|Qd3c/4d6d2d/5d/2c'),
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:999:ccr12926r20000cc///:QsAs|3s8h|Qd3c/4d6d2d/5d/2c'),

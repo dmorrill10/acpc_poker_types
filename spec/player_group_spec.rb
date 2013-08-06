@@ -8,7 +8,7 @@ require_relative "../lib/acpc_poker_types/player_group"
 # require_relative "../lib/acpc_poker_types/poker_action"
 require_relative "../lib/acpc_poker_types/hand"
 # require_relative "../lib/acpc_poker_types/card"
-# require_relative "../lib/acpc_poker_types/acpc_dealer_data/poker_match_data"
+# require_relative "../lib/acpc_poker_types/dealer_data/poker_match_data"
 
 module MapWithIndex
   refine Array do

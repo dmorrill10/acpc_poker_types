@@ -1,7 +1,7 @@
-require 'acpc_poker_types/acpc_dealer_data/match_definition'
-require 'acpc_poker_types/acpc_dealer_data/log_file'
+require 'acpc_poker_types/dealer_data/match_definition'
+require 'acpc_poker_types/dealer_data/log_file'
 
-module AcpcPokerTypes::AcpcDealerData
+module AcpcPokerTypes::DealerData
   class  HandResults
     attr_reader :data, :final_score, :match_def
 
@@ -45,8 +45,8 @@ module AcpcPokerTypes::AcpcDealerData
       game_def_directory,
       num_hands=nil
     )
-       AcpcPokerTypes::AcpcDealerData::LogFile.open(acpc_log_file_path, 'r') do |file|
-         AcpcPokerTypes::AcpcDealerData::HandResults.parse file, player_names, game_def_directory, num_hands
+       AcpcPokerTypes::DealerData::LogFile.open(acpc_log_file_path, 'r') do |file|
+         AcpcPokerTypes::DealerData::HandResults.parse file, player_names, game_def_directory, num_hands
       end
     end
 
@@ -58,9 +58,9 @@ module AcpcPokerTypes::AcpcDealerData
 
       @data = acpc_log_statements.inject([]) do |accumulating_data, log_line|
         if @match_def.nil?
-          @match_def = AcpcPokerTypes::AcpcDealerData::MatchDefinition.parse(log_line, player_names, game_def_directory)
+          @match_def = AcpcPokerTypes::DealerData::MatchDefinition.parse(log_line, player_names, game_def_directory)
         else
-          parsed_message = AcpcPokerTypes::AcpcDealerData::HandResults.parse_state(log_line)
+          parsed_message = AcpcPokerTypes::DealerData::HandResults.parse_state(log_line)
           if parsed_message
             # Yes, this causes one more result to be parsed than is saved as long as
             # the number of hands is less than the total number in the log, but this
@@ -68,7 +68,7 @@ module AcpcPokerTypes::AcpcDealerData
             break accumulating_data if accumulating_data.length == num_hands
             accumulating_data << parsed_message
           else
-            @final_score = AcpcPokerTypes::AcpcDealerData::HandResults.parse_score(log_line) unless @final_score
+            @final_score = AcpcPokerTypes::DealerData::HandResults.parse_score(log_line) unless @final_score
           end
         end
 

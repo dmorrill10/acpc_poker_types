@@ -10,7 +10,7 @@ require "acpc_poker_types/match_state"
 require "acpc_poker_types/pile_of_cards"
 require "acpc_poker_types/rank"
 require "acpc_poker_types/suit"
-require "acpc_poker_types/acpc_dealer_data"
+require "acpc_poker_types/dealer_data"
 require 'acpc_poker_types/seat'
 
 module AcpcPokerTypes

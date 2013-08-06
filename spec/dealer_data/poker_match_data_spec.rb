@@ -7,12 +7,12 @@ require 'acpc_dealer'
 require 'acpc_poker_types/match_state'
 require 'acpc_poker_types/poker_action'
 
-require 'acpc_poker_types/acpc_dealer_data/hand_data'
-require 'acpc_poker_types/acpc_dealer_data/match_definition'
-require 'acpc_poker_types/acpc_dealer_data/poker_match_data'
+require 'acpc_poker_types/dealer_data/hand_data'
+require 'acpc_poker_types/dealer_data/match_definition'
+require 'acpc_poker_types/dealer_data/poker_match_data'
 
 include AcpcPokerTypes
-include AcpcPokerTypes::AcpcDealerData
+include AcpcPokerTypes::DealerData
 
 describe PokerMatchData do
   before do

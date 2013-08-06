@@ -1,15 +1,15 @@
 require 'celluloid/autostart'
 
-require 'acpc_poker_types/acpc_dealer_data/action_messages'
-require 'acpc_poker_types/acpc_dealer_data/hand_data'
-require 'acpc_poker_types/acpc_dealer_data/hand_results'
-require 'acpc_poker_types/acpc_dealer_data/match_definition'
+require 'acpc_poker_types/dealer_data/action_messages'
+require 'acpc_poker_types/dealer_data/hand_data'
+require 'acpc_poker_types/dealer_data/hand_results'
+require 'acpc_poker_types/dealer_data/match_definition'
 
 require 'contextual_exceptions'
 using ContextualExceptions::ClassRefinement
 
 module AcpcPokerTypes
-module AcpcDealerData
+module DealerData
 
 class PokerMatchData
   exceptions :match_definitions_do_not_match, :final_scores_do_not_match, :data_inconsistent, :names_do_not_match
@@ -23,15 +23,15 @@ class PokerMatchData
     :match_def,
     # @returns [Integer] Zero-index turn number within the hand
     :hand_number,
-    # @returns [AcpcDealerData::HandData] Data from each hand
+    # @returns [DealerData::HandData] Data from each hand
     :data,
-    # @returns [Array<AcpcDealerData::PokerMatchData::Player>]
+    # @returns [Array<DealerData::PokerMatchData::Player>]
     :players,
     # @returns [Integer] Seat of the active player
     :seat
   )
 
-  # @returns [AcpcDealerData::PokerMatchData]
+  # @returns [DealerData::PokerMatchData]
   def self.parse_files(
     action_messages_file,
     result_messages_file,
@@ -40,7 +40,7 @@ class PokerMatchData
     num_hands=nil
   )
     parsed_action_messages = Celluloid::Future.new do
-       AcpcDealerData::ActionMessages.parse_file(
+       DealerData::ActionMessages.parse_file(
         action_messages_file,
         player_names,
         dealer_directory,
@@ -48,7 +48,7 @@ class PokerMatchData
       )
     end
     parsed_hand_results = Celluloid::Future.new do
-       AcpcDealerData::HandResults.parse_file(
+       DealerData::HandResults.parse_file(
         result_messages_file,
         player_names,
         dealer_directory,
@@ -64,7 +64,7 @@ class PokerMatchData
     )
   end
 
-  # @returns [AcpcDealerData::PokerMatchData]
+  # @returns [DealerData::PokerMatchData]
   def self.parse(
     action_messages,
     result_messages,
@@ -73,7 +73,7 @@ class PokerMatchData
     num_hands=nil
   )
     parsed_action_messages = Celluloid::Future.new do
-       AcpcDealerData::ActionMessages.parse(
+       DealerData::ActionMessages.parse(
         action_messages,
         player_names,
         dealer_directory,
@@ -81,7 +81,7 @@ class PokerMatchData
       )
     end
     parsed_hand_results = Celluloid::Future.new do
-       AcpcDealerData::HandResults.parse(
+       DealerData::HandResults.parse(
         result_messages,
         player_names,
         dealer_directory,
@@ -345,7 +345,7 @@ class PokerMatchData
   def set_data!(parsed_action_messages, parsed_hand_results)
     @data = []
     parsed_action_messages.data.zip(parsed_hand_results.data).each do |action_messages_by_hand, hand_result|
-      @data << AcpcDealerData::HandData.new(
+      @data << DealerData::HandData.new(
         @match_def,
         action_messages_by_hand,
         hand_result

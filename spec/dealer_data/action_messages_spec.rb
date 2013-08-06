@@ -7,11 +7,11 @@ require 'acpc_dealer'
 require 'acpc_poker_types/match_state'
 require 'acpc_poker_types/poker_action'
 
-require 'acpc_poker_types/acpc_dealer_data/action_messages'
-require 'acpc_poker_types/acpc_dealer_data/match_definition'
-require 'acpc_poker_types/acpc_dealer_data/log_file'
+require 'acpc_poker_types/dealer_data/action_messages'
+require 'acpc_poker_types/dealer_data/match_definition'
+require 'acpc_poker_types/dealer_data/log_file'
 
-describe AcpcPokerTypes::AcpcDealerData::ActionMessages do
+describe AcpcPokerTypes::DealerData::ActionMessages do
   before do
     @data = nil
     @final_score = nil
@@ -25,33 +25,33 @@ describe AcpcPokerTypes::AcpcDealerData::ActionMessages do
     it 'properly parses a ACPC log "TO . . ." line' do
       [
         "TO 1 at 1341695999.222281 MATCHSTATE:0:0::5d5c|\n" =>
-          AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+          AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
             0,
             AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:0::5d5c|')
           ),
         "TO 2 at 1341695920.914907 MATCHSTATE:1:0:r19686:|9hQd\n" =>
-          AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+          AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
             1,
             AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:0:r19686:|9hQd')
           ),
         "TO 3 at 1341696044.566738 MATCHSTATE:2:0:rf:||8dAs\n" =>
-          AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+          AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
             2,
             AcpcPokerTypes::MatchState.parse('MATCHSTATE:2:0:rf:||8dAs')
           ),
         "TO 1 at 1341715418.808925 MATCHSTATE:0:0:fcr17162:5d5c||\n" =>
-          AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+          AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
             0,
             AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:0:fcr17162:5d5c||')
           )
       ].each do |to_message_to_data|
         to_message_to_data.each do |to_message, expected_values|
-          AcpcPokerTypes::AcpcDealerData::ActionMessages.parse_to_message(to_message).must_equal expected_values
+          AcpcPokerTypes::DealerData::ActionMessages.parse_to_message(to_message).must_equal expected_values
         end
       end
     end
     it 'returns nil if asked to parse an improperly formatted string' do
-      AcpcPokerTypes::AcpcDealerData::ActionMessages.parse_to_message("improperly formatted string").must_be_nil
+      AcpcPokerTypes::DealerData::ActionMessages.parse_to_message("improperly formatted string").must_be_nil
     end
   end
 
@@ -59,37 +59,37 @@ describe AcpcPokerTypes::AcpcDealerData::ActionMessages do
     it 'properly parses a ACPC log "FROM . . ." line' do
       [
         "FROM 2 at 1341695999.222410 MATCHSTATE:1:0::|9hQd:c\n" =>
-          AcpcPokerTypes::AcpcDealerData::ActionMessages::FromMessage.new(
+          AcpcPokerTypes::DealerData::ActionMessages::FromMessage.new(
             1,
             AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:0::|9hQd'),
             AcpcPokerTypes::PokerAction.new('c')
           ),
         "FROM 1 at 1341695920.914935 MATCHSTATE:0:0:r19686:5d5c|:r20000\n" =>
-          AcpcPokerTypes::AcpcDealerData::ActionMessages::FromMessage.new(
+          AcpcPokerTypes::DealerData::ActionMessages::FromMessage.new(
             0,
             AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:0:r19686:5d5c|'),
             AcpcPokerTypes::PokerAction.new('r20000')
           ),
         "FROM 3 at 1341696044.566938 MATCHSTATE:2:0:rfr:||8dAs:r\n" =>
-          AcpcPokerTypes::AcpcDealerData::ActionMessages::FromMessage.new(
+          AcpcPokerTypes::DealerData::ActionMessages::FromMessage.new(
             2,
             AcpcPokerTypes::MatchState.parse('MATCHSTATE:2:0:rfr:||8dAs'),
             AcpcPokerTypes::PokerAction.new('r')
           ),
         "FROM 2 at 1341715418.808896 MATCHSTATE:1:0:fc:|9hQd|:r17162\n" =>
-          AcpcPokerTypes::AcpcDealerData::ActionMessages::FromMessage.new(
+          AcpcPokerTypes::DealerData::ActionMessages::FromMessage.new(
             1,
             AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:0:fc:|9hQd|'),
             AcpcPokerTypes::PokerAction.new('r17162')
           )
       ].each do |from_message_to_data|
         from_message_to_data.each do |from_message, expected_values|
-          AcpcPokerTypes::AcpcDealerData::ActionMessages.parse_from_message(from_message).must_equal expected_values
+          AcpcPokerTypes::DealerData::ActionMessages.parse_from_message(from_message).must_equal expected_values
         end
       end
     end
     it 'returns nil if asked to parse an improperly formatted string' do
-      AcpcPokerTypes::AcpcDealerData::ActionMessages.parse_from_message("improperly formatted string").must_be_nil
+      AcpcPokerTypes::DealerData::ActionMessages.parse_from_message("improperly formatted string").must_be_nil
     end
   end
 
@@ -100,12 +100,12 @@ describe AcpcPokerTypes::AcpcDealerData::ActionMessages do
         'SCORE:19835|621.5|-20455.5:p1|p2|p3' => {p1: 19835, p2: 621.5, p3: -20455.5}
       ].each do |score_to_player_results|
         score_to_player_results.each do |score_string, expected_values|
-          AcpcPokerTypes::AcpcDealerData::ActionMessages.parse_score(score_string).must_equal expected_values
+          AcpcPokerTypes::DealerData::ActionMessages.parse_score(score_string).must_equal expected_values
         end
       end
     end
     it 'returns nil if asked to parse an improperly formatted string' do
-      AcpcPokerTypes::AcpcDealerData::ActionMessages.parse_score("improperly formatted string").must_be_nil
+      AcpcPokerTypes::DealerData::ActionMessages.parse_score("improperly formatted string").must_be_nil
     end
   end
 
@@ -114,17 +114,17 @@ describe AcpcPokerTypes::AcpcDealerData::ActionMessages do
       it 'when every hand is desired' do
         init_data do |action_messages|
           file_name = 'file_name'
-          AcpcPokerTypes::AcpcDealerData::LogFile.expects(:open).with(file_name, 'r').yields(
+          AcpcPokerTypes::DealerData::LogFile.expects(:open).with(file_name, 'r').yields(
             action_messages
           ).returns(
-            AcpcPokerTypes::AcpcDealerData::ActionMessages.parse(
+            AcpcPokerTypes::DealerData::ActionMessages.parse(
               action_messages,
               @player_names,
               AcpcDealer::DEALER_DIRECTORY
             )
           )
 
-          @patient = AcpcPokerTypes::AcpcDealerData::ActionMessages.parse_file(
+          @patient = AcpcPokerTypes::DealerData::ActionMessages.parse_file(
             file_name,
             @player_names,
             AcpcDealer::DEALER_DIRECTORY
@@ -138,10 +138,10 @@ describe AcpcPokerTypes::AcpcDealerData::ActionMessages do
         num_hands = 1
         init_data do |action_messages|
           file_name = 'file_name'
-          AcpcPokerTypes::AcpcDealerData::LogFile.expects(:open).with(file_name, 'r').yields(
+          AcpcPokerTypes::DealerData::LogFile.expects(:open).with(file_name, 'r').yields(
             action_messages
           ).returns(
-            AcpcPokerTypes::AcpcDealerData::ActionMessages.parse(
+            AcpcPokerTypes::DealerData::ActionMessages.parse(
               action_messages,
               @player_names,
               AcpcDealer::DEALER_DIRECTORY,
@@ -149,7 +149,7 @@ describe AcpcPokerTypes::AcpcDealerData::ActionMessages do
             )
           )
 
-          @patient = AcpcPokerTypes::AcpcDealerData::ActionMessages.parse_file(
+          @patient = AcpcPokerTypes::DealerData::ActionMessages.parse_file(
             file_name,
             @player_names,
             AcpcDealer::DEALER_DIRECTORY,
@@ -167,7 +167,7 @@ describe AcpcPokerTypes::AcpcDealerData::ActionMessages do
     describe 'from array' do
       it 'when all hands are desired' do
         init_data do |action_messages|
-          @patient = AcpcPokerTypes::AcpcDealerData::ActionMessages.parse(
+          @patient = AcpcPokerTypes::DealerData::ActionMessages.parse(
             action_messages,
             @player_names,
             AcpcDealer::DEALER_DIRECTORY
@@ -180,7 +180,7 @@ describe AcpcPokerTypes::AcpcDealerData::ActionMessages do
         @no_final_score = true
         num_hands = 1
         init_data do |log_statements|
-          @patient = AcpcPokerTypes::AcpcDealerData::ActionMessages.parse(
+          @patient = AcpcPokerTypes::DealerData::ActionMessages.parse(
             log_statements,
             @player_names,
             AcpcDealer::DEALER_DIRECTORY,
@@ -208,7 +208,7 @@ describe AcpcPokerTypes::AcpcDealerData::ActionMessages do
       @final_score = data_hash[:final_score]
       @data = data_hash[:data]
       @player_names = data_hash[:player_names]
-      @match_def = AcpcPokerTypes::AcpcDealerData::MatchDefinition.parse(
+      @match_def = AcpcPokerTypes::DealerData::MatchDefinition.parse(
         data_hash[:action_messages].first,
         @player_names,
         AcpcDealer::DEALER_DIRECTORY
@@ -236,39 +236,39 @@ describe AcpcPokerTypes::AcpcDealerData::ActionMessages do
         ],
         data: [
           [
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               0,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:998:crc/cc/cc/:|TdQd/As6d6h/7h/4s')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               1,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:998:crc/cc/cc/:Jc8d|/As6d6h/7h/4s')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::FromMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::FromMessage.new(
               1,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:998:crc/cc/cc/:Jc8d|/As6d6h/7h/4s'),
               AcpcPokerTypes::PokerAction.new('r')
             )
           ],
           [
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               0,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:999:crc/cc/cc/r:|TdQd/As6d6h/7h/4s')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               1,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:999:crc/cc/cc/r:Jc8d|/As6d6h/7h/4s')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::FromMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::FromMessage.new(
               0,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:999:crc/cc/cc/r:|TdQd/As6d6h/7h/4s'),
               AcpcPokerTypes::PokerAction.new('c')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               0,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:999:crc/cc/cc/rc:Jc8d|TdQd/As6d6h/7h/4s')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               1,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:999:crc/cc/cc/rc:Jc8d|TdQd/As6d6h/7h/4s')
             )
@@ -295,47 +295,47 @@ describe AcpcPokerTypes::AcpcDealerData::ActionMessages do
         ],
         data: [
           [
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               0,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:998:cc/r5841r19996r20000:Kc6h|/QhAh8d')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               1,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:998:cc/r5841r19996r20000:|Qc3s/QhAh8d')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::FromMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::FromMessage.new(
               1,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:998:cc/r5841r19996r20000:|Qc3s/QhAh8d:c'),
               AcpcPokerTypes::PokerAction.new('c')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               0,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:998:cc/r5841r19996r20000c//:Kc6h|Qc3s/QhAh8d/Th/9d')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               1,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:998:cc/r5841r19996r20000c//:Kc6h|Qc3s/QhAh8d/Th/9d')
             )
           ],
           [
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               0,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:999::|TdQd')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               1,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:999::Jc8d|')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::FromMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::FromMessage.new(
               0,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:999::|TdQd'),
               AcpcPokerTypes::PokerAction.new('f')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               0,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:999:f:|TdQd')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               1,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:999:f:Jc8d|')
             )
@@ -359,32 +359,32 @@ describe AcpcPokerTypes::AcpcDealerData::ActionMessages do
         ],
         data: [
           [
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               0,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:999:ccc/ccc/rrcc/rrrfr:QsAs||/4d6d2d/5d/2c')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               1,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:999:ccc/ccc/rrcc/rrrfr:|3s8h|/4d6d2d/5d/2c')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               2,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:2:999:ccc/ccc/rrcc/rrrfr:||Qd3c/4d6d2d/5d/2c')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::FromMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::FromMessage.new(
               2,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:2:999:ccc/ccc/rrcc/rrrfr:||Qd3c/4d6d2d/5d/2c'),
               AcpcPokerTypes::PokerAction.new('c')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               0,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:999:ccc/ccc/rrcc/rrrfrc:QsAs|3s8h|Qd3c/4d6d2d/5d/2c')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               1,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:999:ccc/ccc/rrcc/rrrfrc:|3s8h|Qd3c/4d6d2d/5d/2c')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               2,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:2:999:ccc/ccc/rrcc/rrrfrc:|3s8h|Qd3c/4d6d2d/5d/2c')
             )
@@ -408,34 +408,34 @@ describe AcpcPokerTypes::AcpcDealerData::ActionMessages do
         ],
         data: [
           [
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               0,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:998:ccr12926r20000c:QsAs||')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               1,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:998:ccr12926r20000c:|3s8h|')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               2,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:2:998:ccr12926r20000c:||Qd3c')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::FromMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::FromMessage.new(
               1,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:998:ccr12926r20000c:|3s8h|'),
               AcpcPokerTypes::PokerAction.new('c')
             )
           ],
           [
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               0,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:0:999:ccr12926r20000cc///:QsAs|3s8h|Qd3c/4d6d2d/5d/2c')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               1,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:1:999:ccr12926r20000cc///:QsAs|3s8h|Qd3c/4d6d2d/5d/2c')
             ),
-            AcpcPokerTypes::AcpcDealerData::ActionMessages::ToMessage.new(
+            AcpcPokerTypes::DealerData::ActionMessages::ToMessage.new(
               2,
               AcpcPokerTypes::MatchState.parse('MATCHSTATE:2:999:ccr12926r20000cc///:QsAs|3s8h|Qd3c/4d6d2d/5d/2c')
             )
