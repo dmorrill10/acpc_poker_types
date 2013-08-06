@@ -148,7 +148,7 @@ describe PokerMatchData do
     end
   end
   describe '#player_acting_sequence' do
-    describe "doesn't append an empty array to the list when no players are active" do
+    describe "doesn't append an empty array to the list when all but one player has folded" do
       it 'in two player' do
         action_messages =
           "# name/game/hands/seed 2p.limit.h1000.r0 holdem.limit.2p.reverse_blinds.game 1 0
@@ -231,6 +231,48 @@ describe PokerMatchData do
 
         @patient.hand_number = 0
         @patient.current_hand.turn_number = 3
+        @patient.player_acting_sequence.must_equal player_acting_sequence
+      end
+    end
+    describe "appends an empty array to the list whenever a new round is encountered" do
+      it 'in two player' do
+        action_messages =
+          "# name/game/hands/seed 2p.nolimit.h1000.r0 /home/dmorrill/.rvm/gems/ruby-1.9.3-p194/gems/acpc_dealer-0.0.1/vendor/project_acpc_server/holdem.nolimit.2p.reverse_blinds.game 1000 0
+          #--t_response 600000
+          #--t_hand 600000
+          #--t_per_hand 7000
+          STARTED at 1341695920.914516
+          TO 1 at 1341695920.914700 MATCHSTATE:0:0::5d5c|
+          TO 2 at 1341695920.914745 MATCHSTATE:1:0::|9hQd
+          FROM 2 at 1341695920.914807 MATCHSTATE:1:0::|9hQd:r19686
+          TO 1 at 1341695920.914864 MATCHSTATE:0:0:r19686:5d5c|
+          TO 2 at 1341695920.914907 MATCHSTATE:1:0:r19686:|9hQd
+          FROM 1 at 1341695920.914935 MATCHSTATE:0:0:r19686:5d5c|:r20000
+          TO 1 at 1341695920.914988 MATCHSTATE:0:0:r19686r20000:5d5c|
+          TO 2 at 1341695920.915032 MATCHSTATE:1:0:r19686r20000:|9hQd
+          FROM 2 at 1341695920.915073 MATCHSTATE:1:0:r19686r20000:|9hQd:c
+          TO 1 at 1341695920.915193 MATCHSTATE:0:0:r19686r20000c///:5d5c|9hQd/8dAs8s/4h/6d
+          TO 2 at 1341695920.915232 MATCHSTATE:1:0:r19686r20000c///:5d5c|9hQd/8dAs8s/4h/6d
+          SCORE:20000|-20000:p1|p2".split("\n").map {|line| line += "\n" }
+
+        result_messages =
+          "# name/game/hands/seed 2p.nolimit.h1000.r0 /home/dmorrill/.rvm/gems/ruby-1.9.3-p194/gems/acpc_dealer-0.0.1/vendor/project_acpc_server/holdem.nolimit.2p.reverse_blinds.game 1000 0
+          #--t_response 600000
+          #--t_hand 600000
+          #--t_per_hand 7000
+          STATE:0:r19686r20000c///:5d5c|9hQd/8dAs8s/4h/6d:20000|-20000:p1|p2
+          SCORE:20000|-20000:p1|p2".split("\n").map {|line| line += "\n" }
+
+        player_acting_sequence = [[1, 0, 1], [], [], []]
+        @patient = PokerMatchData.parse(
+          action_messages,
+          result_messages,
+          ['p1', 'p2'],
+          AcpcDealer::DEALER_DIRECTORY
+        )
+
+        @patient.hand_number = 0
+        @patient.current_hand.turn_number = @patient.current_hand.data.length - 1
         @patient.player_acting_sequence.must_equal player_acting_sequence
       end
     end

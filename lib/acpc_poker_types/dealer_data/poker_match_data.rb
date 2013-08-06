@@ -211,11 +211,6 @@ class PokerMatchData
     self
   end
 
-  def match_has_another_round?(current_round, turn_index, turns_taken)
-    new_round?(current_round, turn_index) ||
-    players_all_in?(current_round, turn_index, turns_taken)
-  end
-
   def hand_started?
     @hand_number &&
     current_hand.turn_number &&
@@ -232,8 +227,13 @@ class PokerMatchData
       next unless turn.action_message
 
       sequence[turn.action_message.state.round] << turn.action_message.seat
-      if match_has_another_round?(sequence.length - 1, turn_index, turns_taken)
+      if new_round?(sequence.length - 1, turn_index)
         sequence << []
+      end
+      if players_all_in?(sequence.length - 1, turn_index, turns_taken)
+        while sequence.length < @match_def.game_def.number_of_rounds
+          sequence << []
+        end
       end
     end
 
