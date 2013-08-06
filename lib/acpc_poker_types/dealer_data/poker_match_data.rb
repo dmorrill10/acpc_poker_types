@@ -218,27 +218,7 @@ class PokerMatchData
   end
 
   def player_acting_sequence
-    sequence = []
-
-    return sequence unless hand_started?
-
-    turns_taken = current_hand.data[0..current_hand.turn_number-1]
-    turns_taken.each_with_index do |turn, turn_index|
-      next unless turn.action_message
-
-      sequence[turn.action_message.state.round] ||= []
-      sequence[turn.action_message.state.round] << turn.action_message.seat
-      if new_round?(sequence.length - 1, turn_index)
-        sequence << []
-      end
-      if players_all_in?(sequence.length - 1, turn_index, turns_taken)
-        while sequence.length < @match_def.game_def.number_of_rounds
-          sequence << []
-        end
-      end
-    end
-
-    sequence
+    sequence_from_action_messages(:seat)
   end
 
   def current_hand
@@ -283,31 +263,7 @@ class PokerMatchData
     current_hand.next_action.seat == @seat
   end
   def betting_sequence
-    sequence = [[]]
-
-    if (
-      @hand_number.nil? ||
-      current_hand.turn_number.nil? ||
-      current_hand.turn_number < 1
-    )
-      return sequence
-    end
-
-    turns_taken = current_hand.data[0..current_hand.turn_number-1]
-    turns_taken.each_with_index do |turn, turn_index|
-      next unless turn.action_message
-
-      sequence[turn.action_message.state.round] << turn.action_message.action
-
-      if (
-        new_round?(sequence.length - 1 , turn_index) ||
-        players_all_in?(sequence.length - 1, turn_index, turns_taken)
-      )
-        sequence << []
-      end
-    end
-
-    sequence
+    sequence_from_action_messages(:action)
   end
   def betting_sequence_string
     (betting_sequence.map do |per_round|
@@ -316,6 +272,28 @@ class PokerMatchData
   end
 
   protected
+
+  def sequence_from_action_messages(attribute)
+    sequence = []
+
+    return sequence unless hand_started?
+
+    turns_taken = current_hand.data[0..current_hand.turn_number-1]
+    turns_taken.each_with_index do |turn, turn_index|
+      next unless turn.action_message
+
+      sequence[turn.action_message.state.round] ||= []
+      sequence[turn.action_message.state.round] << turn.action_message[attribute]
+
+      if players_all_in?(sequence.length - 1, turn_index, turns_taken)
+        while sequence.length < @match_def.game_def.number_of_rounds
+          sequence << []
+        end
+      end
+    end
+
+    sequence
+  end
 
   def initialize_players!
     @players = @match_def.player_names.length.times.map do |seat|
