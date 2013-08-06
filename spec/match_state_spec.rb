@@ -9,7 +9,7 @@ require_relative "../lib/acpc_poker_types/suit"
 require_relative "../lib/acpc_poker_types/hand"
 require_relative "../lib/acpc_poker_types/card"
 require_relative "../lib/acpc_poker_types/game_definition"
-require_relative "../lib/acpc_poker_types/acpc_dealer_data/poker_match_data"
+require_relative "../lib/acpc_poker_types/dealer_data/poker_match_data"
 
 module MapWithIndex
   refine Array do
@@ -144,6 +144,12 @@ describe MatchState do
         betting += "c/"
       end
     end
+    it "properly reports the current round number when players are all-in" do
+      x_match_state = "#{MatchState::LABEL}:0:0:rc///:#{arbitrary_hole_card_hand}|#{arbitrary_hole_card_hand}"
+      patient = test_match_state_success(x_match_state)
+      patient.round.must_equal 3
+      patient.to_s.must_equal x_match_state
+    end
   end
 
   it 'reports the correct number of players' do
@@ -231,7 +237,7 @@ describe MatchState do
     end
   end
   describe '#betting_sequence' do
-    it 'works' do
+    it 'works for normal play' do
       MatchState.parse(
         "#{MatchState::LABEL}:0:0:crcc/ccc/rrfc:AhKs|"
       ).betting_sequence.must_equal [
@@ -253,6 +259,41 @@ describe MatchState do
           PokerAction.new(PokerAction::CALL)
         ]
       ]
+    end
+    it 'works when players are all-in' do
+      wager_size = 10
+      x_game_def = GameDefinition.new(
+        first_player_positions: [3, 2, 2, 2],
+        chip_stacks: [100, 200, 150],
+        blinds: [0, 10, 5],
+        raise_sizes: [wager_size]*4,
+        number_of_ranks: 3
+      )
+
+      (0..x_game_def.number_of_players-1).each do |position|
+        hands = x_game_def.number_of_players.times.map { arbitrary_hole_card_hand }
+
+        hand_string = hands.inject('') do |hand_string, hand|
+          hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
+        end[0..-2]
+
+        match_state =
+          "#{MatchState::LABEL}:#{position}:0:cr200cc///:#{hand_string}"
+
+        MatchState.new(match_state).betting_sequence.must_equal(
+          [
+            [
+              PokerAction.new('c'),
+              PokerAction.new('r200'),
+              PokerAction.new('c'),
+              PokerAction.new('c')
+            ],
+            [],
+            [],
+            []
+          ]
+        )
+      end
     end
   end
   describe '#players_at_hand_start' do
@@ -605,7 +646,7 @@ describe MatchState do
     end
   end
   describe '#player_acting_sequence' do
-    it 'works' do
+    it 'works for normal play' do
       wager_size = 10
       x_game_def = GameDefinition.new(
         first_player_positions: [3, 2, 2, 2],
@@ -616,78 +657,6 @@ describe MatchState do
       )
 
       (0..x_game_def.number_of_players-1).each do |position|
-        x_actions = [
-          {
-            action: PokerAction.new(PokerAction::CALL, cost: 5),
-            round: 0,
-            acting_player_position: 2
-          },
-          {
-            action: PokerAction.new(PokerAction::RAISE, cost: wager_size + 10),
-            round: 0,
-            acting_player_position: 0
-          },
-          {
-            action: PokerAction.new(PokerAction::CALL, cost: wager_size),
-            round: 0,
-            acting_player_position: 1
-          },
-          {
-            action: PokerAction.new(PokerAction::CALL, cost: wager_size),
-            round: 0,
-            acting_player_position: 2
-          },
-          {
-            action: PokerAction.new(PokerAction::CHECK),
-            round: 1,
-            acting_player_position: 1
-          },
-          {
-            action: PokerAction.new(PokerAction::CHECK),
-            round: 1,
-            acting_player_position: 2
-          },
-          {
-            action: PokerAction.new(PokerAction::CHECK),
-            round: 1,
-            acting_player_position: 0
-          },
-          {
-            action: PokerAction.new(PokerAction::BET, cost: wager_size),
-            round: 2,
-            acting_player_position: 1
-          },
-          {
-            action: PokerAction.new(PokerAction::RAISE, cost: 2 * wager_size),
-            round: 2,
-            acting_player_position: 2
-          },
-          {
-            action: PokerAction.new(PokerAction::FOLD),
-            round: 2,
-            acting_player_position: 0
-          },
-          {
-            action: PokerAction.new(PokerAction::CALL, cost: wager_size),
-            round: 2,
-            acting_player_position: 1
-          },
-          {
-            action: PokerAction.new(PokerAction::CHECK),
-            round: 3,
-            acting_player_position: 1
-          },
-          {
-            action: PokerAction.new(PokerAction::BET, cost: wager_size),
-            round: 3,
-            acting_player_position: 2
-          },
-          {
-            action: PokerAction.new(PokerAction::CALL, cost: wager_size),
-            round: 3,
-            acting_player_position: 1
-          }
-        ]
         hands = x_game_def.number_of_players.times.map { Hand.new }
 
         hands[position] = arbitrary_hole_card_hand
@@ -701,6 +670,31 @@ describe MatchState do
 
         MatchState.new(match_state).player_acting_sequence(x_game_def).must_equal(
           [[2, 0, 1, 2], [1, 2, 0], [1, 2, 0, 1], [1, 2, 1]]
+        )
+      end
+    end
+    it 'works when players are all-in' do
+      wager_size = 10
+      x_game_def = GameDefinition.new(
+        first_player_positions: [3, 2, 2, 2],
+        chip_stacks: [100, 200, 150],
+        blinds: [0, 10, 5],
+        raise_sizes: [wager_size]*4,
+        number_of_ranks: 3
+      )
+
+      (0..x_game_def.number_of_players-1).each do |position|
+        hands = x_game_def.number_of_players.times.map { arbitrary_hole_card_hand }
+
+        hand_string = hands.inject('') do |hand_string, hand|
+          hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
+        end[0..-2]
+
+        match_state =
+          "#{MatchState::LABEL}:#{position}:0:cr200cc///:#{hand_string}"
+
+        MatchState.new(match_state).player_acting_sequence(x_game_def).must_equal(
+          [[2, 0, 1, 2], [], [], []]
         )
       end
     end

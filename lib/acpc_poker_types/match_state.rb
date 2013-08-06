@@ -144,7 +144,7 @@ class MatchState
     @betting_sequence ||= if @betting_sequence_string.empty?
       [[]]
     else
-      lcl_betting_sequence = @betting_sequence_string.split(
+      sequence = @betting_sequence_string.split(
         BETTING_SEQUENCE_SEPARATOR
       ).map do |betting_string_per_round|
         actions_from_acpc_characters(betting_string_per_round).map do |action|
@@ -153,8 +153,10 @@ class MatchState
       end
 
       # Adjust the number of rounds if the last action was the last action in the round
-      lcl_betting_sequence << [] if first_state_of_round?
-      lcl_betting_sequence
+      while sequence.length <= round
+        sequence << []
+      end
+      sequence
     end
   end
 
@@ -321,6 +323,7 @@ class MatchState
 
   def walk_over_betting_sequence!(game_def)
     last_round = -1
+
     betting_sequence.each_with_index do |actions_per_round, current_round|
       @min_wager_by = game_def.min_wagers[current_round]
       @next_to_act = @players.position_of_first_active_player(
