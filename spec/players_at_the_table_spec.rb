@@ -17,7 +17,7 @@ describe PlayersAtTheTable do
       # Careful though, even 10 hands takes about three seconds,
       # and it scales slightly less than linearly. 120 takes
       # about 30 seconds.
-      num_hands = 10
+      num_hands = 120
       MatchLog.all.each do |log_description|
         @match = DealerData::PokerMatchData.parse_files(
           log_description.actions_file_path,
@@ -28,14 +28,13 @@ describe PlayersAtTheTable do
         )
         @match.for_every_seat! do |users_seat|
 
-          @patient = PlayersAtTheTable.seat_players(@match.match_def.game_def)
+          @patient = PlayersAtTheTable.seat_players(@match.match_def.game_def, users_seat)
 
           check_patient
 
           @match.for_every_hand! do
             @match.for_every_turn! do
               @patient.update! @match.current_hand.current_match_state
-
               check_patient
             end
           end
@@ -46,31 +45,24 @@ describe PlayersAtTheTable do
 
   def check_patient(patient=@patient)
     patient.player_acting_sequence.must_equal @match.player_acting_sequence
-    # patient.players.length.must_equal @match.players.length
-    # check_last_action
-    # check_next_to_act
-    # check_last_turn
-    # patient.player_acting_sequence_string.must_equal @match.player_acting_sequence_string
-    # patient.users_turn_to_act?.must_equal @match.users_turn_to_act?
-    # check_betting_sequence(patient)
-    # patient.last_hand?.must_equal (
-    #   if @match.final_hand?.nil?
-    #     false
-    #   else
-    #     @match.final_hand?
-    #   end
-    # )
+    patient.players.length.must_equal @match.players.length
+    check_last_action
+    check_next_to_act
+    check_last_turn
+    patient.player_acting_sequence_string.must_equal @match.player_acting_sequence_string
+    patient.users_turn_to_act?.must_equal @match.users_turn_to_act?
+    check_betting_sequence(patient)
 
-    # if @match.current_hand
-    #   patient.hand_ended?.must_equal @match.current_hand.final_turn?
-    #   unless @match.current_hand.final_turn?
-    #     patient.match_state.all_hands.each do |hand|
-    #       hand.each do |card|
-    #         card.must_be_kind_of AcpcPokerTypes::Card
-    #       end
-    #     end
-    #   end
-    # end
+    if @match.current_hand
+      patient.hand_ended?.must_equal @match.current_hand.final_turn?
+      unless @match.current_hand.final_turn?
+        patient.match_state.all_hands.each do |hand|
+          hand.each do |card|
+            card.must_be_kind_of AcpcPokerTypes::Card
+          end
+        end
+      end
+    end
     # @todo Test this eventually
     # patient.min_wager.to_i.must_equal @min_wager.to_i
   end
@@ -115,8 +107,6 @@ describe PlayersAtTheTable do
   end
   def check_next_to_act(patient=@patient)
     if @match.current_hand && @match.current_hand.next_action
-      ap state: @match.current_hand.current_match_state.to_s, action: @match.current_hand.next_action.to_s, first_player_position: patient.game_def.first_player_positions[1]
-
       patient.next_player_to_act.seat.must_equal @match.current_hand.next_action.seat
     else
       patient.next_player_to_act.must_be_nil
@@ -125,8 +115,9 @@ describe PlayersAtTheTable do
   def check_last_turn(patient=@patient)
     return unless @match.current_hand && @match.current_hand.final_turn?
 
+    ap state: @match.current_hand.current_match_state.to_s
+
     patient.players.players_close_enough?(@match.players).must_equal true
-    patient.player_with_dealer_button.close_enough?(@match.player_with_dealer_button).must_equal true
     check_player_blind_relation(patient)
   end
 end
@@ -148,7 +139,7 @@ end
 
 class Player
   def close_enough?(other)
-    @name == other.name &&
+    ap balance: balance, other: other
     @seat == other.seat &&
     balance == other.balance
   end

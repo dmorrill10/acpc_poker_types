@@ -34,14 +34,15 @@ class PlayersAtTheTable
 
   # @param [GameDefinition] game_def The game definition for the
   #  match these players are playing
-  def initialize(game_def)
+  # @param [#to_i] seat The user's seat. Defaults to zero.
+  def initialize(game_def, seat = 0)
     @players = game_def.number_of_players.times.map do |i|
       Player.new(
         Seat.new(i, game_def.number_of_players)
       )
     end
-    @users_seat = Seat.new(0, game_def.number_of_players)
     @game_def = game_def
+    @seat = Seat.new(seat, game_def.number_of_players)
   end
 
   # @param [MatchState] match_state The next match state.
@@ -89,7 +90,7 @@ class PlayersAtTheTable
   def users_turn_to_act?
     return false if @match_state.nil? || hand_ended?
 
-    next_player_to_act.seat == @users_seat
+    next_player_to_act.seat == seat
   end
 
   # @param [Integer] player The player of which the position relative to the
@@ -100,7 +101,7 @@ class PlayersAtTheTable
   # @raise (see Integer#seat_from_relative_position)
   # @raise (see Integer#position_relative_to)
   def position_relative_to_dealer(player)
-    (@users_seat.seats_to(player) + users_position_relative_to_dealer) % @players.length
+    (seat.seats_to(player) + users_position_relative_to_dealer) % @players.length
   end
 
   # @return [Array] The set of legal actions for the currently acting player.
@@ -121,10 +122,21 @@ class PlayersAtTheTable
     return [[]] unless @match_state
 
     @match_state.player_acting_sequence(@game_def).map do |actions_per_round|
-      actions_per_round.map do |seat|
-        position_relative_to_dealer(seat)
+      next [] if actions_per_round.empty?
+
+      actions_per_round.map do |pos_rel_dealer|
+        seat(pos_rel_dealer)
       end
     end
+  end
+
+  def seat(pos_rel_dealer = users_position_relative_to_dealer)
+    return @seat if pos_rel_dealer == users_position_relative_to_dealer
+
+    Seat.new(
+      @seat + Seat.new(users_position_relative_to_dealer, @game_def.number_of_players).seats_to(pos_rel_dealer),
+      @game_def.number_of_players
+    )
   end
 
   def users_position_relative_to_dealer
