@@ -150,10 +150,15 @@ class PokerMatchData
     self
   end
 
-  def end_hand!
+  def distribute_chips!
     @players.each do |plyr|
       plyr.balance += hand_player(plyr).balance
     end
+
+    self
+  end
+
+  def end_hand!
     current_hand.end_hand!
 
     self
@@ -198,6 +203,8 @@ class PokerMatchData
       last_match_state = current_hand.last_match_state(seat)
       match_state = current_hand.current_match_state(seat)
     end
+
+    distribute_chips! if current_hand.final_turn?
 
     self
   end
@@ -283,6 +290,7 @@ class PokerMatchData
 
       sequence[turn.action_message.state.round] ||= []
       sequence[turn.action_message.state.round] << turn.action_message[attribute]
+
       if new_round?(sequence.length - 1, turn_index)
         sequence << []
       end
@@ -344,6 +352,7 @@ class PokerMatchData
     end) != @players.length - 1
   end
   def new_round?(current_round, turn_index)
+    current_hand &&
     current_hand.data.length > turn_index + 1 &&
     current_hand.data[turn_index + 1].action_message &&
     current_hand.data[turn_index + 1].action_message.state.round > current_round
