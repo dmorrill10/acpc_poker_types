@@ -46,7 +46,6 @@ describe PlayersAtTheTable do
   def check_patient(patient=@patient)
     patient.player_acting_sequence.must_equal @match.player_acting_sequence
     patient.players.length.must_equal @match.players.length
-    check_last_action
     check_next_to_act
     check_last_turn
     patient.player_acting_sequence_string.must_equal @match.player_acting_sequence_string
@@ -68,10 +67,10 @@ describe PlayersAtTheTable do
   end
 
   def check_player_blind_relation(patient)
-    patient.position_relative_to_dealer(patient.big_blind_player).must_equal(
+    patient.position_relative_to_dealer(patient.big_blind_payer).must_equal(
       @match.match_def.game_def.blinds.index(@match.match_def.game_def.blinds.max)
     )
-    patient.position_relative_to_dealer(patient.small_blind_player).must_equal(
+    patient.position_relative_to_dealer(patient.small_blind_payer).must_equal(
       @match.match_def.game_def.blinds.index do |blind|
         blind < @match.match_def.game_def.blinds.max && blind > 0
       end
@@ -96,26 +95,15 @@ describe PlayersAtTheTable do
       end
     end.join('').must_equal @match.betting_sequence_string
   end
-  def check_last_action(patient=@patient)
-    if @match.current_hand && @match.current_hand.last_action
-      if patient.player_acting_sequence.last.last.nil?
-        patient.player_acting_sequence[-2].last.must_equal @match.current_hand.last_action.seat
-      end
-    else
-      patient.player_acting_sequence.last.empty?.must_equal true
-    end
-  end
   def check_next_to_act(patient=@patient)
     if @match.current_hand && @match.current_hand.next_action
       patient.next_player_to_act.seat.must_equal @match.current_hand.next_action.seat
     else
-      patient.next_player_to_act.must_be_nil
+      patient.next_player_to_act.seat.must_be_nil
     end
   end
   def check_last_turn(patient=@patient)
     return unless @match.current_hand && @match.current_hand.final_turn?
-
-    ap state: @match.current_hand.current_match_state.to_s
 
     patient.players.players_close_enough?(@match.players).must_equal true
     check_player_blind_relation(patient)
@@ -139,7 +127,6 @@ end
 
 class Player
   def close_enough?(other)
-    ap balance: balance, other: other
     @seat == other.seat &&
     balance == other.balance
   end

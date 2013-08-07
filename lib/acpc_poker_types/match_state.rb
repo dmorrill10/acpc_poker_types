@@ -295,7 +295,7 @@ class MatchState
   def hand_ended?(game_def)
     return @hand_ended unless @hand_ended.nil?
 
-    @hand_ended = reached_showdown? || players(game_def).count { |player| player.inactive? } >= number_of_players - 1
+    @hand_ended = reached_showdown? || players(game_def).count { |player| player.folded? } >= number_of_players - 1
   end
 
   def reached_showdown?

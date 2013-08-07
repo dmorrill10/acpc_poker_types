@@ -61,7 +61,7 @@ class PlayersAtTheTable
 
   # @return [Player] The player with the dealer button.
   def dealer_player
-    return nil unless @match_state
+    return Player.new(nil) unless @match_state
     @players.find { |player| position_relative_to_dealer(player) == @players.length - 1}
   end
   def big_blind_payer
@@ -73,15 +73,13 @@ class PlayersAtTheTable
     @players.find do |plyr|
       position_relative_to_dealer(plyr) == (
         @game_def.blinds.index do |blind|
-          blind < @match.match_def.game_def.blinds.max && blind > 0
+          blind < @game_def.blinds.max && blind > 0
         end
       )
     end
   end
   def next_player_to_act
-    return nil if @match_state.nil? || hand_ended?
-
-    ap next_to_act: @match_state.next_to_act(@game_def)
+    return Player.new(nil) if @match_state.nil? || hand_ended?
 
     @players.find { |plyr| position_relative_to_dealer(plyr) == @match_state.next_to_act(@game_def) }
   end

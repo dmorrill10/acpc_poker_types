@@ -775,6 +775,54 @@ describe MatchState do
         MatchState.new(match_state).hand_ended?(x_game_def).must_equal true
       end
     end
+    it 'works when one player has gone all-in' do
+      wager_size = 10
+      x_game_def = GameDefinition.new(
+        first_player_positions: [3, 2, 2, 2],
+        chip_stacks: [100, 200, 150],
+        blinds: [0, 10, 5],
+        raise_sizes: [wager_size]*4,
+        number_of_ranks: 3
+      )
+
+      (0..x_game_def.number_of_players-1).each do |position|
+        hands = x_game_def.number_of_players.times.map { Hand.new }
+
+        hands[position] = arbitrary_hole_card_hand
+
+        hand_string = hands.inject('') do |hand_string, hand|
+          hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
+        end[0..-2]
+
+        match_state =
+          "#{MatchState::LABEL}:#{position}:0:cr200:#{hand_string}"
+
+        MatchState.new(match_state).hand_ended?(x_game_def).must_equal false
+      end
+    end
+    it 'works when all players have gone all-in' do
+      wager_size = 10
+      x_game_def = GameDefinition.new(
+        first_player_positions: [3, 2, 2, 2],
+        chip_stacks: [100, 200, 150],
+        blinds: [0, 10, 5],
+        raise_sizes: [wager_size]*4,
+        number_of_ranks: 3
+      )
+
+      (0..x_game_def.number_of_players-1).each do |position|
+        hands = x_game_def.number_of_players.times.map { arbitrary_hole_card_hand }
+
+        hand_string = hands.inject('') do |hand_string, hand|
+          hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
+        end[0..-2]
+
+        match_state =
+          "#{MatchState::LABEL}:#{position}:0:cr200cc///:#{hand_string}"
+
+        MatchState.new(match_state).hand_ended?(x_game_def).must_equal true
+      end
+    end
   end
   describe '#min_wager_by' do
     it 'return proper player states' do
