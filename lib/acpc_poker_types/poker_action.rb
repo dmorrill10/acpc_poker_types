@@ -77,14 +77,6 @@ class PokerAction < DelegateClass(String)
     super to_s
   end
 
-  # def ==(other_action)
-  #   0 == (self <=> other_action)
-  # end
-
-  # def <=>(other_action)
-  #   to_s <=> other_action.to_s
-  # end
-
   # @return [String] String representation of this action.
   # @param pot_gained_chips [Boolean] Whether or not the pot had gained chips before this action. Defaults to true.
   # @param player_sees_wager [Boolean] Whether or not the player is reacting to a wager.
@@ -102,7 +94,6 @@ class PokerAction < DelegateClass(String)
   end
 
   alias_method :to_acpc, :to_s
-  alias_method :to_str, :to_s
 
   # @return [Boolean] +true+ if this action has a modifier, +false+ otherwise.
   def has_modifier?

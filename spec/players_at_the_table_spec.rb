@@ -17,7 +17,7 @@ describe PlayersAtTheTable do
       # Careful though, even 10 hands takes about three seconds,
       # and it scales slightly less than linearly. 120 takes
       # about 30 seconds.
-      num_hands = 120
+      num_hands = 10
       MatchLog.all.each do |log_description|
         @match = DealerData::PokerMatchData.parse_files(
           log_description.actions_file_path,

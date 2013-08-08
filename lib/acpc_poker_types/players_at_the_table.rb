@@ -106,7 +106,7 @@ class PlayersAtTheTable
   def legal_actions
     return [] unless @match_state
 
-    @match_state.players(@game_def)[users_position_relative_to_dealer].legal_actions
+    @match_state.legal_actions(@game_def)
   end
 
   # @return [String] player acting sequence as a string.
