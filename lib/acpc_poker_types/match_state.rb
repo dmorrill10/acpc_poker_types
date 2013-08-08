@@ -1,3 +1,5 @@
+require 'delegate'
+
 require 'acpc_poker_types/board_cards'
 require 'acpc_poker_types/hand'
 require 'acpc_poker_types/rank'
@@ -35,7 +37,7 @@ using AcpcPokerTypes::Indices
 module AcpcPokerTypes
 
 # Model to parse and manage information from a given match state string.
-class MatchState
+class MatchState < DelegateClass(String)
   # @return [Integer] The position relative to the dealer of the player that
   #     received the match state string, indexed from 0, modulo the
   #     number of players.
@@ -104,6 +106,8 @@ class MatchState
       @community_cards_string = $5
     end
     @min_wager_by = nil
+
+    super to_s
   end
 
   # @return [String] The MatchState in raw text form.
@@ -317,6 +321,15 @@ class MatchState
     every_action(game_def) unless @min_wager_by
 
     @min_wager_by
+  end
+
+  # @return [Array<PokerAction>] The legal actions for the next player to act.
+  def legal_actions(game_def)
+    players(game_def).legal_actions(
+      next_to_act(game_def),
+      round,
+      game_def.max_number_of_wagers[round]
+    )
   end
 
   private

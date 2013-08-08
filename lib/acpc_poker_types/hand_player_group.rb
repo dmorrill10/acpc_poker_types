@@ -64,5 +64,23 @@ class HandPlayerGroup < DelegateClass(Array)
       next_player_position(acting_player_position)
     )
   end
+
+  # @return [Integer] The number of wagers this round
+  def num_wagers(round)
+    inject(0) do |sum, pl|
+      sum += pl.actions[round].count do |ac|
+        PokerAction::MODIFIABLE_ACTIONS.include?(ac.action)
+      end
+    end
+  end
+
+  # @return [Array<PokerAction>] The legal actions for the next player to act.
+  def legal_actions(acting_player_position, round, max_num_wagers)
+    @players[acting_player_position].legal_actions(
+      round: round,
+      amount_to_call: amount_to_call(acting_player_position),
+      wager_illegal: num_wagers(round) >= max_num_wagers
+    )
+  end
 end
 end

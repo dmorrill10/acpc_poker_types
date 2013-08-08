@@ -222,7 +222,7 @@ describe MatchState do
           log_description.results_file_path,
           log_description.player_names,
           AcpcDealer::DEALER_DIRECTORY,
-          20
+          10
         )
         match.for_every_seat! do |seat|
           match.for_every_hand! do
@@ -876,6 +876,17 @@ describe MatchState do
           patient.next_to_act(x_game_def).must_equal x_next_to_act.shift
         end
       end
+    end
+  end
+  describe 'players legal actions' do
+    it 'should work properly when facing a wager' do
+      game_definition = GameDefinition.parse_file(AcpcDealer::GAME_DEFINITION_FILE_PATHS[2][:limit])
+      MatchState.parse("MATCHSTATE:0:3:crc/rrrr:Qh9s|/KdQc7c").legal_actions(
+        game_definition
+      ).must_equal [
+        PokerAction.new(PokerAction::CALL, cost: game_definition.min_wagers[2]),
+        PokerAction.new(PokerAction::FOLD)
+      ]
     end
   end
 end
