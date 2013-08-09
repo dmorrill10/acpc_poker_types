@@ -74,10 +74,13 @@ module AcpcPokerTypes
       :@number_of_ranks => AcpcPokerTypes::Rank::DOMAIN.length
     }
 
+    LIMIT = 'limit'
+    NO_LIMIT = 'nolimit'
+
     # @return [Hash] Betting types understood by this class.
     BETTING_TYPES = {
-      :limit => 'limit',
-      :nolimit => 'nolimit'
+      :limit => LIMIT,
+      :nolimit => NO_LIMIT
     }
 
     DEFINITIONS = {
@@ -198,7 +201,7 @@ module AcpcPokerTypes
     def to_a
       @array ||= -> do
         list_of_lines = []
-        list_of_lines << BETTING_TYPES[@betting_type] if @betting_type
+        list_of_lines << @betting_type if @betting_type
         list_of_lines << "stack = #{@chip_stacks.join(' ')}" unless @chip_stacks.empty?
         list_of_lines << "numPlayers = #{@number_of_players}" if @number_of_players
         list_of_lines << "blind = #{@blinds.join(' ')}" unless @blinds.empty?
@@ -272,7 +275,7 @@ module AcpcPokerTypes
             type = type_and_name.first
             name = type_and_name[1]
             if line.match(/\b#{name}\b/i)
-              @betting_type = type
+              @betting_type = name
               true
             else
               false

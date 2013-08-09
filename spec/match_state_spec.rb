@@ -222,7 +222,7 @@ describe MatchState do
           log_description.results_file_path,
           log_description.player_names,
           AcpcDealer::DEALER_DIRECTORY,
-          10
+          5
         )
         match.for_every_seat! do |seat|
           match.for_every_hand! do
@@ -883,31 +883,68 @@ describe MatchState do
   describe '#legal_actions' do
     it 'should work properly when facing a wager' do
       game_definition = GameDefinition.parse_file(AcpcDealer::GAME_DEFINITION_FILE_PATHS[2][:limit])
-      MatchState.parse("MATCHSTATE:0:3:crc/rrrr:Qh9s|/KdQc7c").legal_actions(
+
+      patient = MatchState.parse("MATCHSTATE:0:3:crc/rrrr:Qh9s|/KdQc7c").legal_actions(
         game_definition
-      ).must_equal [
+      )
+
+      x_actions = [
         PokerAction.new(PokerAction::CALL, cost: game_definition.min_wagers[1]),
         PokerAction.new(PokerAction::FOLD)
       ]
+
+      patient.must_equal x_actions
+
+      patient.map { |action| action.cost }.must_equal x_actions.map { |action| action.cost }
     end
     it 'should work properly when a new round begins' do
       game_definition = GameDefinition.parse_file(AcpcDealer::GAME_DEFINITION_FILE_PATHS[2][:limit])
-      MatchState.parse("MATCHSTATE:0:1:rrc/:Qh3c|/Js4c9d").legal_actions(
+
+      patient = MatchState.parse("MATCHSTATE:0:1:rrc/:Qh3c|/Js4c9d").legal_actions(
         game_definition
-      ).must_equal [
+      )
+
+      x_actions = [
         PokerAction.new(PokerAction::CHECK, cost: 0),
         PokerAction.new(PokerAction::BET, cost: game_definition.min_wagers[1])
       ]
+
+      patient.must_equal x_actions
+
+      patient.map { |action| action.cost }.must_equal x_actions.map { |action| action.cost }
     end
     it 'should work properly when a new round begins and the other players check' do
       game_definition = GameDefinition.parse_file(AcpcDealer::GAME_DEFINITION_FILE_PATHS[2][:limit])
 
-      MatchState.parse("MATCHSTATE:1:0:cc/rrrrc/rrc/c:|2hQc/QhQsJs/2s/Kh").legal_actions(
+      patient = MatchState.parse("MATCHSTATE:1:0:cc/rrrrc/rrc/c:|2hQc/QhQsJs/2s/Kh").legal_actions(
         game_definition
-      ).must_equal [
+      )
+
+      x_actions = [
         PokerAction.new(PokerAction::CHECK, cost: 0),
         PokerAction.new(PokerAction::BET, cost: game_definition.min_wagers[3])
       ]
+
+      patient.must_equal x_actions
+
+      patient.map { |action| action.cost }.must_equal x_actions.map { |action| action.cost }
+    end
+    it 'should work properly after an opponent has bet in a new round' do
+      game_definition = GameDefinition.parse_file(AcpcDealer::GAME_DEFINITION_FILE_PATHS[2][:limit])
+
+      patient = MatchState.parse("MATCHSTATE:1:0:cc/crrrc/r:|2hQc/QhQsJs/2s").legal_actions(
+        game_definition
+      )
+
+      x_actions = [
+        PokerAction.new(PokerAction::CALL, cost: game_definition.min_wagers[2]),
+        PokerAction.new(PokerAction::FOLD, cost: 0),
+        PokerAction.new(PokerAction::RAISE, cost: 2 * game_definition.min_wagers[2])
+      ]
+
+      patient.must_equal x_actions
+
+      patient.map { |action| action.cost }.must_equal x_actions.map { |action| action.cost }
     end
   end
 end

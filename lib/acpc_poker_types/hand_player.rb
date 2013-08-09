@@ -1,6 +1,7 @@
 require 'acpc_poker_types/chip_stack'
 require 'acpc_poker_types/hand'
 require 'acpc_poker_types/poker_action'
+require 'acpc_poker_types/game_definition'
 
 require 'contextual_exceptions'
 using ContextualExceptions::ClassRefinement
@@ -69,11 +70,13 @@ class HandPlayer
   # @param amount_to_call [#to_r] The amount to call for this player
   # @param wager_illegal [Boolean]
   # @return [Array<PokerAction>] The list of legal actions for this player. If a wager is legal,
-  # the largest possible wager will be returned in the list.
+  # the smallest and largest possible wagers will be returned in the list.
   def legal_actions(
     in_round: round,
     amount_to_call: ChipStack.new(0),
-    wager_illegal: false
+    wager_illegal: false,
+    betting_type: GameDefinition::BETTING_TYPES[:limit],
+    min_wager_by: ChipStack.new(1)
   )
     l_actions = []
     return l_actions if inactive?
@@ -85,16 +88,25 @@ class HandPlayer
       l_actions << PokerAction.new(PokerAction::CHECK)
     end
     if !wager_illegal && stack > amount_to_call.to_r
-      l_actions << if (
-        (contributions.length > in_round) &&
+      max_wager_by = stack - amount_to_call.to_r
+      min_wager_by_adjusted = [min_wager_by + amount_to_call.to_r, max_wager_by].min
+
+      if (
+        amount_to_call.to_r > 0 ||
         (
-          contributions[in_round] > 0 ||
-          amount_to_call.to_r > 0
+          contributions.length > in_round &&
+          contributions[in_round] > 0
         )
       )
-        PokerAction.new(PokerAction::RAISE, cost: stack - amount_to_call.to_r)
+        l_actions << PokerAction.new(PokerAction::RAISE, cost: min_wager_by_adjusted)
+        unless betting_type == GameDefinition::BETTING_TYPES[:limit] || min_wager_by_adjusted == max_wager_by
+          l_actions << PokerAction.new(PokerAction::RAISE, cost: max_wager_by)
+        end
       else
-        PokerAction.new(PokerAction::BET, cost: stack - amount_to_call.to_r)
+        l_actions << PokerAction.new(PokerAction::BET, cost: min_wager_by_adjusted)
+        unless betting_type == GameDefinition::BETTING_TYPES[:limit] || min_wager_by_adjusted == max_wager_by
+          l_actions << PokerAction.new(PokerAction::BET, cost: max_wager_by)
+        end
       end
     end
 

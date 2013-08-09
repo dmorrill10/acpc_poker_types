@@ -328,7 +328,8 @@ class MatchState < DelegateClass(String)
     players(game_def).legal_actions(
       next_to_act(game_def),
       round,
-      game_def.max_number_of_wagers[round]
+      game_def,
+      min_wager_by(game_def)
     )
   end
 
