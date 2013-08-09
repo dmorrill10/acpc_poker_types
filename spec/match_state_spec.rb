@@ -946,6 +946,48 @@ describe MatchState do
 
       patient.map { |action| action.cost }.must_equal x_actions.map { |action| action.cost }
     end
+    it 'should work properly in no-limit after an opponent has bet' do
+      game_definition = GameDefinition.parse_file(AcpcDealer::GAME_DEFINITION_FILE_PATHS[2][:nolimit])
+
+      patient = MatchState.parse("MATCHSTATE:0:0:r9550:Jh7d|").legal_actions(
+        game_definition
+      )
+
+      blind = 100
+      to_call = 9550 - blind
+      to_all_in = game_definition.chip_stacks[0] - blind
+
+      x_actions = [
+        PokerAction.new(PokerAction::CALL, cost: to_call),
+        PokerAction.new(PokerAction::FOLD, cost: 0),
+        PokerAction.new(PokerAction::RAISE, cost: 2 * to_call),
+        PokerAction.new(PokerAction::RAISE, cost: to_all_in)
+      ]
+
+      patient.must_equal x_actions
+
+      patient.map { |action| action.cost }.must_equal x_actions.map { |action| action.cost }
+    end
+    it 'should not error' do
+      game_definition = GameDefinition.parse_file(AcpcDealer::GAME_DEFINITION_FILE_PATHS[2][:nolimit])
+
+      patient = MatchState.parse("MATCHSTATE:0:0:r9550c/:Jh7d|/QhQsJs").legal_actions(
+        game_definition
+      )
+
+      blind = 100
+      to_all_in = game_definition.chip_stacks[0] - 9550
+
+      x_actions = [
+        PokerAction.new(PokerAction::CHECK, cost: 0),
+        PokerAction.new(PokerAction::BET, cost: game_definition.min_wagers[1]),
+        PokerAction.new(PokerAction::BET, cost: to_all_in)
+      ]
+
+      patient.must_equal x_actions
+
+      patient.map { |action| action.cost }.must_equal x_actions.map { |action| action.cost }
+    end
   end
 end
 

@@ -87,26 +87,22 @@ class HandPlayer
     else
       l_actions << PokerAction.new(PokerAction::CHECK)
     end
-    if !wager_illegal && stack > amount_to_call.to_r
-      max_wager_by = stack - amount_to_call.to_r
-      min_wager_by_adjusted = [min_wager_by + amount_to_call.to_r, max_wager_by].min
+    if !wager_illegal && wager_allowed_by_stack?(amount_to_call)
+      min_wager_by_cost = [min_wager_by + amount_to_call.to_r, stack].min
+
+      add_wager_actions = ->(wager_character) do
+        l_actions << PokerAction.new(wager_character, cost: min_wager_by_cost)
+        if all_in_allowed?(betting_type, min_wager_by_cost)
+          l_actions << PokerAction.new(wager_character, cost: stack)
+        end
+      end
 
       if (
-        amount_to_call.to_r > 0 ||
-        (
-          contributions.length > in_round &&
-          contributions[in_round] > 0
-        )
+        amount_to_call.to_r > 0 || contributions[in_round].to_i > 0
       )
-        l_actions << PokerAction.new(PokerAction::RAISE, cost: min_wager_by_adjusted)
-        unless betting_type == GameDefinition::BETTING_TYPES[:limit] || min_wager_by_adjusted == max_wager_by
-          l_actions << PokerAction.new(PokerAction::RAISE, cost: max_wager_by)
-        end
+        add_wager_actions.call(PokerAction::RAISE)
       else
-        l_actions << PokerAction.new(PokerAction::BET, cost: min_wager_by_adjusted)
-        unless betting_type == GameDefinition::BETTING_TYPES[:limit] || min_wager_by_adjusted == max_wager_by
-          l_actions << PokerAction.new(PokerAction::BET, cost: max_wager_by)
-        end
+        add_wager_actions.call(PokerAction::BET)
       end
     end
 
@@ -140,6 +136,14 @@ class HandPlayer
 
   def round
     @actions.length - 1
+  end
+
+  def wager_allowed_by_stack?(amount_to_call)
+    stack > amount_to_call.to_r
+  end
+
+  def all_in_allowed?(betting_type, min_wager_by_cost)
+    betting_type != GameDefinition::BETTING_TYPES[:limit] && min_wager_by_cost < stack
   end
 end
 end

@@ -81,7 +81,10 @@ class HandPlayerGroup < DelegateClass(Array)
     @players[acting_player_position].legal_actions(
       in_round: round,
       amount_to_call: amount_to_call(acting_player_position),
-      wager_illegal: num_wagers(round) >= game_def.max_number_of_wagers[round],
+      wager_illegal: (
+        game_def.max_number_of_wagers[round] &&
+        num_wagers(round) >= game_def.max_number_of_wagers[round]
+      ),
       betting_type: game_def.betting_type,
       min_wager_by: min_wager_by
     )
