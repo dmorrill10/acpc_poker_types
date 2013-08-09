@@ -878,14 +878,23 @@ describe MatchState do
       end
     end
   end
-  describe 'players legal actions' do
+  describe '#legal_actions' do
     it 'should work properly when facing a wager' do
       game_definition = GameDefinition.parse_file(AcpcDealer::GAME_DEFINITION_FILE_PATHS[2][:limit])
       MatchState.parse("MATCHSTATE:0:3:crc/rrrr:Qh9s|/KdQc7c").legal_actions(
         game_definition
       ).must_equal [
-        PokerAction.new(PokerAction::CALL, cost: game_definition.min_wagers[2]),
+        PokerAction.new(PokerAction::CALL, cost: game_definition.min_wagers[1]),
         PokerAction.new(PokerAction::FOLD)
+      ]
+    end
+    it 'should work properly when a new round begins' do
+      game_definition = GameDefinition.parse_file(AcpcDealer::GAME_DEFINITION_FILE_PATHS[2][:limit])
+      MatchState.parse("MATCHSTATE:0:1:rrc/:Qh3c|/Js4c9d").legal_actions(
+        game_definition
+      ).must_equal [
+        PokerAction.new(PokerAction::CHECK, cost: 0),
+        PokerAction.new(PokerAction::BET, cost: game_definition.min_wagers[1])
       ]
     end
   end

@@ -144,8 +144,6 @@ class PlayersAtTheTable
   private
 
   def update_players!
-    return self if @match_state.first_state_of_first_round?
-
     @players.each do |plyr|
       plyr.hand_player = @match_state.players(@game_def)[position_relative_to_dealer(plyr)]
     end
