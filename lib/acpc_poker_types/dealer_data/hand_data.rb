@@ -1,10 +1,10 @@
-require 'acpc_poker_types/acpc_dealer_data/match_definition'
+require 'acpc_poker_types/dealer_data/match_definition'
 
 require 'contextual_exceptions'
 using ContextualExceptions::ClassRefinement
 
 # Refinement for easy boundary checking
-module AcpcPokerTypes::AcpcDealerData
+module AcpcPokerTypes::DealerData
   module BoundaryCheckingRefinement
     refine Array do
       def in_bounds?(i)
@@ -13,9 +13,9 @@ module AcpcPokerTypes::AcpcDealerData
     end
   end
 end
-using AcpcPokerTypes::AcpcDealerData::BoundaryCheckingRefinement
+using AcpcPokerTypes::DealerData::BoundaryCheckingRefinement
 
-module AcpcPokerTypes::AcpcDealerData
+module AcpcPokerTypes::DealerData
   class HandData
     exceptions :invalid_data, :names_do_not_match
 

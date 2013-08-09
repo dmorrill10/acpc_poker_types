@@ -9,6 +9,7 @@ Gem::Specification.new do |s|
   s.homepage    = "https://github.com/dmorrill10/acpc_poker_types"
   s.summary     = %q{ACPC Poker Types}
   s.description = %q{Poker classes and constants that conform to the standards of the Annual Computer Poker Competition.}
+  s.license     = 'MIT'
 
   s.add_dependency 'process_runner', '~> 0.0'
   s.add_dependency 'acpc_dealer', '~> 2.0'
@@ -19,10 +20,10 @@ Gem::Specification.new do |s|
   s.test_files    = Dir.glob "spec/**/*"
   s.require_paths = ["lib"]
 
-  s.add_development_dependency 'turn', '~> 0.9'
-  s.add_development_dependency 'minitest', '~> 4.7'
+  s.add_development_dependency 'minitest', '~> 5.0.6'
   s.add_development_dependency 'mocha', '~> 0.13'
   s.add_development_dependency 'awesome_print', '~> 1.0'
   s.add_development_dependency 'pry-rescue', '~> 1.0'
   s.add_development_dependency 'simplecov', '~> 0.7'
+  s.add_development_dependency 'method_profiler'
 end

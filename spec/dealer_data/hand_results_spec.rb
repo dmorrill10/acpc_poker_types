@@ -1,15 +1,14 @@
-
 # Spec helper (must include first to track code coverage with SimpleCov)
-require_relative 'support/spec_helper'
+require_relative '../support/spec_helper'
 
 require 'mocha/setup'
 
 require 'acpc_dealer'
 
-require 'acpc_poker_types/acpc_dealer_data/hand_results'
-require 'acpc_poker_types/acpc_dealer_data/match_definition'
+require 'acpc_poker_types/dealer_data/hand_results'
+require 'acpc_poker_types/dealer_data/match_definition'
 
-describe AcpcPokerTypes::AcpcDealerData::HandResults do
+describe AcpcPokerTypes::DealerData::HandResults do
   before do
     @patient = nil
     @data = nil
@@ -32,12 +31,12 @@ describe AcpcPokerTypes::AcpcDealerData::HandResults do
           {p1: -20000, p2: -20000, p3: 40000}
       ].each do |state_to_player_results|
         state_to_player_results.each do |state_string, expected_values|
-          AcpcPokerTypes::AcpcDealerData::HandResults.parse_state(state_string).must_equal expected_values
+          AcpcPokerTypes::DealerData::HandResults.parse_state(state_string).must_equal expected_values
         end
       end
     end
     it 'returns nil if asked to parse an improperly formatted string' do
-      AcpcPokerTypes::AcpcDealerData::HandResults.parse_state("improperly formatted string").must_be_nil
+      AcpcPokerTypes::DealerData::HandResults.parse_state("improperly formatted string").must_be_nil
     end
   end
   describe '::parse_score' do
@@ -47,12 +46,12 @@ describe AcpcPokerTypes::AcpcDealerData::HandResults do
         'SCORE:19835|621.5|-20455.5:p1|p2|p3' => {p1: 19835, p2: 621.5, p3: -20455.5}
       ].each do |score_to_player_results|
         score_to_player_results.each do |score_string, expected_values|
-          AcpcPokerTypes::AcpcDealerData::HandResults.parse_score(score_string).must_equal expected_values
+          AcpcPokerTypes::DealerData::HandResults.parse_score(score_string).must_equal expected_values
         end
       end
     end
     it 'returns nil if asked to parse an improperly formatted string' do
-      AcpcPokerTypes::AcpcDealerData::HandResults.parse_score("improperly formatted string").must_be_nil
+      AcpcPokerTypes::DealerData::HandResults.parse_score("improperly formatted string").must_be_nil
     end
   end
 
@@ -61,17 +60,17 @@ describe AcpcPokerTypes::AcpcDealerData::HandResults do
       it 'when every hand is desired' do
         init_data do |log_statements|
           file_name = 'file_name'
-          AcpcPokerTypes::AcpcDealerData::LogFile.stubs(:open).with(file_name, 'r').yields(
+          AcpcPokerTypes::DealerData::LogFile.stubs(:open).with(file_name, 'r').yields(
             log_statements
           ).returns(
-            AcpcPokerTypes::AcpcDealerData::HandResults.parse(
+            AcpcPokerTypes::DealerData::HandResults.parse(
               log_statements,
               @player_names,
               AcpcDealer::DEALER_DIRECTORY
             )
           )
 
-          @patient = AcpcPokerTypes::AcpcDealerData::HandResults.parse_file(
+          @patient = AcpcPokerTypes::DealerData::HandResults.parse_file(
             file_name,
             @player_names,
             AcpcDealer::DEALER_DIRECTORY
@@ -85,10 +84,10 @@ describe AcpcPokerTypes::AcpcDealerData::HandResults do
         num_hands = 3
         init_data do |log_statements|
           file_name = 'file_name'
-          AcpcPokerTypes::AcpcDealerData::LogFile.stubs(:open).with(file_name, 'r').yields(
+          AcpcPokerTypes::DealerData::LogFile.stubs(:open).with(file_name, 'r').yields(
             log_statements
           ).returns(
-            AcpcPokerTypes::AcpcDealerData::HandResults.parse(
+            AcpcPokerTypes::DealerData::HandResults.parse(
               log_statements,
               @player_names,
               AcpcDealer::DEALER_DIRECTORY,
@@ -96,7 +95,7 @@ describe AcpcPokerTypes::AcpcDealerData::HandResults do
             )
           )
 
-          @patient = AcpcPokerTypes::AcpcDealerData::HandResults.parse_file(
+          @patient = AcpcPokerTypes::DealerData::HandResults.parse_file(
             file_name,
             @player_names,
             AcpcDealer::DEALER_DIRECTORY,
@@ -114,7 +113,7 @@ describe AcpcPokerTypes::AcpcDealerData::HandResults do
     describe 'from array' do
       it 'when every hand is desired' do
         init_data do |log_statements|
-          @patient = AcpcPokerTypes::AcpcDealerData::HandResults.parse(
+          @patient = AcpcPokerTypes::DealerData::HandResults.parse(
             log_statements,
             @player_names,
             AcpcDealer::DEALER_DIRECTORY
@@ -127,7 +126,7 @@ describe AcpcPokerTypes::AcpcDealerData::HandResults do
         @no_final_score = true
         num_hands = 3
         init_data do |log_statements|
-          @patient = AcpcPokerTypes::AcpcDealerData::HandResults.parse(
+          @patient = AcpcPokerTypes::DealerData::HandResults.parse(
             log_statements,
             @player_names,
             AcpcDealer::DEALER_DIRECTORY,
@@ -155,7 +154,7 @@ describe AcpcPokerTypes::AcpcDealerData::HandResults do
       @final_score = data_hash[:final_score]
       @data = data_hash[:data]
       @player_names = data_hash[:player_names]
-      @match_def = AcpcPokerTypes::AcpcDealerData::MatchDefinition.parse(
+      @match_def = AcpcPokerTypes::DealerData::MatchDefinition.parse(
         data_hash[:log_statements].first,
         @player_names,
         AcpcDealer::DEALER_DIRECTORY

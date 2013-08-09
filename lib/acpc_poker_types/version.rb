@@ -1,3 +1,3 @@
 module AcpcPokerTypes
-  VERSION = '5.0.3'
+  VERSION = '7.2.1'
 end

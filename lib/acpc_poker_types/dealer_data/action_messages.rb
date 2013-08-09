@@ -1,10 +1,10 @@
 require 'acpc_poker_types/match_state'
 require 'acpc_poker_types/poker_action'
 
-require 'acpc_poker_types/acpc_dealer_data/match_definition'
-require 'acpc_poker_types/acpc_dealer_data/log_file'
+require 'acpc_poker_types/dealer_data/match_definition'
+require 'acpc_poker_types/dealer_data/log_file'
 
-module AcpcPokerTypes::AcpcDealerData
+module AcpcPokerTypes::DealerData
   class ActionMessages
     attr_reader(
       :data, :final_score, :match_def
@@ -73,9 +73,9 @@ module AcpcPokerTypes::AcpcDealerData
     end
 
     def self.parse_to_or_from_message(message)
-      parsed_message =  AcpcPokerTypes::AcpcDealerData::ActionMessages.parse_to_message(message)
+      parsed_message =  AcpcPokerTypes::DealerData::ActionMessages.parse_to_message(message)
       if parsed_message.nil?
-         AcpcPokerTypes::AcpcDealerData::ActionMessages.parse_from_message(message)
+         AcpcPokerTypes::DealerData::ActionMessages.parse_from_message(message)
       else
         parsed_message
       end
@@ -87,8 +87,8 @@ module AcpcPokerTypes::AcpcDealerData
       game_def_directory,
       num_hands=nil
     )
-       AcpcPokerTypes::AcpcDealerData::LogFile.open(acpc_log_file_path, 'r') do |file|
-         AcpcPokerTypes::AcpcDealerData::ActionMessages.parse file, player_names, game_def_directory, num_hands
+       AcpcPokerTypes::DealerData::LogFile.open(acpc_log_file_path, 'r') do |file|
+         AcpcPokerTypes::DealerData::ActionMessages.parse file, player_names, game_def_directory, num_hands
       end
     end
 
@@ -104,9 +104,9 @@ module AcpcPokerTypes::AcpcDealerData
       @match_def = nil
       @data = acpc_log_statements.inject([]) do |accumulating_data, log_line|
         if @match_def.nil?
-          @match_def =  AcpcPokerTypes::AcpcDealerData::MatchDefinition.parse(log_line, player_names, game_def_directory)
+          @match_def =  AcpcPokerTypes::DealerData::MatchDefinition.parse(log_line, player_names, game_def_directory)
         else
-          parsed_message =  AcpcPokerTypes::AcpcDealerData::ActionMessages.parse_to_or_from_message(log_line)
+          parsed_message =  AcpcPokerTypes::DealerData::ActionMessages.parse_to_or_from_message(log_line)
           if parsed_message
             if (
               accumulating_data.empty? ||
@@ -120,7 +120,7 @@ module AcpcPokerTypes::AcpcDealerData
             end
             accumulating_data.last << parsed_message
           else
-            @final_score =  AcpcPokerTypes::AcpcDealerData::ActionMessages.parse_score(log_line) unless @final_score
+            @final_score =  AcpcPokerTypes::DealerData::ActionMessages.parse_score(log_line) unless @final_score
           end
         end
 

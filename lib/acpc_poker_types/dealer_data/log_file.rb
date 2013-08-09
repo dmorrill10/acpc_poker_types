@@ -1,5 +1,5 @@
 # Wrapper class to enable mocking log files in tests
-module AcpcPokerTypes::AcpcDealerData
+module AcpcPokerTypes::DealerData
   class  LogFile < File
   end
 end

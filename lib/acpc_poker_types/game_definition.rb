@@ -1,5 +1,3 @@
-require 'set'
-
 require 'acpc_poker_types/chip_stack'
 require 'acpc_poker_types/suit'
 require 'acpc_poker_types/rank'
@@ -27,9 +25,6 @@ module AcpcPokerTypes
     # @example The usual Texas hold'em sequence would look like this:
     #     number_of_board_cards == [0, 3, 1, 1]
     attr_reader :number_of_board_cards
-
-    # @return [Array] The minimum wager in each round.
-    attr_reader :min_wagers
 
     # @return [Array] The position relative to the dealer that is first to act
     #     in each round, indexed from 0.
@@ -79,10 +74,13 @@ module AcpcPokerTypes
       :@number_of_ranks => AcpcPokerTypes::Rank::DOMAIN.length
     }
 
+    LIMIT = 'limit'
+    NO_LIMIT = 'nolimit'
+
     # @return [Hash] Betting types understood by this class.
     BETTING_TYPES = {
-      :limit => 'limit',
-      :nolimit => 'nolimit'
+      :limit => LIMIT,
+      :nolimit => NO_LIMIT
     }
 
     DEFINITIONS = {
@@ -174,7 +172,12 @@ module AcpcPokerTypes
 
     def initialize(definitions)
       initialize_members!
-      parse_definitions! definitions
+
+      if definitions.is_a?(Hash)
+        assign_definitions! definitions
+      else
+        parse_definitions! definitions
+      end
 
       @chip_stacks = AcpcPokerTypes::GameDefinition.default_chip_stacks(@number_of_players) if @chip_stacks.empty?
 
@@ -191,29 +194,38 @@ module AcpcPokerTypes
 
     alias_method :to_str, :to_s
 
+    def to_h
+      @hash ||= DEFINITIONS.keys.inject({betting_type: @betting_type}) do |h, instance_variable_symbol|
+        h[instance_variable_symbol[1..-1].to_sym] = instance_variable_get(instance_variable_symbol)
+        h
+      end
+    end
+
     def to_a
-      list_of_lines = []
-      list_of_lines << BETTING_TYPES[@betting_type] if @betting_type
-      list_of_lines << "stack = #{@chip_stacks.join(' ')}" unless @chip_stacks.empty?
-      list_of_lines << "numPlayers = #{@number_of_players}" if @number_of_players
-      list_of_lines << "blind = #{@blinds.join(' ')}" unless @blinds.empty?
-      list_of_lines << "raiseSize = #{min_wagers.join(' ')}" unless min_wagers.empty?
-      list_of_lines << "numRounds = #{@number_of_rounds}" if @number_of_rounds
-      list_of_lines << "firstPlayer = #{(@first_player_positions.map{|p| p + 1}).join(' ')}" unless @first_player_positions.empty?
-      list_of_lines << "maxRaises = #{@max_number_of_wagers.join(' ')}" unless @max_number_of_wagers.empty?
-      list_of_lines << "numSuits = #{@number_of_suits}" if @number_of_suits
-      list_of_lines << "numRanks = #{@number_of_ranks}" if @number_of_ranks
-      list_of_lines << "numHoleCards = #{@number_of_hole_cards}" if @number_of_hole_cards
-      list_of_lines << "numBoardCards = #{@number_of_board_cards.join(' ')}" unless @number_of_board_cards.empty?
-      list_of_lines
+      @array ||= -> do
+        list_of_lines = []
+        list_of_lines << @betting_type if @betting_type
+        list_of_lines << "stack = #{@chip_stacks.join(' ')}" unless @chip_stacks.empty?
+        list_of_lines << "numPlayers = #{@number_of_players}" if @number_of_players
+        list_of_lines << "blind = #{@blinds.join(' ')}" unless @blinds.empty?
+        list_of_lines << "raiseSize = #{min_wagers.join(' ')}" unless min_wagers.empty?
+        list_of_lines << "numRounds = #{@number_of_rounds}" if @number_of_rounds
+        list_of_lines << "firstPlayer = #{(@first_player_positions.map{|p| p + 1}).join(' ')}" unless @first_player_positions.empty?
+        list_of_lines << "maxRaises = #{@max_number_of_wagers.join(' ')}" unless @max_number_of_wagers.empty?
+        list_of_lines << "numSuits = #{@number_of_suits}" if @number_of_suits
+        list_of_lines << "numRanks = #{@number_of_ranks}" if @number_of_ranks
+        list_of_lines << "numHoleCards = #{@number_of_hole_cards}" if @number_of_hole_cards
+        list_of_lines << "numBoardCards = #{@number_of_board_cards.join(' ')}" unless @number_of_board_cards.empty?
+        list_of_lines
+      end.call
     end
 
     def ==(other_game_definition)
-      Set.new(to_a) == Set.new(other_game_definition.to_a)
+      to_h == other_game_definition.to_h
     end
 
     def min_wagers
-      if @raise_sizes
+      @min_wagers ||= if @raise_sizes
         @raise_sizes
       else
         @number_of_rounds.times.map { |i| @blinds.max }
@@ -251,6 +263,12 @@ module AcpcPokerTypes
       end
     end
 
+    def assign_definitions!(definitions)
+      definitions.each do |key, value|
+        instance_variable_set("@#{key}", value)
+      end
+    end
+
     def parse_definitions!(definitions)
       definitions.each do |line|
         break if line.match(/\bend\s*gamedef\b/i)
@@ -260,7 +278,7 @@ module AcpcPokerTypes
             type = type_and_name.first
             name = type_and_name[1]
             if line.match(/\b#{name}\b/i)
-              @betting_type = type
+              @betting_type = name
               true
             else
               false
@@ -308,7 +326,7 @@ module AcpcPokerTypes
         unless Seat.in_bounds?(@first_player_positions[i], @number_of_players)
           raise(
             ParseError,
-            "Invalid first player #{@first_player_positions[i]} on round #{i+1}"
+            "Invalid first player #{@first_player_positions[i]} on round #{i+1} for #{@number_of_players} players"
           )
         end
       end
@@ -333,6 +351,11 @@ module AcpcPokerTypes
     end
 
     def adjust_definitions_if_necessary!
+      if @number_of_players < @chip_stacks.length
+        @number_of_players = @chip_stacks.length
+      elsif @number_of_players < @blinds.length
+        @number_of_players = @blinds.length
+      end
       @number_of_players.times do |i|
         @blinds << 0 unless @blinds.length > i
         @chip_stacks << DEFAULT_CHIP_STACK unless @chip_stacks.length > i
