@@ -64,22 +64,9 @@ describe AcpcPokerTypes::PokerAction do
     end
   end
   describe '#to_s' do
-    it "prints in the dealer's canonical representation by default" do
+    it "prints in the given format by default" do
       AcpcPokerTypes::PokerAction::ACTIONS.each do |a|
-        AcpcPokerTypes::PokerAction.new(a).to_s.must_equal (
-          case a
-          when AcpcPokerTypes::PokerAction::BET
-            AcpcPokerTypes::PokerAction::RAISE
-          when AcpcPokerTypes::PokerAction::CALL
-            AcpcPokerTypes::PokerAction::CALL
-          when AcpcPokerTypes::PokerAction::CHECK
-            AcpcPokerTypes::PokerAction::CALL
-          when AcpcPokerTypes::PokerAction::FOLD
-            AcpcPokerTypes::PokerAction::FOLD
-          when AcpcPokerTypes::PokerAction::RAISE
-            AcpcPokerTypes::PokerAction::RAISE
-          end
-        )
+        AcpcPokerTypes::PokerAction.new(a).to_s.must_equal a
       end
     end
     it 'works properly when no chips have been added to the pot' do
@@ -89,7 +76,7 @@ describe AcpcPokerTypes::PokerAction do
           when AcpcPokerTypes::PokerAction::BET
             AcpcPokerTypes::PokerAction::BET
           when AcpcPokerTypes::PokerAction::CALL
-            AcpcPokerTypes::PokerAction::CHECK
+            AcpcPokerTypes::PokerAction::CALL
           when AcpcPokerTypes::PokerAction::CHECK
             AcpcPokerTypes::PokerAction::CHECK
           when AcpcPokerTypes::PokerAction::FOLD
@@ -105,7 +92,7 @@ describe AcpcPokerTypes::PokerAction do
         AcpcPokerTypes::PokerAction.new(a).to_s(player_sees_wager: false).must_equal (
           case a
           when AcpcPokerTypes::PokerAction::BET
-            AcpcPokerTypes::PokerAction::RAISE
+            AcpcPokerTypes::PokerAction::BET
           when AcpcPokerTypes::PokerAction::CALL
             AcpcPokerTypes::PokerAction::CHECK
           when AcpcPokerTypes::PokerAction::CHECK

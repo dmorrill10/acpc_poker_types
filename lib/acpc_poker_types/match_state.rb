@@ -364,7 +364,13 @@ class MatchState < DelegateClass(String)
         game_def.min_wagers[current_round]
       )
 
-      action = PokerAction.new(action.to_s, cost: cost) if cost > 0
+      action = PokerAction.new(
+        action.to_s(
+          pot_gained_chips: @players.inject(0) { |sum, player| sum += player.contributions[current_round].to_i } > 0,
+          player_sees_wager: @players.amount_to_call(acting_player_position) > 0
+        ),
+        cost: cost
+      )
 
       adjust_min_wager!(action, acting_player_position)
 

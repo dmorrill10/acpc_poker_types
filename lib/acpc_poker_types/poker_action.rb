@@ -78,10 +78,11 @@ class PokerAction < DelegateClass(String)
   end
 
   # @return [String] String representation of this action.
-  # @param pot_gained_chips [Boolean] Whether or not the pot had gained chips before this action. Defaults to true.
+  # @param pot_gained_chips [Boolean] Whether or not the pot had gained chips before this action.
+  # Defaults to +pot_gained_chips?+.
   # @param player_sees_wager [Boolean] Whether or not the player is reacting to a wager.
-  #   Defaults to the value of +pot_gained_chips+.
-  def to_s(pot_gained_chips: true, player_sees_wager: pot_gained_chips)
+  # Defaults to the value of +player_sees_wager?+.
+  def to_s(pot_gained_chips: pot_gained_chips?, player_sees_wager: player_sees_wager?)
     combine_action_and_modifier(
       if @action == FOLD
         @action
@@ -101,6 +102,30 @@ class PokerAction < DelegateClass(String)
   end
 
   private
+
+  def pot_gained_chips?
+    if @action == FOLD || @action == RAISE || @action == CALL
+      true
+    elsif @action == CHECK
+      # Could be true or false, but doesn't matter for the purpose of
+      # printing a check properly
+      nil
+    else
+      false
+    end
+  end
+
+  def player_sees_wager?
+    if @action == FOLD || @action == CALL
+      true
+    elsif @action == RAISE
+      # Could be true or false, but doesn't matter for the purpose of
+      # printing a raise properly
+      nil
+    else
+      false
+    end
+  end
 
   def combine_action_and_modifier(action=@action, modifier=@modifier)
     "#{action}#{modifier}"

@@ -79,7 +79,7 @@ class HandPlayerGroup < DelegateClass(Array)
   # @return [Array<PokerAction>] The legal actions for the next player to act.
   def legal_actions(acting_player_position, round, max_num_wagers)
     @players[acting_player_position].legal_actions(
-      round: round,
+      in_round: round,
       amount_to_call: amount_to_call(acting_player_position),
       wager_illegal: num_wagers(round) >= max_num_wagers
     )

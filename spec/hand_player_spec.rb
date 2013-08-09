@@ -44,9 +44,9 @@ describe HandPlayer do
     describe 'raises an exception if it is not active' do
       it 'if it has folded' do
         x_actions = [['c', 'r100'], ['r200', 'c'], ['f']]
-        x_actions.each_with_index do |actions, round|
+        x_actions.each_with_index do |actions, in_round|
           actions.each do |action|
-            patient.append_action! PokerAction.new(action), round
+            patient.append_action! PokerAction.new(action), in_round
           end
         end
 
@@ -63,9 +63,9 @@ describe HandPlayer do
             PokerAction.new('c', cost: INITIAL_CHIP_STACK - ANTE)
           ]
         ]
-        x_actions.each_with_index do |actions, round|
+        x_actions.each_with_index do |actions, in_round|
           actions.each do |action|
-            patient.append_action!(action, round)
+            patient.append_action!(action, in_round)
           end
         end
 
@@ -74,9 +74,9 @@ describe HandPlayer do
     end
     it 'works' do
       x_actions = [['c', 'r100'], ['r200', 'c'], ['f']]
-      x_actions.each_with_index do |actions, round|
+      x_actions.each_with_index do |actions, in_round|
         actions.each do |action|
-          patient.append_action! PokerAction.new(action), round
+          patient.append_action! PokerAction.new(action), in_round
         end
       end
 
@@ -86,9 +86,9 @@ describe HandPlayer do
   describe '#folded?' do
     it 'works' do
       x_actions = [['c', 'r100'], ['r200', 'c']]
-      x_actions.each_with_index do |actions, round|
+      x_actions.each_with_index do |actions, in_round|
         actions.each do |action|
-          patient.append_action!(PokerAction.new(action), round).folded?.must_equal false
+          patient.append_action!(PokerAction.new(action), in_round).folded?.must_equal false
         end
       end
 
@@ -106,9 +106,9 @@ describe HandPlayer do
           PokerAction.new('r400')
         ]
       ]
-      x_actions.each_with_index do |actions, round|
+      x_actions.each_with_index do |actions, in_round|
         actions.each do |action|
-          patient.append_action!(action, round).all_in?.must_equal false
+          patient.append_action!(action, in_round).all_in?.must_equal false
         end
       end
 
@@ -126,9 +126,9 @@ describe HandPlayer do
           PokerAction.new('r400')
         ]
       ]
-      x_actions.each_with_index do |actions, round|
+      x_actions.each_with_index do |actions, in_round|
         actions.each do |action|
-          patient.append_action!(action, round).inactive?.must_equal false
+          patient.append_action!(action, in_round).inactive?.must_equal false
         end
       end
 
@@ -144,9 +144,9 @@ describe HandPlayer do
           PokerAction.new('r400')
         ]
       ]
-      x_actions.each_with_index do |actions, round|
+      x_actions.each_with_index do |actions, in_round|
         actions.each do |action|
-          patient.append_action!(action, round).inactive?.must_equal false
+          patient.append_action!(action, in_round).inactive?.must_equal false
         end
       end
 
@@ -165,17 +165,18 @@ describe HandPlayer do
           PokerAction.new('c', cost: 0)
         ]
       ]
-      x_actions.each_with_index do |actions, round|
+      x_actions.each_with_index do |actions, in_round|
         actions.each do |action|
-          patient.append_action!(action, round)
+          patient.append_action!(action, in_round)
         end
       end
 
-      patient.contributions.must_equal(
-        x_actions.map do |actions|
-          actions.inject(0) { |sum, action| sum += action.cost }
-        end.unshift(ANTE)
-      )
+      x_contributions = x_actions.map do |actions|
+        actions.inject(0) { |sum, action| sum += action.cost }
+      end
+      x_contributions[0] += ANTE
+
+      patient.contributions.must_equal(x_contributions)
     end
   end
   describe '#total_contribution' do
@@ -190,9 +191,9 @@ describe HandPlayer do
           PokerAction.new('c', cost: 0)
         ]
       ]
-      x_actions.each_with_index do |actions, round|
+      x_actions.each_with_index do |actions, in_round|
         actions.each do |action|
-          patient.append_action!(action, round)
+          patient.append_action!(action, in_round)
         end
       end
 
@@ -204,40 +205,40 @@ describe HandPlayer do
 
   describe '#legal_actions' do
     it 'works with fold' do
-      patient.legal_actions(round: 0, amount_to_call: 100).sort.must_equal [
+      patient.legal_actions(in_round: 0, amount_to_call: 100).sort.must_equal [
         PokerAction.new(PokerAction::CALL),
         PokerAction.new(PokerAction::RAISE, cost: INITIAL_CHIP_STACK - (ANTE + 100)),
         PokerAction.new(PokerAction::FOLD)
       ].sort
       patient.append_action!(PokerAction.new('c', cost: 100))
-        .legal_actions(round: 0, amount_to_call: 200).sort.must_equal [
+        .legal_actions(in_round: 0, amount_to_call: 200).sort.must_equal [
           PokerAction.new(PokerAction::CALL),
           PokerAction.new(PokerAction::RAISE, cost: INITIAL_CHIP_STACK - (ANTE + 200)),
           PokerAction.new(PokerAction::FOLD)
         ].sort
       patient.append_action!(PokerAction.new('f'))
-        .legal_actions(round: 0).empty?.must_equal true
+        .legal_actions(in_round: 0).empty?.must_equal true
     end
     it 'works with all in' do
-      patient.legal_actions(round: 0).sort.must_equal [
+      patient.legal_actions(in_round: 0).sort.must_equal [
         PokerAction.new(PokerAction::CHECK),
-        PokerAction.new(PokerAction::BET, cost: INITIAL_CHIP_STACK - ANTE),
+        PokerAction.new(PokerAction::RAISE, cost: INITIAL_CHIP_STACK - ANTE),
       ].sort
       patient.append_action!(PokerAction.new('c', cost: 100))
-        .legal_actions(round: 0).sort.must_equal [
+        .legal_actions(in_round: 0).sort.must_equal [
           PokerAction.new(PokerAction::CHECK),
-          PokerAction.new(PokerAction::BET, cost: INITIAL_CHIP_STACK - (ANTE + 100)),
+          PokerAction.new(PokerAction::RAISE, cost: INITIAL_CHIP_STACK - (ANTE + 100)),
         ].sort
       patient.append_action!(PokerAction.new('c', cost: INITIAL_CHIP_STACK - (ANTE + 100)))
-        .legal_actions(round: 0).empty?.must_equal true
+        .legal_actions(in_round: 0).empty?.must_equal true
     end
     it 'works when an opponent is all in' do
       patient.append_action!(PokerAction.new('c', cost: 100))
-        .legal_actions(round: 0).sort.must_equal [
+        .legal_actions(in_round: 0).sort.must_equal [
           PokerAction.new(PokerAction::CHECK),
           PokerAction.new(PokerAction::RAISE, cost: INITIAL_CHIP_STACK - (ANTE + 100))
         ].sort
-      patient.legal_actions(round: 0, amount_to_call: INITIAL_CHIP_STACK - (ANTE + 100))
+      patient.legal_actions(in_round: 0, amount_to_call: INITIAL_CHIP_STACK - (ANTE + 100))
         .sort.must_equal [
           PokerAction.new(PokerAction::CALL),
           PokerAction.new(PokerAction::FOLD)
@@ -245,16 +246,16 @@ describe HandPlayer do
     end
     it 'works when no more raises are allowed' do
       patient.append_action!(PokerAction.new('c', cost: 100))
-        .legal_actions(round: 0, wager_illegal: true).must_equal [
+        .legal_actions(in_round: 0, wager_illegal: true).must_equal [
           PokerAction.new(PokerAction::CHECK)
         ]
-      patient.legal_actions(round: 0, amount_to_call: INITIAL_CHIP_STACK - (ANTE + 100))
+      patient.legal_actions(in_round: 0, amount_to_call: INITIAL_CHIP_STACK - (ANTE + 100))
         .sort.must_equal [
           PokerAction.new(PokerAction::CALL),
           PokerAction.new(PokerAction::FOLD)
         ].sort
     end
-    it 'works without round argument' do
+    it 'works without in_round argument' do
       patient.append_action!(PokerAction.new('c', cost: 100))
         .legal_actions(wager_illegal: true).must_equal [
           PokerAction.new(PokerAction::CHECK)

@@ -479,9 +479,11 @@ describe MatchState do
         ]
       ]
       x_contributions = x_actions.map_with_index do |actions_per_player, i|
-        actions_per_player.map do |actions_per_round|
+        player_contribs = actions_per_player.map do |actions_per_round|
           actions_per_round.inject(0) { |sum, action| sum += action.cost }
-        end.unshift(x_game_def.blinds[i])
+        end
+        player_contribs[0] += x_game_def.blinds[i]
+        player_contribs
       end
       x_winnings = [0, 0, x_contributions.flatten.inject(:+)]
       x_stacks = x_game_def.chip_stacks.map_with_index do |chip_stack, i|
@@ -895,6 +897,16 @@ describe MatchState do
       ).must_equal [
         PokerAction.new(PokerAction::CHECK, cost: 0),
         PokerAction.new(PokerAction::BET, cost: game_definition.min_wagers[1])
+      ]
+    end
+    it 'should work properly when a new round begins and the other players check' do
+      game_definition = GameDefinition.parse_file(AcpcDealer::GAME_DEFINITION_FILE_PATHS[2][:limit])
+
+      MatchState.parse("MATCHSTATE:1:0:cc/rrrrc/rrc/c:|2hQc/QhQsJs/2s/Kh").legal_actions(
+        game_definition
+      ).must_equal [
+        PokerAction.new(PokerAction::CHECK, cost: 0),
+        PokerAction.new(PokerAction::BET, cost: game_definition.min_wagers[3])
       ]
     end
   end
