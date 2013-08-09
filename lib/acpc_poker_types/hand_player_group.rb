@@ -68,6 +68,8 @@ class HandPlayerGroup < DelegateClass(Array)
   # @return [Integer] The number of wagers this round
   def num_wagers(round)
     inject(0) do |sum, pl|
+      next sum if round >= pl.actions.length
+
       sum += pl.actions[round].count do |ac|
         PokerAction::MODIFIABLE_ACTIONS.include?(ac.action)
       end
