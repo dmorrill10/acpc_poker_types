@@ -72,7 +72,7 @@ class HandPlayer
     return l_actions if inactive?
 
     if amount_to_call.to_r > 0
-      l_actions << PokerAction.new(PokerAction::CALL) << PokerAction.new(PokerAction::FOLD)
+      l_actions << PokerAction.new(PokerAction::CALL, cost: amount_to_call) << PokerAction.new(PokerAction::FOLD)
     else
       l_actions << PokerAction.new(PokerAction::CHECK)
     end
