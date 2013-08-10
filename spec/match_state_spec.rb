@@ -295,6 +295,42 @@ describe MatchState do
         )
       end
     end
+    it 'works with a game definition and provides more a precise result' do
+      MatchState.parse(
+        "#{MatchState::LABEL}:0:0:ccr20cc/r50fr100c/cc/cc:AhKs||"
+      ).betting_sequence(
+        GameDefinition.new(
+          first_player_positions: [3, 2, 2, 2],
+          chip_stacks: [200, 200, 200],
+          blinds: [10, 0, 5],
+          raise_sizes: [10]*4,
+          number_of_ranks: 3
+        )
+      ).must_equal [
+        [
+          PokerAction.new(PokerAction::CALL),
+          PokerAction.new(PokerAction::CHECK),
+          PokerAction.new("#{PokerAction::RAISE}20"),
+          PokerAction.new(PokerAction::CALL),
+          PokerAction.new(PokerAction::CALL)
+        ],
+        [
+          PokerAction.new("#{PokerAction::BET}50"),
+          PokerAction.new(PokerAction::FOLD),
+          PokerAction.new("#{PokerAction::RAISE}100"),
+          PokerAction.new(PokerAction::CALL)
+
+        ],
+        [
+          PokerAction.new(PokerAction::CHECK),
+          PokerAction.new(PokerAction::CHECK)
+        ],
+        [
+          PokerAction.new(PokerAction::CHECK),
+          PokerAction.new(PokerAction::CHECK)
+        ]
+      ]
+    end
   end
   describe '#players_at_hand_start' do
     it 'returns HandPlayers with states set at the beginning of the hand' do

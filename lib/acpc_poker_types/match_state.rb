@@ -143,8 +143,16 @@ class MatchState < DelegateClass(String)
     end.call
   end
 
+  # @param game_def [GameDefinition] A game definition by which the actions can be interpreted
+  # and made more precise (bets marked by 'r' are converted into 'b' and checks marked by 'c'
+  # are converted to 'k').
   # @return [Array<Array<PokerAction>>] The sequence of betting actions.
-  def betting_sequence
+  def betting_sequence(game_def=nil)
+    if game_def
+      every_action(game_def) unless @precise_betting_sequence
+      return @precise_betting_sequence
+    end
+
     @betting_sequence ||= if @betting_sequence_string.empty?
       [[]]
     else
@@ -270,6 +278,7 @@ class MatchState < DelegateClass(String)
 
     @next_to_act = game_def.first_player_positions.first
     @player_acting_sequence = []
+    @precise_betting_sequence = []
     @min_wager_by = game_def.min_wagers.first
 
     walk_over_betting_sequence!(game_def)
@@ -344,6 +353,7 @@ class MatchState < DelegateClass(String)
         game_def.first_player_positions[current_round]
       )
       @player_acting_sequence << []
+      @precise_betting_sequence << []
       last_round = current_round
 
       walk_over_actions!(actions_per_round, game_def, last_round, current_round)
@@ -365,7 +375,7 @@ class MatchState < DelegateClass(String)
         game_def.min_wagers[current_round]
       )
 
-      action = PokerAction.new(
+      @precise_betting_sequence.last << PokerAction.new(
         action.to_s(
           pot_gained_chips: @players.inject(0) { |sum, player| sum += player.contributions[current_round].to_i } > 0,
           player_sees_wager: @players.amount_to_call(acting_player_position) > 0
@@ -373,11 +383,11 @@ class MatchState < DelegateClass(String)
         cost: cost
       )
 
-      adjust_min_wager!(action, acting_player_position)
+      adjust_min_wager!(@precise_betting_sequence.last.last, acting_player_position)
 
-      @players[acting_player_position].append_action!(action, current_round)
+      @players[acting_player_position].append_action!(@precise_betting_sequence.last.last, current_round)
 
-      yield action, current_round, acting_player_position if block_given?
+      yield @precise_betting_sequence.last.last, current_round, acting_player_position if block_given?
     end
 
     self
