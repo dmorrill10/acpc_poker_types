@@ -13,7 +13,7 @@ describe GameDefinition do
   describe '::new' do
     it 'creates a new game definition from a hash' do
       x_hash = {
-        betting_type: 'limit', 
+        betting_type: 'limit',
         chip_stacks: [10] * 3,
         number_of_players: 3,
         blinds: [2] * 3,
@@ -26,7 +26,27 @@ describe GameDefinition do
         number_of_hole_cards: 2,
         number_of_board_cards: [2] * 4
       }
-      GameDefinition.new(x_hash).to_h.must_equal(x_hash)
+      patient = GameDefinition.new(x_hash)
+      x_hash[:first_player_positions].map! { |pos| pos - 1 }
+      patient.to_h.must_equal(x_hash)
+    end
+    it 'does not modify the input hash values' do
+      x_hash = {
+        betting_type: 'limit',
+        chip_stacks: [10] * 3,
+        number_of_players: 3,
+        blinds: [2] * 3,
+        raise_sizes: [2] * 3,
+        number_of_rounds: 4,
+        first_player_positions: [1] * 4,
+        max_number_of_wagers: [3] * 4,
+        number_of_suits: 4,
+        number_of_ranks: 13,
+        number_of_hole_cards: 2,
+        number_of_board_cards: [2] * 4
+      }
+      GameDefinition.new(x_hash)
+      x_hash[:first_player_positions].must_equal [1]*4
     end
   end
 

@@ -265,7 +265,16 @@ module AcpcPokerTypes
 
     def assign_definitions!(definitions)
       definitions.each do |key, value|
-        instance_variable_set("@#{key}", value)
+        instance_variable_set(
+          "@#{key}",
+          (
+            begin
+              value.dup
+            rescue TypeError
+              value
+            end
+          )
+        )
       end
     end
 
