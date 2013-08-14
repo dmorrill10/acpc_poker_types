@@ -29,13 +29,18 @@ include AcpcPokerTypes
 
 describe MatchState do
   describe '#parse' do
-    it "parses every possible limit action" do
-      partial_match_state = MatchState::LABEL + ":1:1:"
+    it "parses every possible action" do
+      partial_match_state = "#{MatchState::LABEL}:1:1:"
       hole_cards = arbitrary_hole_card_hand
       PokerAction::CANONICAL_ACTIONS.each do |action|
-        match_state = partial_match_state + action + ":" + hole_cards.to_acpc
+        action_string = if PokerAction::MODIFIABLE_ACTIONS.include?(action)
+          "#{action}123"
+        else
+          action
+        end
+        match_state = "#{partial_match_state}#{action_string}/:#{hole_cards.to_acpc}"
         patient = test_match_state_success match_state
-        patient.last_action.to_s.must_equal action
+        patient.last_action.to_s.must_equal action_string
       end
     end
     it "parses every possible hole card hand" do

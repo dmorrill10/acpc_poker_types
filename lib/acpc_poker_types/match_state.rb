@@ -230,12 +230,10 @@ class MatchState < DelegateClass(String)
 
   # @return [PokerAction] The last action taken.
   def last_action
-    @last_action ||= if @betting_sequence_string.match(
-      /([^#{BETTING_SEQUENCE_SEPARATOR}])#{BETTING_SEQUENCE_SEPARATOR}*$/
-    )
-      PokerAction.new($1)
-    else
+    @last_action ||= if betting_sequence.flatten.empty?
       nil
+    else
+      betting_sequence[round_in_which_last_action_taken].last
     end
   end
 
