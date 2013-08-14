@@ -132,15 +132,15 @@ class MatchState < DelegateClass(String)
 
   # @return [Array<Hand>] The list of hole card hands for each player.
   def all_hands
-    @all_hands ||= -> do
-      lcl_hole_card_hands = all_string_hands(@hands_string).map do |string_hand|
-        Hand.from_acpc string_hand
-      end
-      while lcl_hole_card_hands.length < number_of_players
-        lcl_hole_card_hands.push Hand.new
-      end
-      lcl_hole_card_hands
-    end.call
+    return @all_hands unless @all_hands.nil?
+
+    @all_hands = all_string_hands(@hands_string).map do |string_hand|
+      Hand.from_acpc string_hand
+    end
+    while @all_hands.length < number_of_players
+      @all_hands.push Hand.new
+    end
+    @all_hands
   end
 
   # @param game_def [GameDefinition] A game definition by which the actions can be interpreted
@@ -174,17 +174,17 @@ class MatchState < DelegateClass(String)
 
   # @return [BoardCards] All visible community cards on the board.
   def community_cards
-    @community_cards ||= -> do
-      lcl_community_cards = BoardCards.new(
-        all_sets_of_community_cards(@community_cards_string).map do |cards_per_round|
-          Card.cards(cards_per_round)
-        end
-      )
-      if lcl_community_cards.round < @community_cards_string.count(COMMUNITY_CARD_SEPARATOR)
-        lcl_community_cards.next_round!
+    return @community_cards unless @community_cards.nil?
+
+    @community_cards = BoardCards.new(
+      all_sets_of_community_cards(@community_cards_string).map do |cards_per_round|
+        Card.cards(cards_per_round)
       end
-      lcl_community_cards
-    end.call
+    )
+    if @community_cards.round < @community_cards_string.count(COMMUNITY_CARD_SEPARATOR)
+      @community_cards.next_round!
+    end
+    @community_cards
   end
 
   # @return [Integer] The zero indexed current round number.
@@ -203,11 +203,11 @@ class MatchState < DelegateClass(String)
   # @example If there are two opponents, one with AhKs and the other with QdJc, then
   #     list_of_opponents_hole_cards == [AhKs:Hand, QdJc:Hand]
   def opponent_hands
-    @opponent_hands ||= -> do
-      hands = all_hands.dup
-      hands.delete_at @position_relative_to_dealer
-      hands
-    end.call
+    return @opponent_hands unless @opponent_hands.nil?
+
+    @opponent_hands = all_hands.dup
+    @opponent_hands.delete_at @position_relative_to_dealer
+    @opponent_hands
   end
 
   # @return [Boolean] Reports whether or not it is the first state of the first round.
