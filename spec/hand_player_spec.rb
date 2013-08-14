@@ -40,6 +40,35 @@ describe HandPlayer do
       end
     end
   end
+  describe '#contributions_before' do
+    it 'works' do
+      x_actions = [
+        [
+          PokerAction.new('c', cost: 100),
+          PokerAction.new('r200', cost: 100)
+        ],
+        [
+          PokerAction.new('r400', cost: 200),
+          PokerAction.new('c', cost: 0)
+        ]
+      ]
+      x_actions.each_with_index do |actions, in_round|
+        actions.each do |action|
+          patient.append_action!(action, in_round)
+        end
+      end
+
+      x_contributions = x_actions.map do |actions|
+        actions.inject(0) { |sum, action| sum += action.cost }
+      end
+      x_contributions[0] += ANTE
+
+      patient.contributions_before.must_equal(x_contributions[0])
+      patient.contributions_before(0).must_equal(0)
+      patient.contributions_before(1).must_equal(x_contributions[0])
+      patient.contributions_before(2).must_equal(x_contributions.inject(:+))
+    end
+  end
   describe '#append_action!' do
     describe 'raises an exception if it is not active' do
       it 'if it has folded' do

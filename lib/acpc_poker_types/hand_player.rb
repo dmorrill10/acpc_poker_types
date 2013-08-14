@@ -50,6 +50,14 @@ class HandPlayer
     @winnings - total_contribution
   end
 
+  def contributions_before(cur_round = round)
+    if cur_round > 0
+      contributions[0..cur_round-1].inject(:+)
+    else
+      0
+    end
+  end
+
   def contributions
     contribution_list = @actions.map do |actions_per_round|
       actions_per_round.inject(0) { |sum, action| sum += action.cost }
