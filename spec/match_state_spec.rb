@@ -667,7 +667,6 @@ describe MatchState do
           :raise_sizes=>nil,
           :number_of_rounds=>4,
           :first_player_positions=>[1, 0, 0, 0],
-          :max_number_of_wagers=>[255],
           :number_of_suits=>4,
           :number_of_ranks=>13,
           :number_of_hole_cards=>2,

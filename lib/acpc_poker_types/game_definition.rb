@@ -106,24 +106,18 @@ module AcpcPokerTypes
     ]
 
     def self.default_first_player_positions(number_of_rounds)
-      number_of_rounds.to_i.times.inject([]) do |list, i|
-        list << 0
-      end
+      number_of_rounds.times.map { 0 }
     end
 
     # @return [Array] The default maximum raise in each round.
     def self.default_max_number_of_wagers(number_of_rounds)
-      number_of_rounds.to_i.times.inject([]) do |list, i|
-        list << DEFAULT_MAX_NUMBER_OF_WAGERS
-      end
+      number_of_rounds.times.map { DEFAULT_MAX_NUMBER_OF_WAGERS }
     end
 
     # @param [Integer] number_of_players The number of players that require stacks.
     # @return [Array<AcpcPokerTypes::ChipStack>] The default list of initial stacks for every player.
     def self.default_chip_stacks(number_of_players)
-      number_of_players.to_i.times.inject([]) do |list, i|
-        list << AcpcPokerTypes::ChipStack.new(DEFAULT_CHIP_STACK)
-      end
+      number_of_players.times.map { ChipStack.new(DEFAULT_CHIP_STACK) }
     end
 
     # Checks if the given line is a comment beginning with '#' or ';', or empty.
@@ -179,7 +173,7 @@ module AcpcPokerTypes
         parse_definitions! definitions
       end
 
-      @chip_stacks = AcpcPokerTypes::GameDefinition.default_chip_stacks(@number_of_players) if @chip_stacks.empty?
+      @chip_stacks = self.class.default_chip_stacks(@number_of_players) if @chip_stacks.empty?
 
       unless @first_player_positions.any? { |pos| pos <= 0 }
         @first_player_positions.map! { |position| position - 1 }
@@ -240,9 +234,9 @@ module AcpcPokerTypes
       @blinds = @number_of_players.times.inject([]) { |blinds, i| blinds << 0 }
       @number_of_rounds = MIN_VALUES[:@number_of_rounds]
       @number_of_board_cards = @number_of_rounds.times.inject([]) { |cards, i| cards << 0 }
-      @first_player_positions = AcpcPokerTypes::GameDefinition.default_first_player_positions @number_of_rounds
-      @max_number_of_wagers = AcpcPokerTypes::GameDefinition.default_max_number_of_wagers @number_of_rounds
-      @chip_stacks = AcpcPokerTypes::GameDefinition.default_chip_stacks @number_of_players
+      @first_player_positions = self.class.default_first_player_positions @number_of_rounds
+      @max_number_of_wagers = self.class.default_max_number_of_wagers @number_of_rounds
+      @chip_stacks = self.class.default_chip_stacks @number_of_players
       @number_of_suits = MIN_VALUES[:@number_of_suits]
       @number_of_ranks = MIN_VALUES[:@number_of_ranks]
       @number_of_hole_cards = MIN_VALUES[:@number_of_hole_cards]
@@ -251,7 +245,7 @@ module AcpcPokerTypes
     end
 
     def set_defintion_if_present!(definition_symbol, line, definition_label_in_line)
-      new_definition = AcpcPokerTypes::GameDefinition.check_game_def_line_for_definition(
+      new_definition = self.class.check_game_def_line_for_definition(
         line,
         definition_label_in_line
       )
@@ -282,7 +276,7 @@ module AcpcPokerTypes
       definitions.each do |line|
         break if line.match(/\bend\s*gamedef\b/i)
         next if (
-          AcpcPokerTypes::GameDefinition.game_def_line_not_informative?(line) ||
+          self.class.game_def_line_not_informative?(line) ||
           BETTING_TYPES.any? do |type_and_name|
             type = type_and_name.first
             name = type_and_name[1]
@@ -372,6 +366,7 @@ module AcpcPokerTypes
       @number_of_rounds.times do |i|
         @first_player_positions << 0 unless @first_player_positions.length > i
         @number_of_board_cards << 0 unless @number_of_board_cards.length > i
+        @max_number_of_wagers << DEFAULT_MAX_NUMBER_OF_WAGERS unless @max_number_of_wagers.length > i
       end
     end
   end
