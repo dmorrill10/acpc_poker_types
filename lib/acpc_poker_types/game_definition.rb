@@ -202,22 +202,22 @@ module AcpcPokerTypes
     end
 
     def to_a
-      @array ||= -> do
-        list_of_lines = []
-        list_of_lines << @betting_type if @betting_type
-        list_of_lines << "stack = #{@chip_stacks.join(' ')}" unless @chip_stacks.empty?
-        list_of_lines << "numPlayers = #{@number_of_players}" if @number_of_players
-        list_of_lines << "blind = #{@blinds.join(' ')}" unless @blinds.empty?
-        list_of_lines << "raiseSize = #{min_wagers.join(' ')}" unless min_wagers.empty?
-        list_of_lines << "numRounds = #{@number_of_rounds}" if @number_of_rounds
-        list_of_lines << "firstPlayer = #{(@first_player_positions.map{|p| p + 1}).join(' ')}" unless @first_player_positions.empty?
-        list_of_lines << "maxRaises = #{@max_number_of_wagers.join(' ')}" unless @max_number_of_wagers.empty?
-        list_of_lines << "numSuits = #{@number_of_suits}" if @number_of_suits
-        list_of_lines << "numRanks = #{@number_of_ranks}" if @number_of_ranks
-        list_of_lines << "numHoleCards = #{@number_of_hole_cards}" if @number_of_hole_cards
-        list_of_lines << "numBoardCards = #{@number_of_board_cards.join(' ')}" unless @number_of_board_cards.empty?
-        list_of_lines
-      end.call
+      return @array unless @array.nil?
+
+      @array = []
+      @array << @betting_type if @betting_type
+      @array << "stack = #{@chip_stacks.join(' ')}" unless @chip_stacks.empty?
+      @array << "numPlayers = #{@number_of_players}" if @number_of_players
+      @array << "blind = #{@blinds.join(' ')}" unless @blinds.empty?
+      @array << "raiseSize = #{min_wagers.join(' ')}" unless min_wagers.empty?
+      @array << "numRounds = #{@number_of_rounds}" if @number_of_rounds
+      @array << "firstPlayer = #{(@first_player_positions.map{|p| p + 1}).join(' ')}" unless @first_player_positions.empty?
+      @array << "maxRaises = #{@max_number_of_wagers.join(' ')}" unless @max_number_of_wagers.empty?
+      @array << "numSuits = #{@number_of_suits}" if @number_of_suits
+      @array << "numRanks = #{@number_of_ranks}" if @number_of_ranks
+      @array << "numHoleCards = #{@number_of_hole_cards}" if @number_of_hole_cards
+      @array << "numBoardCards = #{@number_of_board_cards.join(' ')}" unless @number_of_board_cards.empty?
+      @array
     end
 
     def ==(other_game_definition)

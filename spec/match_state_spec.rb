@@ -922,6 +922,25 @@ describe MatchState do
     end
   end
   describe '#legal_actions' do
+    it 'should work properly after all-in' do
+      game_def = GameDefinition.new(
+        :betting_type=>"nolimit",
+        :chip_stacks=>[20000, 20000],
+        :number_of_players=>2,
+        :blinds=>[100, 50],
+        :raise_sizes=>nil,
+        :number_of_rounds=>4,
+        :first_player_positions=>[1, 0, 0, 0],
+        :max_number_of_wagers=>[255],
+        :number_of_suits=>4,
+        :number_of_ranks=>13,
+        :number_of_hole_cards=>2,
+        :number_of_board_cards=>[0, 3, 1, 1]
+      )
+      MatchState.parse(
+        'MATCHSTATE:1:1:cr20000c///:7c7d|6cAc/2s9cKc/4s/5s'
+      ).legal_actions(game_def).must_equal []
+    end
     it 'should work properly when facing a wager' do
       game_definition = GameDefinition.parse_file(AcpcDealer::GAME_DEFINITION_FILE_PATHS[2][:limit])
 

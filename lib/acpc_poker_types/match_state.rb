@@ -332,6 +332,8 @@ class MatchState < DelegateClass(String)
 
   # @return [Array<PokerAction>] The legal actions for the next player to act.
   def legal_actions(game_def)
+    return [] unless next_to_act(game_def)
+
     players(game_def).legal_actions(
       next_to_act(game_def),
       round,
