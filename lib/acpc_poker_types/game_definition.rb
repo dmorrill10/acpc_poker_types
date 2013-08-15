@@ -1,4 +1,3 @@
-require 'acpc_poker_types/chip_stack'
 require 'acpc_poker_types/suit'
 require 'acpc_poker_types/rank'
 
@@ -115,9 +114,9 @@ module AcpcPokerTypes
     end
 
     # @param [Integer] number_of_players The number of players that require stacks.
-    # @return [Array<AcpcPokerTypes::ChipStack>] The default list of initial stacks for every player.
+    # @return [Array<Integer>] The default list of initial stacks for every player.
     def self.default_chip_stacks(number_of_players)
-      number_of_players.times.map { ChipStack.new(DEFAULT_CHIP_STACK) }
+      number_of_players.times.map { DEFAULT_CHIP_STACK }
     end
 
     # Checks if the given line is a comment beginning with '#' or ';', or empty.
