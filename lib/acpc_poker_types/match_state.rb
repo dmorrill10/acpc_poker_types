@@ -95,9 +95,11 @@ class MatchState < DelegateClass(String)
 
   # @param [String] raw_match_state A raw match state string to be parsed.
   # @raise IncompleteMatchState
-  def initialize(raw_match_state)
-    if raw_match_state.match(
-/#{LABEL}:(\d+):(\d+):([^:]*):([^#{COMMUNITY_CARD_SEPARATOR}]+)#{COMMUNITY_CARD_SEPARATOR}*([^\s:]*)/
+  def initialize(raw_match_state, previous_state = nil, game_def = nil)
+    if (
+      %r{#{LABEL}:(\d+):(\d+):([^:]*):([^#{COMMUNITY_CARD_SEPARATOR}\s]+)#{COMMUNITY_CARD_SEPARATOR}*([^\s:]*)}.match(
+        raw_match_state
+      )
     )
       @position_relative_to_dealer = $1.to_i
       @hand_number = $2.to_i
@@ -105,7 +107,47 @@ class MatchState < DelegateClass(String)
       @hands_string = $4
       @community_cards_string = $5
     end
-    @min_wager_by = nil
+    @str = nil
+    @all_hands = nil
+    @community_cards = nil
+    @round = nil
+    @hand = nil
+    @opponent_hands = nil
+    @first_state_of_first_round = nil
+    @first_state_of_round = nil
+    @last_action = nil
+    @number_of_actions_this_round = nil
+    @number_of_actions_this_hand = nil
+    @round_in_which_last_action_taken = nil
+    @number_of_players = nil
+    @betting_sequence = nil
+    @hand_ended = nil
+    @opponents_cards_visible = nil
+    @pot = nil
+    @legal_actions = nil
+    if (
+      previous_state.nil? ||
+      game_def.nil? ||
+      last_action.nil? ||
+      previous_state.number_of_actions_this_hand != number_of_actions_this_hand - 1
+    )
+      @precise_betting_sequence = nil
+      @next_to_act = nil
+      @players = nil
+      @player_acting_sequence = nil
+      @min_wager_by = nil
+    else # Only process the one new action, bootstrapping from the given last state
+      @precise_betting_sequence = previous_state.betting_sequence(game_def).map { |per_round| per_round.dup }
+      @next_to_act = previous_state.next_to_act(game_def)
+      @players = previous_state.players(game_def).dup
+      @players.each_with_index { |player, i| player.hand = all_hands[i] }
+      @player_acting_sequence = previous_state.player_acting_sequence(game_def).map { |per_round| per_round.dup }
+      @min_wager_by = previous_state.min_wager_by(game_def)
+
+      process_action!(last_action, round_in_which_last_action_taken)
+      init_new_round!(game_def, round) if round != previous_state.round
+      distribute_chips!(game_def) if hand_ended?(game_def)
+    end
 
     super to_s
   end
@@ -306,7 +348,10 @@ class MatchState < DelegateClass(String)
   def hand_ended?(game_def)
     return @hand_ended unless @hand_ended.nil?
 
-    @hand_ended = reached_showdown? || players(game_def).count { |player| player.folded? } >= number_of_players - 1
+    @hand_ended = (
+      reached_showdown? ||
+      players(game_def).count { |player| player.folded? } >= number_of_players - 1
+    )
   end
 
   def reached_showdown?
@@ -325,7 +370,7 @@ class MatchState < DelegateClass(String)
 
   # @return [ChipStack] Minimum wager by.
   def min_wager_by(game_def)
-    every_action(game_def) unless @min_wager_by
+    every_action(game_def) if @min_wager_by.nil?
 
     @min_wager_by
   end
@@ -333,8 +378,9 @@ class MatchState < DelegateClass(String)
   # @return [Array<PokerAction>] The legal actions for the next player to act.
   def legal_actions(game_def)
     return [] unless next_to_act(game_def)
+    return @legal_actions unless @legal_actions.nil?
 
-    players(game_def).legal_actions(
+    @legal_actions = players(game_def).legal_actions(
       next_to_act(game_def),
       round,
       game_def,
@@ -345,50 +391,68 @@ class MatchState < DelegateClass(String)
   private
 
   def walk_over_betting_sequence!(game_def)
-    last_round = -1
-
     betting_sequence.each_with_index do |actions_per_round, current_round|
-      @min_wager_by = game_def.min_wagers[current_round]
-      @next_to_act = @players.position_of_first_active_player(
-        game_def.first_player_positions[current_round]
-      )
-      @player_acting_sequence << []
-      @precise_betting_sequence << []
-      last_round = current_round
+      init_new_round!(game_def, current_round)
 
-      walk_over_actions!(actions_per_round, game_def, last_round, current_round)
+      walk_over_actions!(actions_per_round, current_round)
     end
 
     self
   end
 
-  def walk_over_actions!(actions_per_round, game_def, last_round, current_round)
-    actions_per_round.each do |action|
-      @player_acting_sequence.last << @next_to_act
-      acting_player_position = @player_acting_sequence.last.last
-
-      @next_to_act = @players.next_to_act(@next_to_act)
-
-      cost = @players.action_cost(
-        acting_player_position,
-        action,
-        game_def.min_wagers[current_round]
-      )
-
-      @precise_betting_sequence.last << PokerAction.new(
-        action.to_s(
-          pot_gained_chips: @players.inject(0) { |sum, player| sum += player.contributions[current_round].to_i } > 0,
-          player_sees_wager: @players.amount_to_call(acting_player_position) > 0
-        ),
-        cost: cost
-      )
-
-      adjust_min_wager!(@precise_betting_sequence.last.last, acting_player_position)
-
-      @players[acting_player_position].append_action!(@precise_betting_sequence.last.last, current_round)
-
-      yield @precise_betting_sequence.last.last, current_round, acting_player_position if block_given?
+  def init_new_round!(game_def, current_round)
+    @min_wager_by = game_def.min_wagers[current_round]
+    @next_to_act = @players.position_of_first_active_player(
+      game_def.first_player_positions[current_round]
+    )
+    while @player_acting_sequence.length <= current_round
+      @player_acting_sequence << []
+      @precise_betting_sequence << []
     end
+
+    self
+  end
+
+  def walk_over_actions!(actions_per_round, current_round)
+    actions_per_round.each do |action|
+      process_action!(action, current_round)
+
+      yield(
+        @precise_betting_sequence[current_round].last,
+        current_round,
+        @player_acting_sequence[current_round].last
+      ) if block_given?
+    end
+
+    self
+  end
+
+  def process_action!(action, current_round)
+    cost = @players.action_cost(
+      @next_to_act,
+      action,
+      @min_wager_by
+    )
+
+    @precise_betting_sequence[current_round] << PokerAction.new(
+      action.to_s(
+        pot_gained_chips: @players.inject(0) { |sum, player| sum += player.contributions[current_round].to_i } > 0,
+        player_sees_wager: @players.amount_to_call(@next_to_act) > 0
+      ),
+      cost: cost
+    )
+
+    adjust_min_wager!(
+      @precise_betting_sequence[current_round].last,
+      @next_to_act
+    )
+
+    @players[@next_to_act].append_action!(
+      @precise_betting_sequence[current_round].last, current_round
+    )
+
+    @player_acting_sequence[current_round] << @next_to_act
+    @next_to_act = @players.next_to_act(@next_to_act)
 
     self
   end

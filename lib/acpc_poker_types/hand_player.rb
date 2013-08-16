@@ -22,7 +22,7 @@ class HandPlayer
 
   # @return [Hand] This player's hole cards or nil if this player is not
   # holding cards.
-  attr_reader :hand
+  attr_accessor :hand
 
   # @return [Array<PokerAction>] The actions this player has taken
   attr_reader :actions
@@ -40,6 +40,14 @@ class HandPlayer
     @ante = ChipStack.new ante
     @actions = [[]]
     @winnings = ChipStack.new 0
+  end
+
+  def ==(other_player)
+    @hand == other_player.hand &&
+    @initial_stack == other_player.initial_stack &&
+    @ante == other_player.ante &&
+    @actions == other_player.actions &&
+    @winnings == other_player.winnings
   end
 
   def stack

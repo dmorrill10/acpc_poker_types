@@ -136,6 +136,145 @@ describe MatchState do
     end
   end
 
+  describe '#new allows bootstrapping from previous states' do
+    it 'eg 1' do
+      wager_size = 10
+      game_def = GameDefinition.new(
+        first_player_positions: [3, 2, 2, 2],
+        chip_stacks: [500, 450, 550],
+        blinds: [0, 10, 5],
+        raise_sizes: [wager_size]*4,
+        number_of_ranks: 3,
+        number_of_hole_cards: 1
+      )
+
+      (0..game_def.number_of_players-1).each do |position|
+        hands = [ Hand.new ]*game_def.number_of_players
+        hands[position] = arbitrary_hole_card_hand
+
+        hand_string = hands.inject('') do |hand_string, hand|
+          hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
+        end[0..-2]
+
+        last_state = MatchState.new(
+          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rr:#{hand_string}"
+        )
+
+        patient = MatchState.new(
+          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrf:#{hand_string}",
+          last_state,
+          game_def
+        )
+
+        x_state = MatchState.new(
+          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrf:#{hand_string}"
+        )
+
+        patient.betting_sequence(game_def).must_equal x_state.betting_sequence(game_def)
+        patient.players(game_def).must_equal x_state.players(game_def)
+        patient.next_to_act(game_def).must_equal x_state.next_to_act(game_def)
+        patient.legal_actions(game_def).must_equal x_state.legal_actions(game_def)
+        patient.player_acting_sequence(game_def).must_equal x_state.player_acting_sequence(game_def)
+        patient.hand_ended?(game_def).must_equal x_state.hand_ended?(game_def)
+        patient.pot(game_def).must_equal x_state.pot(game_def)
+        patient.min_wager_by(game_def).must_equal x_state.min_wager_by(game_def)
+      end
+    end
+    it 'eg 2' do
+      wager_size = 10
+      game_def = GameDefinition.new(
+        first_player_positions: [1, 0, 0, 0],
+        number_of_hole_cards: 2,
+        number_of_suits: 4,
+        number_of_ranks: 13,
+        raise_sizes: [wager_size]*4
+      )
+
+      last_state = MatchState.new(
+        "MATCHSTATE:0:0:c:5d5c|/8dAs8s"
+      )
+
+      patient = MatchState.new(
+        "MATCHSTATE:0:0:cc/:5d5c|/8dAs8s",
+        last_state,
+        game_def
+      )
+
+      x_state = MatchState.new("MATCHSTATE:0:0:cc/:5d5c|/8dAs8s")
+
+      patient.betting_sequence(game_def).must_equal x_state.betting_sequence(game_def)
+      patient.players(game_def).must_equal x_state.players(game_def)
+      patient.next_to_act(game_def).must_equal x_state.next_to_act(game_def)
+      patient.legal_actions(game_def).must_equal x_state.legal_actions(game_def)
+      patient.player_acting_sequence(game_def).must_equal x_state.player_acting_sequence(game_def)
+      patient.hand_ended?(game_def).must_equal x_state.hand_ended?(game_def)
+      patient.pot(game_def).must_equal x_state.pot(game_def)
+      patient.min_wager_by(game_def).must_equal x_state.min_wager_by(game_def)
+    end
+    it 'eg 3' do
+      wager_size = 10
+      game_def = GameDefinition.new(
+        first_player_positions: [1, 0, 0, 0],
+        number_of_hole_cards: 2,
+        number_of_suits: 4,
+        number_of_ranks: 13,
+        raise_sizes: [wager_size]*4
+      )
+
+      last_state = MatchState.new(
+        "MATCHSTATE:0:0:cc/:5d5c|/8dAs8s"
+      )
+
+      patient = MatchState.new(
+        "MATCHSTATE:0:0:cc/c:5d5c|/8dAs8s",
+        last_state,
+        game_def
+      )
+
+      x_state = MatchState.new("MATCHSTATE:0:0:cc/c:5d5c|/8dAs8s")
+
+      patient.betting_sequence(game_def).must_equal x_state.betting_sequence(game_def)
+      patient.players(game_def).must_equal x_state.players(game_def)
+      patient.next_to_act(game_def).must_equal x_state.next_to_act(game_def)
+      patient.legal_actions(game_def).must_equal x_state.legal_actions(game_def)
+      patient.player_acting_sequence(game_def).must_equal x_state.player_acting_sequence(game_def)
+      patient.hand_ended?(game_def).must_equal x_state.hand_ended?(game_def)
+      patient.pot(game_def).must_equal x_state.pot(game_def)
+      patient.min_wager_by(game_def).must_equal x_state.min_wager_by(game_def)
+    end
+    it 'distributes chips properly' do
+      wager_size = 10
+      game_def = GameDefinition.new(
+        first_player_positions: [1, 0, 0, 0],
+        number_of_hole_cards: 2,
+        number_of_suits: 4,
+        number_of_ranks: 13,
+        raise_sizes: [wager_size]*4
+      )
+
+      last_state = MatchState.new(
+        "MATCHSTATE:0:0:cc/r:5d5c|/8dAs8s"
+      )
+
+      patient = MatchState.new(
+        "MATCHSTATE:0:0:cc/rf:5d5c|2h3s/8dAs8s",
+        last_state,
+        game_def
+      )
+
+      x_state = MatchState.new("MATCHSTATE:0:0:cc/rf:5d5c|2h3s/8dAs8s")
+
+      patient.betting_sequence(game_def).must_equal x_state.betting_sequence(game_def)
+      patient.players(game_def).must_equal x_state.players(game_def)
+      patient.next_to_act(game_def).must_equal x_state.next_to_act(game_def)
+      patient.legal_actions(game_def).must_equal x_state.legal_actions(game_def)
+      patient.player_acting_sequence(game_def).must_equal x_state.player_acting_sequence(game_def)
+      patient.hand_ended?(game_def).must_equal x_state.hand_ended?(game_def)
+      patient.pot(game_def).must_equal x_state.pot(game_def)
+      patient.min_wager_by(game_def).must_equal x_state.min_wager_by(game_def)
+    end
+  end
+
   describe '#round' do
     it "properly reports the current round number" do
       partial_match_state = MatchState::LABEL + ":0:0:"
@@ -300,41 +439,103 @@ describe MatchState do
         )
       end
     end
-    it 'works with a game definition and provides more a precise result' do
-      MatchState.parse(
-        "#{MatchState::LABEL}:0:0:ccr20cc/r50fr100c/cc/cc:AhKs||"
-      ).betting_sequence(
-        GameDefinition.new(
-          first_player_positions: [3, 2, 2, 2],
-          chip_stacks: [200, 200, 200],
-          blinds: [10, 0, 5],
-          raise_sizes: [10]*4,
-          number_of_ranks: 3
-        )
-      ).must_equal [
-        [
-          PokerAction.new(PokerAction::CALL),
-          PokerAction.new(PokerAction::CHECK),
-          PokerAction.new("#{PokerAction::RAISE}20"),
-          PokerAction.new(PokerAction::CALL),
-          PokerAction.new(PokerAction::CALL)
-        ],
-        [
-          PokerAction.new("#{PokerAction::BET}50"),
-          PokerAction.new(PokerAction::FOLD),
-          PokerAction.new("#{PokerAction::RAISE}100"),
-          PokerAction.new(PokerAction::CALL)
+    describe 'works with a game definition to provide a more precise result' do
+      it 'eg 1' do
+        MatchState.parse(
+          "#{MatchState::LABEL}:0:0:ccr20cc/r50fr100c/cc/cc:AhKs||"
+        ).betting_sequence(
+          GameDefinition.new(
+            first_player_positions: [3, 2, 2, 2],
+            chip_stacks: [200, 200, 200],
+            blinds: [10, 0, 5],
+            raise_sizes: [10]*4,
+            number_of_ranks: 3
+          )
+        ).must_equal [
+          [
+            PokerAction.new(PokerAction::CALL),
+            PokerAction.new(PokerAction::CHECK),
+            PokerAction.new("#{PokerAction::RAISE}20"),
+            PokerAction.new(PokerAction::CALL),
+            PokerAction.new(PokerAction::CALL)
+          ],
+          [
+            PokerAction.new("#{PokerAction::BET}50"),
+            PokerAction.new(PokerAction::FOLD),
+            PokerAction.new("#{PokerAction::RAISE}100"),
+            PokerAction.new(PokerAction::CALL)
 
-        ],
-        [
-          PokerAction.new(PokerAction::CHECK),
-          PokerAction.new(PokerAction::CHECK)
-        ],
-        [
-          PokerAction.new(PokerAction::CHECK),
-          PokerAction.new(PokerAction::CHECK)
+          ],
+          [
+            PokerAction.new(PokerAction::CHECK),
+            PokerAction.new(PokerAction::CHECK)
+          ],
+          [
+            PokerAction.new(PokerAction::CHECK),
+            PokerAction.new(PokerAction::CHECK)
+          ]
         ]
-      ]
+      end
+      it 'eg 2' do
+        wager_size = 10
+        game_def = GameDefinition.new(
+          first_player_positions: [3, 2, 2, 2],
+          chip_stacks: [500, 450, 550],
+          blinds: [0, 10, 5],
+          raise_sizes: [wager_size]*4,
+          number_of_ranks: 3,
+          number_of_hole_cards: 1
+        )
+
+        (0..game_def.number_of_players-1).each do |position|
+          hands = [ Hand.new ]*game_def.number_of_players
+          hands[position] = arbitrary_hole_card_hand
+
+          hand_string = hands.inject('') do |hand_string, hand|
+            hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
+          end[0..-2]
+
+          patient = MatchState.parse(
+            "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rr:#{hand_string}"
+          )
+
+          patient.betting_sequence.must_equal [
+            [
+              PokerAction::CALL,
+              PokerAction::RAISE,
+              PokerAction::CALL,
+              PokerAction::CALL
+            ],
+            [
+              PokerAction::CALL,
+              PokerAction::CALL,
+              PokerAction::CALL
+            ],
+            [
+              PokerAction::RAISE,
+              PokerAction::RAISE
+            ]
+          ]
+
+          patient.betting_sequence(game_def).must_equal [
+            [
+              PokerAction::CALL,
+              PokerAction::RAISE,
+              PokerAction::CALL,
+              PokerAction::CALL
+            ],
+            [
+              PokerAction::CHECK,
+              PokerAction::CHECK,
+              PokerAction::CHECK
+            ],
+            [
+              PokerAction::BET,
+              PokerAction::RAISE
+            ]
+          ]
+        end
+      end
     end
   end
   describe '#players_at_hand_start' do

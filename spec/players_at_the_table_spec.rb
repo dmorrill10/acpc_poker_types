@@ -13,10 +13,7 @@ describe PlayersAtTheTable do
   describe '#update!' do
     it "keeps track of state for a sequence of match states and actions in Doyle's game" do
       # Change this number to do more or less thorough tests.
-      # Some interesting three player hands occur after 120
-      # Careful though, even 10 hands takes about three seconds,
-      # and it scales slightly less than linearly. 120 takes
-      # about 30 seconds.
+      # They are expensive, so don't make this number too large
       num_hands = 5
       MatchLog.all.each do |log_description|
         @match = DealerData::PokerMatchData.parse_files(

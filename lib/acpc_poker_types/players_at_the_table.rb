@@ -43,11 +43,12 @@ class PlayersAtTheTable
     end
     @game_def = game_def
     @seat = Seat.new(seat, game_def.number_of_players)
+    @match_state = nil
   end
 
   # @param [MatchState] match_state The next match state.
   def update!(match_state)
-    @match_state = match_state
+    @match_state = MatchState.new(match_state, @match_state, @game_def)
 
     update_players!
   end
