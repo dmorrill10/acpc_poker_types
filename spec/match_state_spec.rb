@@ -1119,6 +1119,25 @@ describe MatchState do
         end
       end
     end
+    it 'becomes the all-in size when there are less chips than the last min wager' do
+      game_def = GameDefinition.new(
+        "betting_type"=>"nolimit",
+        "chip_stacks"=>[20000, 20000],
+        "number_of_players"=>2,
+        "blinds"=>[100, 50],
+        "raise_sizes"=>nil,
+        "number_of_rounds"=>4,
+        "first_player_positions"=>[1, 0, 0, 0],
+        "max_number_of_wagers"=>[255, 255, 255, 255],
+        "number_of_suits"=>4,
+        "number_of_ranks"=>13,
+        "number_of_hole_cards"=>2,
+        "number_of_board_cards"=>[0, 3, 1, 1]
+      )
+      MatchState.parse(
+        "MATCHSTATE:1:1:r11000c/cr19950c/c:|KhKc/Js4c9d/Jc"
+      ).min_wager_by(game_def).must_equal 50
+    end
   end
   describe '#next_to_act' do
     it 'works at the start of new rounds' do

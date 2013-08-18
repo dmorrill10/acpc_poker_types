@@ -500,15 +500,18 @@ class MatchState < DelegateClass(String)
   end
 
   def adjust_min_wager!(action, acting_player_position)
-    return self unless PokerAction::MODIFIABLE_ACTIONS.include?(action.action)
+    if PokerAction::MODIFIABLE_ACTIONS.include?(action.action)
+      wager_size = ChipStack.new(
+        action.cost.to_f - @players.amount_to_call(acting_player_position)
+      )
+      if wager_size > @min_wager_by
+        @min_wager_by = wager_size
+      end
+    end
 
-    wager_size = ChipStack.new(
-      action.cost.to_f - @players.amount_to_call(acting_player_position)
-    )
-
-    return self unless wager_size > @min_wager_by
-
-    @min_wager_by = wager_size
+    if @players[acting_player_position].stack < @min_wager_by
+      @min_wager_by = @players[acting_player_position].stack
+    end
 
     self
   end
