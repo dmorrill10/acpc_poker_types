@@ -1091,7 +1091,7 @@ describe MatchState do
       wager_size = 10
       x_game_def = GameDefinition.new(
         first_player_positions: [0, 0, 0],
-        chip_stacks: [100, 200, 150],
+        chip_stacks: [10000, 20000, 15000],
         blinds: [0, 10, 5],
         raise_sizes: [wager_size]*3,
         number_of_ranks: 3
@@ -1137,6 +1137,10 @@ describe MatchState do
       MatchState.parse(
         "MATCHSTATE:1:1:r11000c/cr19950c/c:|KhKc/Js4c9d/Jc"
       ).min_wager_by(game_def).must_equal 50
+
+      MatchState.parse(
+        "MATCHSTATE:0:0:r15212:Jh7d|"
+      ).min_wager_by(game_def).must_equal 4788
     end
   end
   describe '#next_to_act' do

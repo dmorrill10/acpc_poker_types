@@ -442,17 +442,21 @@ class MatchState < DelegateClass(String)
       cost: cost
     )
 
+    @player_acting_sequence[current_round] << @next_to_act
+    @next_to_act = @players.next_to_act(@next_to_act)
+
     adjust_min_wager!(
       @precise_betting_sequence[current_round].last,
-      @next_to_act
+      @player_acting_sequence[current_round].last
     )
 
-    @players[@next_to_act].append_action!(
+    @players[@player_acting_sequence[current_round].last].append_action!(
       @precise_betting_sequence[current_round].last, current_round
     )
 
-    @player_acting_sequence[current_round] << @next_to_act
-    @next_to_act = @players.next_to_act(@next_to_act)
+    if @next_to_act && @players[@next_to_act].stack < (@players.amount_to_call(@next_to_act) + @min_wager_by)
+      @min_wager_by = @players[@next_to_act].stack - @players.amount_to_call(@next_to_act)
+    end
 
     self
   end
@@ -500,18 +504,12 @@ class MatchState < DelegateClass(String)
   end
 
   def adjust_min_wager!(action, acting_player_position)
-    if PokerAction::MODIFIABLE_ACTIONS.include?(action.action)
-      wager_size = ChipStack.new(
-        action.cost.to_f - @players.amount_to_call(acting_player_position)
-      )
-      if wager_size > @min_wager_by
-        @min_wager_by = wager_size
-      end
-    end
+    return self unless PokerAction::MODIFIABLE_ACTIONS.include?(action.action)
 
-    if @players[acting_player_position].stack < @min_wager_by
-      @min_wager_by = @players[acting_player_position].stack
-    end
+    wager_size = ChipStack.new(
+      action.cost.to_f - @players.amount_to_call(acting_player_position)
+    )
+    @min_wager_by = wager_size if wager_size > @min_wager_by
 
     self
   end
