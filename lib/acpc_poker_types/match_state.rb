@@ -442,17 +442,17 @@ class MatchState < DelegateClass(String)
       cost: cost
     )
 
-    @player_acting_sequence[current_round] << @next_to_act
-    @next_to_act = @players.next_to_act(@next_to_act)
-
     adjust_min_wager!(
       @precise_betting_sequence[current_round].last,
-      @player_acting_sequence[current_round].last
+      @next_to_act
     )
 
-    @players[@player_acting_sequence[current_round].last].append_action!(
+    @players[@next_to_act].append_action!(
       @precise_betting_sequence[current_round].last, current_round
     )
+
+    @player_acting_sequence[current_round] << @next_to_act
+    @next_to_act = @players.next_to_act(@next_to_act)
 
     if @next_to_act && @players[@next_to_act].stack < (@players.amount_to_call(@next_to_act) + @min_wager_by)
       @min_wager_by = @players[@next_to_act].stack - @players.amount_to_call(@next_to_act)
