@@ -25,6 +25,18 @@ describe PokerMatchData do
     @hand_data_list = nil
     @final_hand = nil
     @no_chip_distribution = false
+
+    if defined? Celluloid
+      Celluloid.shutdown
+      Celluloid.boot
+    end
+  end
+
+  after do
+    if defined? Celluloid
+      Celluloid.shutdown
+      Celluloid.boot
+    end
   end
 
   describe 'when given action and result messages' do

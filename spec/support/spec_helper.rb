@@ -4,6 +4,9 @@ SimpleCov.start
 require 'minitest/autorun'
 require 'minitest/spec'
 
+require 'celluloid/autostart'
+require 'celluloid/test'
+
 begin
   require 'awesome_print'
   module Minitest::Assertions

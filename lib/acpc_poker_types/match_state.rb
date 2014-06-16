@@ -262,7 +262,7 @@ class MatchState < DelegateClass(String)
   def first_state_of_round?
     return @first_state_of_round unless @first_state_of_round.nil?
 
-    @first_state_of_round = @betting_sequence_string[-1] == BETTING_SEQUENCE_SEPARATOR
+    @first_state_of_round = ((@betting_sequence_string[-1] == BETTING_SEQUENCE_SEPARATOR) || first_state_of_first_round?)
   end
 
   # @return [Integer] The number of players in this match.
