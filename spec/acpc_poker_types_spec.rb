@@ -86,7 +86,7 @@ END GAMEDEF
   it 'when player A folds: A folds' do
     fold_description('A').must_equal 'A folds'
   end
-  it 'when the xth hand is dealt by player A, and A is small blind, while player B is big blind: Hand #x of y dealt by A, A pays SB (5), B pays BB (10)' do
+  it 'when the xth hand is dealt by player A, and A is small blind, while player B is big blind: hand #x of y dealt by A, A pays SB (5), B pays BB (10)' do
     x = 23
     y = 100
     p1 = 'A'
@@ -96,7 +96,7 @@ END GAMEDEF
       x,
       @l_game_def,
       y
-    ).must_equal "Hand ##{x} of #{y} dealt by #{p1}, #{p1} pays SB (#{@l_game_def.blinds.min}), #{p2} pays BB (#{@l_game_def.blinds.max})"
+    ).must_equal "hand ##{x} of #{y} dealt by #{p1}, #{p1} pays SB (#{@l_game_def.blinds.min}), #{p2} pays BB (#{@l_game_def.blinds.max})"
   end
 
   describe 'hand result messages' do

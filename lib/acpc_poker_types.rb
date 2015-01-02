@@ -68,7 +68,7 @@ module AcpcPokerTypes
       hand_number,
       game_def
     )]
-    "Hand ##{hand_number} of #{number_of_hands} dealt by #{dealer_player}, #{small_blind_payer} pays SB (#{game_def.blinds.min}), #{big_blind_payer} pays BB (#{game_def.blinds.max})"
+    "hand ##{hand_number} of #{number_of_hands} dealt by #{dealer_player}, #{small_blind_payer} pays SB (#{game_def.blinds.min}), #{big_blind_payer} pays BB (#{game_def.blinds.max})"
   end
   def hand_win_description(player, amount_won, current_balance)
     "#{player} wins #{amount_won}, bringing their balance to #{current_balance + amount_won}"
