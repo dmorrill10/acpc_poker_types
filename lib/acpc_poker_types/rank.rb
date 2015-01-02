@@ -3,6 +3,8 @@ using ContextualExceptions::ClassRefinement
 
 module AcpcPokerTypes
   class Rank
+    include Comparable
+
     exceptions :unrecognized_rank
 
     DOMAIN = {
@@ -45,6 +47,10 @@ module AcpcPokerTypes
 
     def initialize(rank)
       @symbol = AcpcPokerTypes::Rank.symbol_from_rank_token rank
+    end
+
+    def <=>(rank)
+      self.to_i <=> rank.to_i
     end
 
     def to_sym

@@ -3,6 +3,8 @@ using ContextualExceptions::ClassRefinement
 
 module AcpcPokerTypes
   class Suit
+    include Comparable
+
     exceptions :unrecognized_suit
 
     DOMAIN = {
@@ -11,6 +13,18 @@ module AcpcPokerTypes
       hearts: {acpc_character: 'h', html_character: '&hearts;', number: 2},
       spades: {acpc_character: 's', html_character: '&spades;', number: 3}
     }
+
+    def self.all_suits
+      DOMAIN.map do |suit, properties|
+        Suit.new(suit)
+      end
+    end
+
+    def self.every_suit
+      DOMAIN.each do |suit, properties|
+        yield Suit.new(suit)
+      end
+    end
 
     def self.hash_from_suit_token(suit)
       if suit.kind_of?(Integer)
@@ -36,6 +50,10 @@ module AcpcPokerTypes
 
     def initialize(suit)
       @symbol = AcpcPokerTypes::Suit.symbol_from_suit_token suit
+    end
+
+    def <=>(suit)
+      self.to_i <=> suit.to_i
     end
 
     def to_sym
