@@ -87,7 +87,7 @@ END GAMEDEF
     fold_description('A').must_equal 'A folds'
   end
   it 'when the xth hand is dealt by player A, and A is small blind, while player B is big blind: hand #x of y dealt by A, A pays SB (5), B pays BB (10)' do
-    x = 23
+    x = 24
     y = 100
     p1 = 'A'
     p2 = 'B'
@@ -130,26 +130,26 @@ END GAMEDEF
 
   describe '#dealer_index, #big_blind_payer_index, and #small_blind_payer_index' do
     it 'should return the index of the big blind on the first hand' do
-      dealer_index(0, @l_game_def).must_equal 1
-      big_blind_payer_index(0, @l_game_def).must_equal 0
-      small_blind_payer_index(0, @l_game_def).must_equal 1
+      dealer_index(0, @l_game_def).must_equal 0
+      big_blind_payer_index(0, @l_game_def).must_equal 1
+      small_blind_payer_index(0, @l_game_def).must_equal 0
     end
     it 'should work on every other hand' do
-      dealer_index(1, @l_game_def).must_equal 0
-      big_blind_payer_index(1, @l_game_def).must_equal 1
-      small_blind_payer_index(1, @l_game_def).must_equal 0
-      dealer_index(2, @l_game_def).must_equal 1
-      big_blind_payer_index(2, @l_game_def).must_equal 0
-      small_blind_payer_index(2, @l_game_def).must_equal 1
-      dealer_index(3, @l_game_def).must_equal 0
-      big_blind_payer_index(3, @l_game_def).must_equal 1
-      small_blind_payer_index(3, @l_game_def).must_equal 0
-      dealer_index(4, @l_game_def).must_equal 1
-      big_blind_payer_index(4, @l_game_def).must_equal 0
-      small_blind_payer_index(4, @l_game_def).must_equal 1
-      dealer_index(5, @l_game_def).must_equal 0
-      big_blind_payer_index(5, @l_game_def).must_equal 1
-      small_blind_payer_index(5, @l_game_def).must_equal 0
+      dealer_index(1, @l_game_def).must_equal 1
+      big_blind_payer_index(1, @l_game_def).must_equal 0
+      small_blind_payer_index(1, @l_game_def).must_equal 1
+      dealer_index(2, @l_game_def).must_equal 0
+      big_blind_payer_index(2, @l_game_def).must_equal 1
+      small_blind_payer_index(2, @l_game_def).must_equal 0
+      dealer_index(3, @l_game_def).must_equal 1
+      big_blind_payer_index(3, @l_game_def).must_equal 0
+      small_blind_payer_index(3, @l_game_def).must_equal 1
+      dealer_index(4, @l_game_def).must_equal 0
+      big_blind_payer_index(4, @l_game_def).must_equal 1
+      small_blind_payer_index(4, @l_game_def).must_equal 0
+      dealer_index(5, @l_game_def).must_equal 1
+      big_blind_payer_index(5, @l_game_def).must_equal 0
+      small_blind_payer_index(5, @l_game_def).must_equal 1
     end
   end
 end

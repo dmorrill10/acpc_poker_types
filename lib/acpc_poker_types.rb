@@ -17,13 +17,13 @@ module AcpcPokerTypes
   # @todo Functionality (but not implementation) duplicated
   # from AcpcPokerTypes::PlayersAtTheTable
   def dealer_index(hand_number, game_def)
-    (hand_number + game_def.number_of_players - 1) % game_def.number_of_players
+    hand_number % game_def.number_of_players
   end
   def big_blind_payer_index(hand_number, game_def)
-    (hand_number + game_def.blinds.index(game_def.blinds.max)) % game_def.number_of_players
+    (hand_number + game_def.blinds.index(game_def.blinds.max) - 1) % game_def.number_of_players
   end
   def small_blind_payer_index(hand_number, game_def)
-    (hand_number + game_def.blinds.index(game_def.blinds.min)) % game_def.number_of_players
+    (hand_number + game_def.blinds.index(game_def.blinds.min) - 1) % game_def.number_of_players
   end
 
   def check_description(player)
