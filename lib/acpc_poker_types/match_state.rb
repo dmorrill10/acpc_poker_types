@@ -57,6 +57,8 @@ class MatchState < DelegateClass(String)
 
   attr_reader :community_cards_string
 
+  attr_reader :winning_players
+
   # @return [String] Label for match state strings.
   LABEL = 'MATCHSTATE'
 
@@ -107,6 +109,7 @@ class MatchState < DelegateClass(String)
       @hands_string = $4
       @community_cards_string = $5
     end
+    @winning_players = nil
     @str = nil
     @all_hands = nil
     @community_cards = nil
@@ -323,6 +326,8 @@ class MatchState < DelegateClass(String)
 
     walk_over_betting_sequence!(game_def)
 
+    compute_winning_players!(game_def)
+
     distribute_chips!(game_def) if hand_ended?(game_def)
 
     @players
@@ -389,6 +394,17 @@ class MatchState < DelegateClass(String)
   end
 
   private
+
+  def compute_winning_players!(game_def)
+    hand_strengths = players(game_def).map do |player|
+      if player.folded?
+        -1
+      else
+        PileOfCards.new(community_cards.flatten + player.hand).to_poker_hand_strength
+      end
+    end
+    @winning_players = hand_strengths.indices hand_strengths.max
+  end
 
   def walk_over_betting_sequence!(game_def)
     betting_sequence.each_with_index do |actions_per_round, current_round|
@@ -465,23 +481,13 @@ class MatchState < DelegateClass(String)
   def distribute_chips!(game_def)
     return self if pot(game_def) <= 0
 
-    # @todo This only works for Doyle's game where there are no side-pots.
-    if 1 == players(game_def).count { |player| !player.folded? }
-      players(game_def).select { |player| !player.folded? }.first.winnings = pot(game_def)
-    else
-      hand_strengths = players(game_def).map do |player|
-        if player.folded?
-          -1
-        else
-          PileOfCards.new(community_cards.flatten + player.hand).to_poker_hand_strength
-        end
-      end
-      winning_players = hand_strengths.indices(hand_strengths.max)
-      amount_each_player_wins = pot(game_def)/winning_players.length.to_r
+    compute_winning_players!(game_def) unless @winning_players
 
-      winning_players.each do |player_index|
-        @players[player_index].winnings = amount_each_player_wins
-      end
+    # @todo This only works for Doyle's game where there are no side-pots.
+    amount_each_player_wins = pot(game_def)/@winning_players.length.to_r
+
+    @winning_players.each do |player_index|
+      @players[player_index].winnings = amount_each_player_wins
     end
 
     self
