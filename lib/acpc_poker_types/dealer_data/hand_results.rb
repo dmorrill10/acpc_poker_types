@@ -2,12 +2,12 @@ require 'acpc_poker_types/dealer_data/match_definition'
 require 'acpc_poker_types/dealer_data/log_file'
 
 module AcpcPokerTypes::DealerData
-  class  HandResults
+  class HandResults
     attr_reader :data, :final_score, :match_def
 
     def self.parse_state(state_string)
       if state_string.strip.match(
-        /^STATE:\d+:[cfr\d\/]+:[^:]+:([\d\-\.|]+):([\w|]+)$/
+        /^STATE:\d+:[cfr\d\/]+:[^:]+:([\d\-\.|]+):(.+)$/
         )
 
         stack_changes = $1.split '|'
@@ -24,7 +24,7 @@ module AcpcPokerTypes::DealerData
 
     def self.parse_score(score_string)
       if score_string.strip.match(
-        /^SCORE:([\d\-\.|]+):([\w|]+)$/
+        /^SCORE:([\d\-\.|]+):(.+)$/
         )
 
         stack_changes = $1.split '|'
