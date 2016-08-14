@@ -164,7 +164,19 @@ module AcpcPokerTypes
     class << self; alias_method(:parse, :new); end
 
     def initialize(definitions)
-      initialize_members!
+      @raise_sizes = nil
+      @array = nil
+      @betting_type = BETTING_TYPES[:limit]
+      @number_of_players = MIN_VALUES[:@number_of_players]
+      @blinds = @number_of_players.times.inject([]) { |blinds, i| blinds << 0 }
+      @number_of_rounds = MIN_VALUES[:@number_of_rounds]
+      @number_of_board_cards = @number_of_rounds.times.inject([]) { |cards, i| cards << 0 }
+      @first_player_positions = self.class.default_first_player_positions @number_of_rounds
+      @max_number_of_wagers = self.class.default_max_number_of_wagers @number_of_rounds
+      @chip_stacks = self.class.default_chip_stacks @number_of_players
+      @number_of_suits = MIN_VALUES[:@number_of_suits]
+      @number_of_ranks = MIN_VALUES[:@number_of_ranks]
+      @number_of_hole_cards = MIN_VALUES[:@number_of_hole_cards]
 
       if definitions.is_a?(Hash)
         assign_definitions! definitions
@@ -227,22 +239,6 @@ module AcpcPokerTypes
 
     private
 
-    def initialize_members!
-      @betting_type = BETTING_TYPES[:limit]
-      @number_of_players = MIN_VALUES[:@number_of_players]
-      @blinds = @number_of_players.times.inject([]) { |blinds, i| blinds << 0 }
-      @number_of_rounds = MIN_VALUES[:@number_of_rounds]
-      @number_of_board_cards = @number_of_rounds.times.inject([]) { |cards, i| cards << 0 }
-      @first_player_positions = self.class.default_first_player_positions @number_of_rounds
-      @max_number_of_wagers = self.class.default_max_number_of_wagers @number_of_rounds
-      @chip_stacks = self.class.default_chip_stacks @number_of_players
-      @number_of_suits = MIN_VALUES[:@number_of_suits]
-      @number_of_ranks = MIN_VALUES[:@number_of_ranks]
-      @number_of_hole_cards = MIN_VALUES[:@number_of_hole_cards]
-
-      self
-    end
-
     def set_defintion_if_present!(definition_symbol, line, definition_label_in_line)
       new_definition = self.class.check_game_def_line_for_definition(
         line,
@@ -277,7 +273,6 @@ module AcpcPokerTypes
         next if (
           self.class.game_def_line_not_informative?(line) ||
           BETTING_TYPES.any? do |type_and_name|
-            type = type_and_name.first
             name = type_and_name[1]
             if line.match(/\b#{name}\b/i)
               @betting_type = name

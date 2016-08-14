@@ -1,4 +1,4 @@
-require 'celluloid/autostart'
+require 'celluloid/current'
 
 require 'acpc_poker_types/dealer_data/action_messages'
 require 'acpc_poker_types/dealer_data/hand_data'
@@ -39,6 +39,7 @@ class PokerMatchData
     dealer_directory,
     num_hands=nil
   )
+    Celluloid.boot
     parsed_action_messages = Celluloid::Future.new do
        DealerData::ActionMessages.parse_file(
         action_messages_file,
@@ -56,12 +57,15 @@ class PokerMatchData
       )
     end
 
-    new(
+    instance = new(
       parsed_action_messages.value,
       parsed_hand_results.value,
       player_names,
       dealer_directory
     )
+    Celluloid.shutdown
+
+    instance
   end
 
   # @returns [DealerData::PokerMatchData]
@@ -72,6 +76,7 @@ class PokerMatchData
     dealer_directory,
     num_hands=nil
   )
+    Celluloid.boot
     parsed_action_messages = Celluloid::Future.new do
        DealerData::ActionMessages.parse(
         action_messages,
@@ -89,12 +94,16 @@ class PokerMatchData
       )
     end
 
-    new(
+    instance = new(
       parsed_action_messages.value,
       parsed_hand_results.value,
       player_names,
       dealer_directory
     )
+
+    Celluloid.shutdown
+
+    instance
   end
 
   def initialize(
@@ -103,6 +112,8 @@ class PokerMatchData
     player_names,
     dealer_directory
   )
+    @hand_number = nil
+    @chip_distribution = nil
     if (
       parsed_action_messages.match_def.nil? ||
       parsed_hand_results.match_def.nil? ||
@@ -198,14 +209,7 @@ class PokerMatchData
 
   def next_turn!
     current_hand.next_turn!
-
-    @players.each_with_index do |player, seat|
-      last_match_state = current_hand.last_match_state(seat)
-      match_state = current_hand.current_match_state(seat)
-    end
-
     distribute_chips! if current_hand.final_turn?
-
     self
   end
 

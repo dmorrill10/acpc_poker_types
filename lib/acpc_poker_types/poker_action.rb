@@ -71,6 +71,7 @@ class PokerAction < DelegateClass(String)
   # @param cost [#to_f] The amount this action costs to the acting player.
   # @raise IllegalAction
   def initialize(action, modifier: nil, cost: 0)
+    @modifier = nil
     validate_action!(action, modifier.strip)
     @cost = cost.to_f
 
@@ -98,7 +99,7 @@ class PokerAction < DelegateClass(String)
 
   # @return [Boolean] +true+ if this action has a modifier, +false+ otherwise.
   def has_modifier?
-    !@modifier.blank?
+    @modifier && !@modifier.blank?
   end
 
   private
@@ -157,7 +158,7 @@ class PokerAction < DelegateClass(String)
   end
 
   def validate_modifier
-    unless @modifier.blank? || MODIFIABLE_ACTIONS.include?(@action)
+    unless @modifier.nil? || @modifier.blank? || MODIFIABLE_ACTIONS.include?(@action)
       raise(IllegalModification, "Illegal modifier: #{@modifier}")
     end
   end

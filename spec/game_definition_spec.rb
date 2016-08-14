@@ -86,8 +86,8 @@ describe GameDefinition do
 
   describe '#parse_file and #parse' do
     it "parses all available game definitions properly" do
-      AcpcDealer::GAME_DEFINITION_FILE_PATHS.each do |key, groups_of_defs|
-        groups_of_defs.each do |key, game_definition_file_name|
+      AcpcDealer::GAME_DEFINITION_FILE_PATHS.each do |_, groups_of_defs|
+        groups_of_defs.each do |_, game_definition_file_name|
           @patient = AcpcPokerTypes::GameDefinition.parse_file game_definition_file_name
 
           @expected = File.readlines(game_definition_file_name).map do |line|

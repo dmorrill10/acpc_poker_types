@@ -49,8 +49,9 @@ describe AcpcPokerTypes::PokerAction do
           end
         end
         it 'when the cost is negative' do
+          negative_cost = -DEFAULT_COST
           AcpcPokerTypes::PokerAction::ACTIONS.each do |a|
-            AcpcPokerTypes::PokerAction.new(a, cost: -DEFAULT_COST).cost.must_equal -DEFAULT_COST
+            AcpcPokerTypes::PokerAction.new(a, cost: negative_cost).cost.must_equal negative_cost
           end
         end
       end

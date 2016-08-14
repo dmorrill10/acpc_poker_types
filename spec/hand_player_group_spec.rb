@@ -3,18 +3,6 @@ require_relative 'support/spec_helper'
 require_relative "../lib/acpc_poker_types/hand_player_group"
 require_relative "../lib/acpc_poker_types/hand"
 
-module MapWithIndex
-  refine Array do
-    def map_with_index
-      i = 0
-      map do |elem|
-        result = yield elem, i
-        i += 1
-        result
-      end
-    end
-  end
-end
 using MapWithIndex
 
 include AcpcPokerTypes

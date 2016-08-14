@@ -1,6 +1,10 @@
 # Spec helper (must include first to track code coverage with SimpleCov)
 require_relative '../support/spec_helper'
 
+require 'celluloid/current'
+require 'celluloid/test'
+require 'celluloid/essentials'
+
 require 'mocha/setup'
 
 require 'acpc_dealer'
@@ -27,7 +31,6 @@ describe PokerMatchData do
     @no_chip_distribution = false
 
     if defined? Celluloid
-      Celluloid.shutdown
       Celluloid.boot
     end
   end
@@ -35,7 +38,6 @@ describe PokerMatchData do
   after do
     if defined? Celluloid
       Celluloid.shutdown
-      Celluloid.boot
     end
   end
 

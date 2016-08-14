@@ -1,11 +1,9 @@
 require 'simplecov'
 SimpleCov.start
+$LOAD_PATH.unshift File.expand_path('../../../lib', __FILE__)
 
 require 'minitest/autorun'
 require 'minitest/spec'
-
-require 'celluloid/autostart'
-require 'celluloid/test'
 
 begin
   require 'awesome_print'
@@ -17,6 +15,19 @@ begin
 
   require 'mocha/setup'
 rescue LoadError
+end
+
+module MapWithIndex
+  refine Array do
+    def map_with_index
+      i = 0
+      map do |elem|
+        result = yield elem, i
+        i += 1
+        result
+      end
+    end
+  end
 end
 
 # Match log information in dealer_logs

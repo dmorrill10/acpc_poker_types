@@ -11,18 +11,6 @@ require_relative "../lib/acpc_poker_types/card"
 require_relative "../lib/acpc_poker_types/game_definition"
 require_relative "../lib/acpc_poker_types/dealer_data/poker_match_data"
 
-module MapWithIndex
-  refine Array do
-    def map_with_index
-      i = 0
-      map do |elem|
-        result = yield elem, i
-        i += 1
-        result
-      end
-    end
-  end
-end
 using MapWithIndex
 
 include AcpcPokerTypes
@@ -152,22 +140,22 @@ describe MatchState do
         hands = [ Hand.new ]*game_def.number_of_players
         hands[position] = arbitrary_hole_card_hand
 
-        hand_string = hands.inject('') do |hand_string, hand|
+        hand_string_ = hands.inject('') do |hand_string, hand|
           hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
         end[0..-2]
 
         last_state = MatchState.new(
-          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rr:#{hand_string}"
+          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rr:#{hand_string_}"
         )
 
         patient = MatchState.new(
-          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrf:#{hand_string}",
+          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrf:#{hand_string_}",
           last_state,
           game_def
         )
 
         x_state = MatchState.new(
-          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrf:#{hand_string}"
+          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrf:#{hand_string_}"
         )
 
         patient.betting_sequence(game_def).must_equal x_state.betting_sequence(game_def)
@@ -417,12 +405,12 @@ describe MatchState do
       (0..x_game_def.number_of_players-1).each do |position|
         hands = x_game_def.number_of_players.times.map { arbitrary_hole_card_hand }
 
-        hand_string = hands.inject('') do |hand_string, hand|
+        hand_string_ = hands.inject('') do |hand_string, hand|
           hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
         end[0..-2]
 
         match_state =
-          "#{MatchState::LABEL}:#{position}:0:cr200cc///:#{hand_string}"
+          "#{MatchState::LABEL}:#{position}:0:cr200cc///:#{hand_string_}"
 
         MatchState.new(match_state).betting_sequence.must_equal(
           [
@@ -491,12 +479,12 @@ describe MatchState do
           hands = [ Hand.new ]*game_def.number_of_players
           hands[position] = arbitrary_hole_card_hand
 
-          hand_string = hands.inject('') do |hand_string, hand|
+          hand_string_ = hands.inject('') do |hand_string, hand|
             hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
           end[0..-2]
 
           patient = MatchState.parse(
-            "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rr:#{hand_string}"
+            "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rr:#{hand_string_}"
           )
 
           patient.betting_sequence.must_equal [
@@ -548,12 +536,12 @@ describe MatchState do
 
         hands[position] = arbitrary_hole_card_hand
 
-        hand_string = hands.inject('') do |hand_string, hand|
+        hand_string_ = hands.inject('') do |hand_string, hand|
           hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
         end[0..-2]
 
         match_state =
-          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc:#{hand_string}"
+          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc:#{hand_string_}"
 
         MatchState.new(
           match_state
@@ -656,12 +644,12 @@ describe MatchState do
 
         hands[position] = arbitrary_hole_card_hand
 
-        hand_string = hands.inject('') do |hand_string, hand|
+        hand_string_ = hands.inject('') do |hand_string, hand|
           hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
         end[0..-2]
 
         match_state =
-          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/crc:#{hand_string}"
+          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/crc:#{hand_string_}"
 
         MatchState.new(match_state).every_action(x_game_def) do |action, round, acting_player_position|
           x_yields = x_actions.shift
@@ -736,12 +724,12 @@ describe MatchState do
           Hand.from_acpc "Ac#{i+2}h"
         end
 
-        hand_string = hands.inject('') do |hand_string, hand|
+        hand_string_ = hands.inject('') do |hand_string, hand|
           hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
         end[0..-2]
 
         match_state =
-          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc:#{hand_string}"
+          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc:#{hand_string_}"
 
         MatchState.new(
           match_state
@@ -777,12 +765,12 @@ describe MatchState do
             Hand.from_acpc "Ac#{i+2}h"
           end
 
-          hand_string = hands.inject('') do |hand_string, hand|
+          hand_string_ = hands.inject('') do |hand_string, hand|
             hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
           end[0..-2]
 
           match_state =
-            "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrcc/crcc:#{hand_string}"
+            "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrcc/crcc:#{hand_string_}"
 
           MatchState.new(match_state).players(x_game_def).each_with_index do |player, i|
             player.winnings.must_equal x_winnings[i]
@@ -811,12 +799,12 @@ describe MatchState do
             Hand.from_acpc "Ac2#{['s', 'h', 'd', 'c'][i%4]}"
           end
 
-          hand_string = hands.inject('') do |hand_string, hand|
+          hand_string_ = hands.inject('') do |hand_string, hand|
             hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
           end[0..-2]
 
           match_state =
-            "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/crc:#{hand_string}"
+            "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/crc:#{hand_string_}"
 
           MatchState.new(match_state).players(x_game_def).each_with_index do |player, i|
             player.winnings.must_equal x_winnings[i]
@@ -845,12 +833,12 @@ describe MatchState do
 
           hands[position] = arbitrary_hole_card_hand
 
-          hand_string = hands.inject('') do |hand_string, hand|
+          hand_string_ = hands.inject('') do |hand_string, hand|
             hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
           end[0..-2]
 
           match_state =
-            "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrff:#{hand_string}"
+            "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrff:#{hand_string_}"
 
           MatchState.new(match_state).players(x_game_def).each_with_index do |player, i|
             player.winnings.must_equal x_winnings[i]
@@ -896,12 +884,12 @@ describe MatchState do
           Hand.from_acpc "Ac2#{['s', 'h', 'd', 'c'][i%4]}"
         end
 
-        hand_string = hands.inject('') do |hand_string, hand|
+        hand_string_ = hands.inject('') do |hand_string, hand|
           hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
         end[0..-2]
 
         match_state =
-          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/crc:#{hand_string}"
+          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/crc:#{hand_string_}"
 
         MatchState.new(match_state).pot(x_game_def).must_equal x_total_contributions.inject(:+)
       end
@@ -923,12 +911,12 @@ describe MatchState do
 
         hands[position] = arbitrary_hole_card_hand
 
-        hand_string = hands.inject('') do |hand_string, hand|
+        hand_string_ = hands.inject('') do |hand_string, hand|
           hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
         end[0..-2]
 
         match_state =
-      "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/crc:#{hand_string}"
+      "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/crc:#{hand_string_}"
 
         MatchState.new(match_state).player_acting_sequence(x_game_def).must_equal(
           [[2, 0, 1, 2], [1, 2, 0], [1, 2, 0, 1], [1, 2, 1]]
@@ -948,12 +936,12 @@ describe MatchState do
       (0..x_game_def.number_of_players-1).each do |position|
         hands = x_game_def.number_of_players.times.map { arbitrary_hole_card_hand }
 
-        hand_string = hands.inject('') do |hand_string, hand|
+        hand_string_ = hands.inject('') do |hand_string, hand|
           hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
         end[0..-2]
 
         match_state =
-          "#{MatchState::LABEL}:#{position}:0:cr200cc///:#{hand_string}"
+          "#{MatchState::LABEL}:#{position}:0:cr200cc///:#{hand_string_}"
 
         MatchState.new(match_state).player_acting_sequence(x_game_def).must_equal(
           [[2, 0, 1, 2], [], [], []]
@@ -977,12 +965,12 @@ describe MatchState do
           Hand.from_acpc "Ac#{i+2}h"
         end
 
-        hand_string = hands.inject('') do |hand_string, hand|
+        hand_string_ = hands.inject('') do |hand_string, hand|
           hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
         end[0..-2]
 
         match_state =
-          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/crc:#{hand_string}"
+          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/crc:#{hand_string_}"
 
         MatchState.new(match_state).hand_ended?(x_game_def).must_equal true
       end
@@ -1002,12 +990,12 @@ describe MatchState do
 
         hands[position] = arbitrary_hole_card_hand
 
-        hand_string = hands.inject('') do |hand_string, hand|
+        hand_string_ = hands.inject('') do |hand_string, hand|
           hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
         end[0..-2]
 
         match_state =
-          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/cr:#{hand_string}"
+          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/cr:#{hand_string_}"
 
         MatchState.new(match_state).hand_ended?(x_game_def).must_equal false
       end
@@ -1027,12 +1015,12 @@ describe MatchState do
 
         hands[position] = arbitrary_hole_card_hand
 
-        hand_string = hands.inject('') do |hand_string, hand|
+        hand_string_ = hands.inject('') do |hand_string, hand|
           hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
         end[0..-2]
 
         match_state =
-          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrff:#{hand_string}"
+          "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrff:#{hand_string_}"
 
         MatchState.new(match_state).hand_ended?(x_game_def).must_equal true
       end
@@ -1052,12 +1040,12 @@ describe MatchState do
 
         hands[position] = arbitrary_hole_card_hand
 
-        hand_string = hands.inject('') do |hand_string, hand|
+        hand_string_ = hands.inject('') do |hand_string, hand|
           hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
         end[0..-2]
 
         match_state =
-          "#{MatchState::LABEL}:#{position}:0:cr200:#{hand_string}"
+          "#{MatchState::LABEL}:#{position}:0:cr200:#{hand_string_}"
 
         MatchState.new(match_state).hand_ended?(x_game_def).must_equal false
       end
@@ -1075,12 +1063,12 @@ describe MatchState do
       (0..x_game_def.number_of_players-1).each do |position|
         hands = x_game_def.number_of_players.times.map { arbitrary_hole_card_hand }
 
-        hand_string = hands.inject('') do |hand_string, hand|
+        hand_string_ = hands.inject('') do |hand_string, hand|
           hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
         end[0..-2]
 
         match_state =
-          "#{MatchState::LABEL}:#{position}:0:cr200cc///:#{hand_string}"
+          "#{MatchState::LABEL}:#{position}:0:cr200cc///:#{hand_string_}"
 
         MatchState.new(match_state).hand_ended?(x_game_def).must_equal true
       end
@@ -1105,13 +1093,13 @@ describe MatchState do
           actions_per_round.each_with_index do |action, j|
             actions << action
 
-            hands = x_game_def.number_of_players.times.map { |i| "Ac#{i+2}h" }
+            hands = x_game_def.number_of_players.times.map { |k| "Ac#{k+2}h" }
 
-            hand_string = hands.inject('') do |string, hand|
+            hand_string_ = hands.inject('') do |string, hand|
               string << "#{hand}#{MatchState::HAND_SEPARATOR}"
             end[0..-2]
 
-            match_state = "#{MatchState::LABEL}:#{position}:0:#{actions}:#{hand_string}"
+            match_state = "#{MatchState::LABEL}:#{position}:0:#{actions}:#{hand_string_}"
 
             MatchState.new(match_state).min_wager_by(x_game_def).must_equal x_min_wagers[i][j]
           end
@@ -1277,7 +1265,6 @@ describe MatchState do
         game_definition
       )
 
-      blind = 100
       to_all_in = game_definition.chip_stacks[0] - 9550
 
       x_actions = [

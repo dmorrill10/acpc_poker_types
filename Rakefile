@@ -8,5 +8,5 @@ Rake::TestTask.new do |t|
   t.libs << "lib" << 'spec/support'
   t.test_files = FileList['spec/**/*_spec.rb']
   t.verbose = false
-  t.warning = false
+  t.warning = true
 end
