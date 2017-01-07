@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.license     = 'MIT'
 
   s.add_dependency 'process_runner', '~> 0.0'
-  s.add_dependency 'acpc_dealer', '~> 2.0'
+  s.add_dependency 'acpc_dealer', '~> 3.0'
   s.add_dependency 'celluloid', '~> 0.14'
   s.add_dependency 'contextual_exceptions', '~> 0.0'
   s.add_dependency 'inflections', '~> 3.2'
