@@ -132,9 +132,6 @@ describe MatchState do
 
       match_state = partial_match_state + betting + ":" + hands + community_cards + ":" + stacks.map(&:to_s).join('|')
 
-      patient = MatchState.parse match_state
-      ap patient: patient.to_s, match_state: match_state
-
       test_match_state_success match_state
     end
   end
