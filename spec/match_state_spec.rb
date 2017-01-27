@@ -122,6 +122,21 @@ describe MatchState do
 
       test_match_state_success match_state
     end
+    it 'parses an initial match state that contains stack sizes' do
+      partial_match_state = MatchState::LABEL + ":0:22:"
+      betting = ''
+      community_cards = ''
+      hands = arbitrary_hole_card_hand.to_acpc + "|" + arbitrary_hole_card_hand.to_acpc
+
+      stacks = [9001, 222]
+
+      match_state = partial_match_state + betting + ":" + hands + community_cards + ":" + stacks.map(&:to_s).join('|')
+
+      patient = MatchState.parse match_state
+      ap patient: patient.to_s, match_state: match_state
+
+      test_match_state_success match_state
+    end
   end
 
   describe '#new allows bootstrapping from previous states' do

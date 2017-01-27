@@ -65,6 +65,7 @@ class MatchState < DelegateClass(String)
   COMMUNITY_CARD_SEPARATOR = '/'
   BETTING_SEQUENCE_SEPARATOR = COMMUNITY_CARD_SEPARATOR
   HAND_SEPARATOR = '|'
+  FIELD_SEPARATOR = ':'
 
   class << self; alias_method(:parse, :new) end
 
@@ -88,27 +89,32 @@ class MatchState < DelegateClass(String)
     hand_number,
     betting_sequence,
     all_hole_cards,
-    board_cards
+    board_cards,
+    stack_sizes = nil
   )
-    string = "#{LABEL}:#{position_relative_to_dealer}:#{hand_number}:#{betting_sequence}:#{all_hole_cards}"
+    string = "#{LABEL}#{FIELD_SEPARATOR}#{position_relative_to_dealer}#{FIELD_SEPARATOR}#{hand_number}#{FIELD_SEPARATOR}#{betting_sequence}#{FIELD_SEPARATOR}#{all_hole_cards}"
     string << "/#{board_cards.to_s}" if board_cards && !board_cards.empty?
+    if stack_sizes
+      string << "#{FIELD_SEPARATOR}#{stack_sizes.map { |stack| format('%g', stack) }.join('|')}"
+    end
     string
   end
 
   # @param [String] raw_match_state A raw match state string to be parsed.
   # @raise IncompleteMatchState
   def initialize(raw_match_state, previous_state = nil, game_def = nil)
-    if (
-      %r{#{LABEL}:(\d+):(\d+):([^:]*):([^#{COMMUNITY_CARD_SEPARATOR}\s]+)#{COMMUNITY_CARD_SEPARATOR}*([^\s:]*)}.match(
-        raw_match_state
-      )
-    )
-      @position_relative_to_dealer = $1.to_i
-      @hand_number = $2.to_i
-      @betting_sequence_string = $3
-      @hands_string = $4
-      @community_cards_string = $5
+    fields = raw_match_state.split(FIELD_SEPARATOR)
+    @position_relative_to_dealer = fields[1].to_i
+    @hand_number = fields[2].to_i
+    @betting_sequence_string = fields[3]
+    card_fields = fields[4].split(COMMUNITY_CARD_SEPARATOR)
+    @hands_string = card_fields.shift
+    @community_cards_string = card_fields.join('/')
+    @stack_sizes = nil
+    if fields.length > 5 && fields[5].count(HAND_SEPARATOR) > 0
+      @stack_sizes = fields[5].split(HAND_SEPARATOR).map(&:to_f)
     end
+
     @winning_players = nil
     @str = nil
     @all_hands = nil
@@ -162,7 +168,8 @@ class MatchState < DelegateClass(String)
       @hand_number,
       @betting_sequence_string,
       @hands_string,
-      @community_cards_string
+      @community_cards_string,
+      @stack_sizes
     )
   end
 
@@ -317,7 +324,10 @@ class MatchState < DelegateClass(String)
   # @param game_def [GameDefinition]
   # @return [HandPlayerGroup] The current state of the players.
   def every_action(game_def)
-    @players = players_at_hand_start game_def.chip_stacks, game_def.blinds
+    @players = players_at_hand_start(
+      @stack_sizes || game_def.chip_stacks,
+      game_def.blinds
+    )
 
     @next_to_act = game_def.first_player_positions.first
     @player_acting_sequence = []
