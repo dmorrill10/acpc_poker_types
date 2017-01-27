@@ -92,28 +92,32 @@ class MatchState < DelegateClass(String)
     board_cards,
     stack_sizes = nil
   )
-    string = "#{LABEL}#{FIELD_SEPARATOR}#{position_relative_to_dealer}#{FIELD_SEPARATOR}#{hand_number}#{FIELD_SEPARATOR}#{betting_sequence}#{FIELD_SEPARATOR}#{all_hole_cards}"
-    string << "/#{board_cards.to_s}" if board_cards && !board_cards.empty?
+    string = "#{LABEL}#{FIELD_SEPARATOR}#{position_relative_to_dealer}#{FIELD_SEPARATOR}#{hand_number}"
     if stack_sizes
       string << "#{FIELD_SEPARATOR}#{stack_sizes.map { |stack| format('%g', stack) }.join('|')}"
     end
+    string << "#{FIELD_SEPARATOR}#{betting_sequence}#{FIELD_SEPARATOR}#{all_hole_cards}"
+    string << "/#{board_cards.to_s}" if board_cards && !board_cards.empty?
     string
   end
 
   # @param [String] raw_match_state A raw match state string to be parsed.
   # @raise IncompleteMatchState
   def initialize(raw_match_state, previous_state = nil, game_def = nil)
-    fields = raw_match_state.split(FIELD_SEPARATOR)
-    @position_relative_to_dealer = fields[1].to_i
-    @hand_number = fields[2].to_i
-    @betting_sequence_string = fields[3]
-    card_fields = fields[4].split(COMMUNITY_CARD_SEPARATOR)
+    fields = raw_match_state.split(FIELD_SEPARATOR)[1..-1]
+    @position_relative_to_dealer = fields.shift.to_i
+    @hand_number = fields.shift.to_i
+
+    @stack_sizes = if (
+        fields.length > 2 &&
+        fields.first.count(HAND_SEPARATOR) > 0
+      ) then fields.shift.split(HAND_SEPARATOR).map(&:to_f) end
+
+    @betting_sequence_string = fields.shift
+
+    card_fields = fields.shift.split(COMMUNITY_CARD_SEPARATOR)
     @hands_string = card_fields.shift
     @community_cards_string = card_fields.join('/')
-    @stack_sizes = nil
-    if fields.length > 5 && fields[5].count(HAND_SEPARATOR) > 0
-      @stack_sizes = fields[5].split(HAND_SEPARATOR).map(&:to_f)
-    end
 
     @winning_players = nil
     @str = nil

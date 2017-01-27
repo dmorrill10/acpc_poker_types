@@ -130,7 +130,15 @@ describe MatchState do
 
       stacks = [9001, 222]
 
-      match_state = partial_match_state + betting + ":" + hands + community_cards + ":" + stacks.map(&:to_s).join('|')
+      match_state = (
+        partial_match_state +
+        stacks.map(&:to_s).join('|') +
+        ":" +
+        betting +
+        ":" +
+        hands +
+        community_cards
+      )
 
       test_match_state_success match_state
     end
