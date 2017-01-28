@@ -59,6 +59,10 @@ class MatchState < DelegateClass(String)
 
   attr_reader :winning_players
 
+  # @return [Array<Float> or nil] The stack sizes at the beginning of the
+  #   current hand, or +nil+ if none were specified by the match state string.
+  attr_reader :stack_sizes
+
   # @return [String] Label for match state strings.
   LABEL = 'MATCHSTATE'
 
