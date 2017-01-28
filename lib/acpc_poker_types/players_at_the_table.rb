@@ -44,10 +44,12 @@ class PlayersAtTheTable
     @game_def = game_def
     @seat = Seat.new(seat, game_def.number_of_players)
     @match_state = nil
+    @match_has_ended = false
   end
 
   # @param [MatchState] match_state The next match state.
   def update!(match_state)
+    @match_has_ended = false
     @match_state = MatchState.new(match_state, @match_state, @game_def)
 
     update_players!
@@ -58,6 +60,23 @@ class PlayersAtTheTable
     return false unless @match_state
 
     @match_state.hand_ended? @game_def
+  end
+
+  def match_ended?(max_num_hands = nil)
+    @match_has_ended ||= (
+      (
+        max_num_hands &&
+        hand_ended? &&
+        match_state.hand_number >= max_num_hands - 1
+      ) ||
+      (
+        match_state && match_state.stack_sizes && (
+          players.any? do |player|
+            !((player.stack + player.winnings.to_f) > 0)
+          end
+        )
+      )
+    )
   end
 
   # @return [Player] The player with the dealer button.
