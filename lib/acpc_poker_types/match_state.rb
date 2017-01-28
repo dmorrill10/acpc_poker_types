@@ -446,7 +446,7 @@ class MatchState < DelegateClass(String)
   end
 
   def init_new_round!(game_def, current_round)
-    @min_wager_by = game_def.min_wagers[current_round]
+    @min_wager_by = game_def.min_wagers[current_round] || 0
     @next_to_act = @players.position_of_first_active_player(
       game_def.first_player_positions[current_round]
     )
