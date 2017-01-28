@@ -142,6 +142,25 @@ describe MatchState do
 
       test_match_state_success match_state
     end
+    it 'parses an initial match state that contains a comment' do
+      partial_match_state = MatchState::LABEL + ":0:22:"
+      betting = ''
+      community_cards = ''
+      hands = arbitrary_hole_card_hand.to_acpc + "|" + arbitrary_hole_card_hand.to_acpc
+
+      match_state = (
+        partial_match_state +
+        betting +
+        ":" +
+        hands +
+        community_cards
+      )
+      ms_with_comment = match_state + ' # comment'
+
+      patient = MatchState.parse ms_with_comment
+      patient.to_s.must_equal match_state
+      patient.comment.must_equal 'comment'
+    end
   end
 
   describe '#new allows bootstrapping from previous states' do

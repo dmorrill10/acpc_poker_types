@@ -60,8 +60,12 @@ class MatchState < DelegateClass(String)
   attr_reader :winning_players
 
   # @return [Array<Float> or nil] The stack sizes at the beginning of the
-  #   current hand, or +nil+ if none were specified by the match state string.
+  #   current hand or +nil+ if none were specified by the match state string.
   attr_reader :stack_sizes
+
+  # @return [String or nil] The comment appended to the end of the match state
+  #   string or +nil+ if none was specified.
+  attr_reader :comment
 
   # @return [String] Label for match state strings.
   LABEL = 'MATCHSTATE'
@@ -108,9 +112,16 @@ class MatchState < DelegateClass(String)
   # @param [String] raw_match_state A raw match state string to be parsed.
   # @raise IncompleteMatchState
   def initialize(raw_match_state, previous_state = nil, game_def = nil)
-    fields = raw_match_state.split(FIELD_SEPARATOR)[1..-1]
+    fields = raw_match_state.split(/(#{FIELD_SEPARATOR}|\s+#\s*)/)[1..-1]
+    fields.delete ':'
     @position_relative_to_dealer = fields.shift.to_i
     @hand_number = fields.shift.to_i
+
+    @comment = if fields[-2].count('#') > 0
+      comment = fields.pop
+      fields.pop
+      comment
+    end
 
     @stack_sizes = if (
         fields.length > 2 &&
