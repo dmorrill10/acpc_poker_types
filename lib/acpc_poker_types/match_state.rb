@@ -169,12 +169,14 @@ class MatchState < DelegateClass(String)
       @next_to_act = previous_state.next_to_act(game_def)
       @players = previous_state.players(game_def).dup
       @players.each_with_index { |player, i| player.hand = all_hands[i] }
-      @player_acting_sequence = previous_state.player_acting_sequence(game_def).map { |per_round| per_round.dup }
+      @player_acting_sequence = previous_state.player_acting_sequence(
+        game_def
+      ).map { |per_round| per_round.dup }
       @min_wager_by = previous_state.min_wager_by(game_def)
 
       process_action!(last_action, round_in_which_last_action_taken)
       init_new_round!(game_def, round) if round != previous_state.round
-      distribute_chips!(game_def) if hand_ended?(game_def)
+      finish_update!(game_def)
     end
 
     super to_s
@@ -353,11 +355,9 @@ class MatchState < DelegateClass(String)
     @precise_betting_sequence = []
     @min_wager_by = game_def.min_wagers.first
 
-    walk_over_betting_sequence!(game_def)
-
-    compute_winning_players!(game_def)
-
-    distribute_chips!(game_def) if hand_ended?(game_def)
+    walk_over_betting_sequence! game_def
+    compute_winning_players! game_def
+    finish_update! game_def
 
     @players
   end
@@ -423,6 +423,13 @@ class MatchState < DelegateClass(String)
   end
 
   private
+
+  def finish_update!(game_def)
+    if hand_ended?(game_def)
+      distribute_chips! game_def
+      @next_to_act = nil
+    end
+  end
 
   def compute_winning_players!(game_def)
     hand_strengths = players(game_def).map do |player|
