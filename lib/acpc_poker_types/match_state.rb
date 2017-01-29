@@ -363,8 +363,13 @@ class MatchState < DelegateClass(String)
   end
 
   def next_to_act(game_def)
-    every_action(game_def) unless @next_to_act
-
+    unless @next_to_act
+      if hand_ended?(game_def)
+        @next_to_act = nil
+      else
+        every_action game_def
+      end
+    end
     @next_to_act
   end
 
