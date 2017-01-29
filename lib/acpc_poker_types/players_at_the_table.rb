@@ -64,16 +64,16 @@ class PlayersAtTheTable
 
   def match_ended?(max_num_hands = nil)
     @match_has_ended ||= (
-      (
-        max_num_hands &&
-        hand_ended? &&
-        match_state.hand_number >= max_num_hands - 1
-      ) ||
-      (
-        match_state && match_state.stack_sizes && (
-          players.any? do |player|
-            !((player.stack + player.winnings.to_f) > 0)
-          end
+      hand_ended? && (
+        (
+          max_num_hands &&
+          match_state.hand_number >= max_num_hands - 1
+        ) || (
+          match_state && match_state.stack_sizes && (
+            players.any? do |player|
+              !((player.stack + player.winnings.to_f) > 0)
+            end
+          )
         )
       )
     )
