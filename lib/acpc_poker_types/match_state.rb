@@ -404,7 +404,9 @@ class MatchState < DelegateClass(String)
   end
 
   def pot(game_def)
-    @pot ||= players(game_def).map { |player| player.contributions }.flatten.inject(:+)
+    @pot ||= players(game_def).map do |player|
+      player.contributions
+    end.flatten.inject(:+)
   end
 
   # @return [ChipStack] Minimum wager by.
@@ -427,6 +429,20 @@ class MatchState < DelegateClass(String)
     )
   end
 
+  def hand_strengths(game_def)
+    @hand_strengths ||= players(game_def).map do |player|
+      if player.folded?
+        -1
+      else
+        PileOfCards.new(community_cards.flatten + player.hand).to_poker_hand_strength
+      end
+    end
+  end
+
+  def winning_players(game_def)
+    @winning_players ||= compute_winning_players!(game_def)
+  end
+
   private
 
   def finish_update!(game_def)
@@ -437,14 +453,9 @@ class MatchState < DelegateClass(String)
   end
 
   def compute_winning_players!(game_def)
-    hand_strengths = players(game_def).map do |player|
-      if player.folded?
-        -1
-      else
-        PileOfCards.new(community_cards.flatten + player.hand).to_poker_hand_strength
-      end
-    end
-    @winning_players = hand_strengths.indices hand_strengths.max
+    @winning_players = hand_strengths(game_def).indices(
+      hand_strengths(game_def).max
+    )
   end
 
   def walk_over_betting_sequence!(game_def)
@@ -490,6 +501,7 @@ class MatchState < DelegateClass(String)
       action,
       @min_wager_by
     )
+    raise %Q{Action "#{action}" cannot cost more than the stack size of the acting player: Acting player position: #{@next_to_act}, stack size: #{@players[@next_to_act].stack.to_f}, action cost: #{cost.to_f}, match state: #{to_s}.} if cost > @players[@next_to_act].stack
 
     @precise_betting_sequence[current_round] << PokerAction.new(
       action.to_s(
@@ -520,17 +532,35 @@ class MatchState < DelegateClass(String)
 
   # Distribute chips to all winning players
   def distribute_chips!(game_def)
-    return self if pot(game_def) <= 0
+    return self unless pot(game_def) > 0
 
-    compute_winning_players!(game_def) unless @winning_players
+    best_hs = hand_strengths(game_def).max
 
-    # @todo This only works for Doyle's game where there are no side-pots.
-    amount_each_player_wins = pot(game_def)/@winning_players.length.to_r
-
-    @winning_players.each do |player_index|
-      @players[player_index].winnings = amount_each_player_wins
+    contributions = players(game_def).map do |player|
+      player.total_contribution
     end
 
+    # @todo This only works for Doyle's game where there are no non-trivial side-pots.
+    winnings = contributions.dup
+    players(game_def).each_with_index do |player, i|
+      next if hand_strengths(game_def)[i] < best_hs
+
+      contributions.each_with_index do |c, j|
+        next if i == j
+
+        num_chips = (
+          [c, player.total_contribution].min /
+          winning_players(game_def).length.to_r
+        )
+        winnings[i] += num_chips
+        winnings[j] -= num_chips
+
+        raise %Q{The winnings for player in position #{j} is negative (#{winnings[j]}) in match state "#{to_s}"} if winnings[j] < 0
+      end
+    end
+    players(game_def).each_with_index do |player, i|
+      player.winnings = winnings[i]
+    end
     self
   end
 

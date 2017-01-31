@@ -783,6 +783,77 @@ describe MatchState do
         end
       end
     end
+    describe 'correctly tracks player contributions to the pot and winnings when players begin with different stack sizes and both go all-in' do
+      let(:game_def) do
+        GameDefinition.new(
+          :betting_type=>"nolimit",
+          :chip_stacks=>[20000, 20000],
+          :number_of_players=>2,
+          :blinds=>[100, 50],
+          :raise_sizes=>nil,
+          :number_of_rounds=>4,
+          :first_player_positions=>[1, 0, 0, 0],
+          :number_of_suits=>4,
+          :number_of_ranks=>13,
+          :number_of_hole_cards=>2,
+          :number_of_board_cards=>[0, 3, 1, 1]
+        )
+      end
+      let(:x_actions) do
+        [
+          [
+            [
+              PokerAction.new(PokerAction::RAISE, cost: 20050),
+            ],
+            [
+              PokerAction.new(PokerAction::CALL, cost: 19800)
+            ],
+          ]
+        ]
+      end
+      let(:patient) { MatchState.new(match_state).players(game_def) }
+
+      it 'when the winner has fewer chips' do
+        def match_state
+          "#{MatchState::LABEL}:0:0:19900|20100:r20100c///:AhKs|2h7d"
+        end
+        patient.map do |player, pos|
+          player.initial_stack
+        end.must_equal [19900, 20100]
+
+        patient.map do |player, pos|
+          player.total_contribution
+        end.must_equal [19900, 20100]
+
+        patient.map { |player, pos| player.winnings }.must_equal(
+          [2 * 19900, 200]
+        )
+
+        patient.map do |player, pos|
+          player.stack
+        end.must_equal [19900 + 19900, 200]
+      end
+
+      it 'when the winner has more chips' do
+        def match_state
+          "#{MatchState::LABEL}:0:0:19900|20100:r20100c///:2h7d|AhKs"
+        end
+
+        patient.map do |player, pos|
+          player.initial_stack
+        end.must_equal [19900, 20100]
+
+        patient.map do |player, pos|
+          player.total_contribution
+        end.must_equal [19900, 20100]
+
+        patient.map { |player, pos| player.winnings }.must_equal(
+          [0, 19900 + 20100]
+        )
+
+        patient.map { |player, pos| player.stack }.must_equal [0, 40000]
+      end
+    end
     describe 'distributes chips properly' do
       it 'when there is a showdown and one winner' do
         wager_size = 10
@@ -842,8 +913,9 @@ describe MatchState do
             hand_string << "#{hand}#{MatchState::HAND_SEPARATOR}"
           end[0..-2]
 
-          match_state =
+          match_state = (
             "#{MatchState::LABEL}:#{position}:0:crcc/ccc/rrfc/crc:#{hand_string_}"
+          )
 
           MatchState.new(match_state).players(x_game_def).each_with_index do |player, i|
             player.winnings.must_equal x_winnings[i]
@@ -900,9 +972,11 @@ describe MatchState do
           :number_of_hole_cards=>2,
           :number_of_board_cards=>[0, 3, 1, 1]
         )
-        MatchState.parse(
+        patient = MatchState.parse(
           'MATCHSTATE:0:2:cr20000c///:8h8s|5s5c/KdTcKh/9h/Jh'
-        ).players(game_def).map { |pl| pl.winnings }.must_equal [40000, 0]
+        )
+        patient.winning_players(game_def).must_equal [0]
+        patient.players(game_def).map { |pl| pl.winnings }.must_equal [40000, 0]
       end
     end
   end
@@ -966,7 +1040,7 @@ describe MatchState do
       wager_size = 10
       x_game_def = GameDefinition.new(
         first_player_positions: [3, 2, 2, 2],
-        chip_stacks: [100, 200, 150],
+        chip_stacks: [200, 200, 150],
         blinds: [0, 10, 5],
         raise_sizes: [wager_size]*4,
         number_of_ranks: 3
@@ -1068,7 +1142,7 @@ describe MatchState do
       wager_size = 10
       x_game_def = GameDefinition.new(
         first_player_positions: [3, 2, 2, 2],
-        chip_stacks: [100, 200, 150],
+        chip_stacks: [200, 200, 150],
         blinds: [0, 10, 5],
         raise_sizes: [wager_size]*4,
         number_of_ranks: 3
