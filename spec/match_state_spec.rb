@@ -1186,6 +1186,33 @@ describe MatchState do
         MatchState.new(match_state).hand_ended?(x_game_def).must_equal true
       end
     end
+    describe 'when a player is all-in before acting' do
+      let(:game_def) do
+        GameDefinition.new(
+          :betting_type=>"nolimit",
+          :chip_stacks=>[20000, 20000],
+          :number_of_players=>2,
+          :blinds=>[100, 50],
+          :raise_sizes=>nil,
+          :number_of_rounds=>4,
+          :first_player_positions=>[1, 0, 0, 0],
+          :number_of_suits=>4,
+          :number_of_ranks=>13,
+          :number_of_hole_cards=>2,
+          :number_of_board_cards=>[0, 3, 1, 1]
+        )
+      end
+      it 'works after the other player acts' do
+        patient = MatchState.parse(
+          'MATCHSTATE:1:7:39950|50:c///:4sAs|3d4h/4c8hKh/8s/2d'
+        )
+        patient.hand_ended?(game_def).must_equal true
+      end
+      it 'works before any actions' do
+        patient = MatchState.parse('MATCHSTATE:1:7:39950|50::|3d4h')
+        patient.hand_ended?(game_def).must_equal false
+      end
+    end
   end
   describe '#min_wager_by' do
     it 'return proper player states' do

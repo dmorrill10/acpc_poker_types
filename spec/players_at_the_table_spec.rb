@@ -39,6 +39,31 @@ describe PlayersAtTheTable do
       end
     end
   end
+  describe '#match_ended?' do
+    let(:game_def) do
+      GameDefinition.new(
+        :betting_type=>"nolimit",
+        :chip_stacks=>[20000, 20000],
+        :number_of_players=>2,
+        :blinds=>[100, 50],
+        :raise_sizes=>nil,
+        :number_of_rounds=>4,
+        :first_player_positions=>[1, 0, 0, 0],
+        :number_of_suits=>4,
+        :number_of_ranks=>13,
+        :number_of_hole_cards=>2,
+        :number_of_board_cards=>[0, 3, 1, 1]
+      )
+    end
+    it 'works' do
+      match_state = MatchState.parse(
+        "MATCHSTATE:1:1:39950|50:c///:9cJc|7s5d/Tc4h6d/7d/Qh"
+      )
+      patient = PlayersAtTheTable.seat_players(game_def, 0)
+      patient.update! match_state
+      patient.match_ended?.must_equal false
+    end
+  end
 
   def check_patient(patient=@patient)
     patient.player_acting_sequence.must_equal @match.player_acting_sequence
