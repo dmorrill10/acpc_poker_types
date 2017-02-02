@@ -26,8 +26,9 @@ describe HandPlayer do
   end
 
   describe '::new' do
-    it 'raises an exception if the player is unable to pay the ante' do
-      -> { HandPlayer.new HAND, INITIAL_CHIP_STACK, INITIAL_CHIP_STACK + 1 }.must_raise HandPlayer::UnableToPayAnte
+    it 'works properly if the player is unable to pay the ante' do
+      patient = HandPlayer.new HAND, INITIAL_CHIP_STACK, INITIAL_CHIP_STACK + 1
+      patient.ante.must_equal INITIAL_CHIP_STACK
     end
     it 'works' do
       [0, 100].each do |ante|

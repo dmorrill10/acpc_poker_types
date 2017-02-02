@@ -10,7 +10,7 @@ module AcpcPokerTypes
 
 # Class to model a player during a hand from information in a +MatchState+
 class HandPlayer
-  exceptions :unable_to_pay_ante, :inactive
+  exceptions :inactive
 
   # @return [AcpcPokerTypes::ChipStack] This player's chip stack at the beginning of the
   # hand before paying their ante.
@@ -33,11 +33,9 @@ class HandPlayer
   # @param initial_chip_stack [#to_i]
   # @param ante [#to_i]
   def initialize(hand, initial_stack, ante)
-    raise UnableToPayAnte if ante > initial_stack
-
     @hand = hand
     @initial_stack = ChipStack.new initial_stack
-    @ante = ChipStack.new ante
+    @ante = ChipStack.new [ante, initial_stack].min
     @actions = [[]]
     @winnings = ChipStack.new 0
   end
